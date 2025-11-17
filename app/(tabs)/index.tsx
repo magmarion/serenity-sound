@@ -1,98 +1,77 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
-
-import { HelloWave } from '@/components/hello-wave';
+import React, { useEffect, useState } from 'react';
+import { View, Button, Text, StyleSheet } from 'react-native';
+import Slider from '@react-native-community/slider';
+import { Audio } from 'expo-av';
 import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
 
 export default function HomeScreen() {
+  const [sound, setSound] = useState<Audio.Sound | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [volume, setVolume] = useState(1); // 0-1
+
+  async function playSound() {
+    if (sound) {
+      await sound.unloadAsync();
+    }
+
+    const { sound: newSound } = await Audio.Sound.createAsync(
+      { uri: 'https://www.orangefreesounds.com/wp-content/uploads/2014/09/Rain-sound.mp3' },
+      { shouldPlay: true, volume }
+    );
+
+    setSound(newSound);
+    setIsPlaying(true);
+  }
+
+
+  async function pauseSound() {
+    if (sound) {
+      await sound.pauseAsync();
+      setIsPlaying(false);
+    }
+  }
+
+  useEffect(() => {
+    return () => {
+      if (sound) sound.unloadAsync();
+    };
+  }, [sound]);
+
+  useEffect(() => {
+    if (sound && (sound as any)._loaded) {
+      sound.setVolumeAsync(volume);
+    }
+  }, [volume, sound]);
+
+
   return (
     <ParallaxScrollView
       headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+      headerImage={<View style={{ height: 250, backgroundColor: 'lightblue' }} />}>
+      <View style={styles.container}>
+        <ThemedText type="title">SerenitySound Test</ThemedText>
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
+        <Button title={isPlaying ? 'Pause Sound' : 'Play Sound'} onPress={isPlaying ? pauseSound : playSound} />
+
+        <Text style={{ marginTop: 16, color: 'white' }}>Volume: {Math.round(volume * 100)}%</Text>
+        <Slider
+          style={{ width: '80%', marginVertical: 16 }}
+          minimumValue={0}
+          maximumValue={1}
+          value={volume}
+          onValueChange={(val: number) => setVolume(val)}
+        />
+      </View>
     </ParallaxScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
+  container: {
+    flex: 1,
     alignItems: 'center',
-    gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+    gap: 16,
+    paddingVertical: 24,
   },
 });
