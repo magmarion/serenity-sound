@@ -1,50 +1,74 @@
-# Welcome to your Expo app 👋
+# SerenitySound1
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+**En mobilapp för stresslindring, fokus och sömn genom ASMR- och ambient-ljud.**
 
-## Get started
+## Projektidé
+SerenitySound1 är en app som hjälper användare att slappna av, få fokus eller somna lättare genom lugnande ljud. Idén uppstod ur behovet av ett enkelt, tillgängligt verktyg för mental återhämtning i en stressig vardag. Appen erbjuder:
+- Blandning av flera ljud samtidigt (t.ex. regn + eld).
+- Timer för sömn eller meditation.
+- Favoriter för sparade ljudkombinationer.
+- Volymkontroller och play/pause-funktioner.
 
-1. Install dependencies
 
-   ```bash
-   npm install
-   ```
+## Technical choices and justification
 
-2. Start the app
+### Platform and framework
+- **React Native with Expo**: Chose React Native for its flexibility and ability to build cross-platform apps for both iOS and Android. Expo simplifies the development process by providing tools for rapid prototyping, build automation, and easy integration with native APIs. This saves time and reduces the complexity of managing separate code bases for different platforms.
 
-   ```bash
-   npx expo start
-   ```
+### State management
+- **Zustand**: Used to manage global state, such as the user's favorite sounds and current sound combinations. Zustand was chosen for its simplicity, performance, and minimalistic API. It is easy to integrate and requires less boilerplate code compared to Redux, making it ideal for this project. Zustand makes it easy to manage and update state across the entire application without having to use `useContext` or `useReducer`.
 
-In the output, you'll find options to open the app in a
+### Database and storage
+- **AsyncStorage**: Used to store the user's favorite sounds and settings locally on the device. This choice was made because the app does not require a backend or user accounts, which simplifies development and increases user privacy. For future versions, Firebase or SQLite may be considered for more advanced features.
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+### Audio Management
+- **Expo AV**: Used to play and manage audio files. Expo AV is a powerful and simple audio management tool in React Native, supporting multiple audio channels, volume control, and synchronization. This allows for mixing multiple sounds simultaneously, which is a central feature of the app.
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+### Design and User Experience
+- **Figma**: Used to create wireframes and prototypes. The design follows UX/UI principles and is responsive to different screen sizes. WCAG 2.1 standards have been followed to ensure accessibility.
 
-## Get a fresh project
+## Install dependencies:
+   `npm install`
 
-When you're ready, run:
+## How to run the project   
+   `npm expo start`
 
-```bash
-npm run reset-project
-```
+## Krav
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+**Krav för godkänt:**
 
-## Learn more
+Planering och Research
 
-To learn more about developing your project with Expo, look at the following resources:
+- [x] Målgruppsanalys.
+- [x] Backlog i projekthanteringsverktyg.
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+Design & Prototyping
+- [x] Wireframes i Figma
+- [ ] Prototyp skapad i Figma
+- [ ] Responsiv design för minst två skärmstorlekar
+- [ ] Följer WCAG 2.1-standarder
 
-## Join the community
+Applikationsutveckling
+- [ ] Utvecklad med [React Native/Expo] 
+- [ ] Databas: [Firebase] 
+- [ ] State-hantering implementerad.
+- [ ] Semantisk HTML och WCAG 2.1-standarder följda.
+- [ ] Responsiv design för mobil och padda.
+- [ ] Git och GitHub används för versionshantering.
+- [ ] 2-3 sidor med abstract, tech stack, och dokumentation av arbetsprocess.
+- [ ] Appen är hostat.
+- [ ] Fri från tekniska fel, konsekvent design, och obruten navigation.
 
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+**Krav för väl godkänt:**
+- [ ] Interaktiv prototyp som liknar den färdiga produkten.
+- [ ] Fullständig WCAG 2.1-nivå A och AA.
+- [ ] State management: [Redux & Zustand]
+- [ ] CRUD med säker autentisering [Firebase Auth]
+- [ ] Fullt responsiv för alla skärmstorlekar.
+- [ ] Optimering: Återanvänd kod & komponenter.
+- [ ] Testad med WebAIM WAVE utan fel
+- [ ] Feature branches och pull requests används.
+- [ ] Tydliga commit-meddelanden.
+- [ ] Automatiserat flöde för bygge och deploy.
+- [ ] 3-6 sidor med djupgående analys, reflektion, och motivering av tekniska val.
+- [ ] Optimerad användarupplevelse med minimala laddningstider och tydlig återkoppling.
