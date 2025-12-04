@@ -110,6 +110,14 @@ export default function HomeScreen() {
 
 function HomeContent() {
     const heroTilt = useRef(new Animated.ValueXY({ x: 0, y: 0 })).current;
+    const resetHeroTilt = useCallback(() => {
+        Animated.spring(heroTilt, {
+            toValue: { x: 0, y: 0 },
+            useNativeDriver: true,
+            speed: 14,
+            bounciness: 8,
+        }).start();
+    }, [heroTilt]);
     const panResponder = useRef(
         PanResponder.create({
             onStartShouldSetPanResponder: () => true,
@@ -117,22 +125,8 @@ function HomeContent() {
             onPanResponderMove: (_, gestureState) => {
                 heroTilt.setValue({ x: gestureState.dx * 0.05, y: gestureState.dy * 0.05 });
             },
-            onPanResponderRelease: () => {
-                Animated.spring(heroTilt, {
-                    toValue: { x: 0, y: 0 },
-                    useNativeDriver: true,
-                    speed: 14,
-                    bounciness: 8,
-                }).start();
-            },
-            onPanResponderTerminate: () => {
-                Animated.spring(heroTilt, {
-                    toValue: { x: 0, y: 0 },
-                    useNativeDriver: true,
-                    speed: 14,
-                    bounciness: 8,
-                }).start();
-            },
+            onPanResponderRelease: resetHeroTilt,
+            onPanResponderTerminate: resetHeroTilt,
         })
     ).current;
 
@@ -158,21 +152,27 @@ function HomeContent() {
     return (
         <View style={styles.screen} testID="home-screen">
             <LinearGradient colors={["#0B0F2E", "#05060A"]} style={StyleSheet.absoluteFill} />
-            <View style={styles.topBar} testID="home-top-bar">
+            <LinearGradient
+                colors={["#312C85", "#0F172B", "#0B0E14"]}
+                locations={[0, 0.4, 1]}
+                style={styles.topBar}
+                testID="home-top-bar"
+            >
                 <View style={styles.headerRow}>
                     <View style={styles.profileRow}>
                         <Image source={{ uri: avatarUri }} style={styles.avatar} testID="profile-avatar" />
                         <View>
                             <Text style={styles.greetingLabel}>Good evening,</Text>
-                            <Text style={styles.greetingName}>Sarah</Text>
+                            <Text style={styles.greetingName}>John</Text>
                         </View>
                     </View>
                     <View style={styles.heartBadge} testID="favorite-button">
                         <Heart color={Colors.light.text} size={18} />
                     </View>
                 </View>
-                <Text style={styles.topPrompt}>How do you want to feel today?</Text>
-            </View>
+                {/* FIX: Use nested Text component instead of span */}
+                <Text style={styles.topPrompt}>How do you want <Text style={styles.titlePrompt}>to feel today?</Text></Text>
+            </LinearGradient>
             <ScrollView style={styles.scrollArea} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
                 <Animated.View
                     style={[styles.heroCard, heroTilt.getTranslateTransform()]}
@@ -197,7 +197,6 @@ function HomeContent() {
                 </Animated.View>
                 <View style={styles.sectionHeader}>
                     <Text style={styles.sectionTitle}>Moods</Text>
-                    <Text style={styles.sectionHint}>Tap to set the vibe</Text>
                 </View>
                 <View style={styles.moodGrid} testID="mood-grid">
                     {MOOD_CARDS.map((mood) => (
@@ -206,7 +205,6 @@ function HomeContent() {
                 </View>
                 <View style={styles.sectionHeader}>
                     <Text style={styles.sectionTitle}>Continue Listening</Text>
-                    <Text style={styles.sectionHint}>Pick up where you left off</Text>
                 </View>
                 <View style={styles.sessionList} testID="session-list">
                     {CONTINUE_SESSIONS.map((session) => (
@@ -278,7 +276,7 @@ const styles = StyleSheet.create({
         paddingTop: 54,
         paddingHorizontal: 20,
         paddingBottom: 24,
-        backgroundColor: "rgba(5,7,18,0.95)",
+        // REMOVED: backgroundColor: "linear-gradient(to bottom, #312C85 0%, #0F172B 40%, #0B0E14 100%)",
         borderBottomLeftRadius: 32,
         borderBottomRightRadius: 32,
         gap: 16,
@@ -295,6 +293,9 @@ const styles = StyleSheet.create({
         fontWeight: "800",
         lineHeight: 34,
         maxWidth: 280,
+    },
+    titlePrompt: {
+        color: Colors.palette.accent, // This will make "to feel today?" a different color
     },
     scrollArea: {
         flex: 1,

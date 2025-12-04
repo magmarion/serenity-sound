@@ -1,39 +1,83 @@
+// template
 import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { Modal, Platform, Pressable, Text, TouchableOpacity, View } from "react-native";
+import {
+  Modal,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 export default function ModalScreen() {
   return (
     <Modal
       animationType="fade"
-      transparent
-      visible
+      transparent={true}
+      visible={true}
       onRequestClose={() => router.back()}
     >
-      {/* Background overlay */}
-      <Pressable
-        onPress={() => router.back()}
-        className="flex-1 bg-black/50 justify-center items-center"
-      >
-        <View className="bg-white rounded-2xl p-6 mx-5 items-center min-w-[300px]">
-          <Text className="text-xl font-bold mb-4">Modal</Text>
-
-          <Text className="text-center mb-6 text-gray-600 leading-5">
-            This is an example modal with proper fade animation.
+      <Pressable style={styles.overlay} onPress={() => router.back()}>
+        <View style={styles.modalContent}>
+          <Text style={styles.title}>Modal</Text>
+          <Text style={styles.description}>
+            This is an example modal with proper fade animation. You can edit it
+            in app/modal.tsx.
           </Text>
 
           <TouchableOpacity
+            style={styles.closeButton}
             onPress={() => router.back()}
-            className="bg-blue-500 px-6 py-3 rounded-lg min-w-[100px]"
           >
-            <Text className="text-white font-semibold text-center">
-              Close
-            </Text>
+            <Text style={styles.closeButtonText}>Close</Text>
           </TouchableOpacity>
         </View>
       </Pressable>
 
+      {/* Use a light status bar on iOS to account for the black space above the modal */}
       <StatusBar style={Platform.OS === "ios" ? "light" : "auto"} />
     </Modal>
   );
 }
+
+const styles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContent: {
+    backgroundColor: "white",
+    borderRadius: 20,
+    padding: 24,
+    margin: 20,
+    alignItems: "center",
+    minWidth: 300,
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 16,
+  },
+  description: {
+    textAlign: "center",
+    marginBottom: 24,
+    color: "#666",
+    lineHeight: 20,
+  },
+  closeButton: {
+    backgroundColor: "#007AFF",
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 10,
+    minWidth: 100,
+  },
+  closeButtonText: {
+    color: "white",
+    fontWeight: "600",
+    textAlign: "center",
+  },
+});
