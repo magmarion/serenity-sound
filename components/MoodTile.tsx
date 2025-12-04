@@ -10,7 +10,7 @@ type Mood = {
     description: string;
     gradient: [string, string];
     accent: string;
-    iconName: string; // matches data.ts
+    iconName: string;
 };
 
 type Props = {

@@ -1,5 +1,7 @@
 // constants/data.ts
-export const MOOD_CARDS = [
+import { Mood, Session } from "@/types";
+
+export const MOOD_CARDS: Mood[] = [
     {
         id: "focus",
         title: "Focus",
@@ -32,9 +34,10 @@ export const MOOD_CARDS = [
         accent: "#4DE2C3",
         iconName: "battery-charging",
     },
-];
+] satisfies Mood[]; //satisfies används för att säkerställa att arrayen följer Mood-typen
 
-export const CONTINUE_SESSIONS = [
+
+export const CONTINUE_SESSIONS: Session[] = [
     { id: "ocean", title: "Ocean Waves", duration: "45 min · Sleep", moodId: "sleep", category: "Sleep" },
     { id: "wood", title: "Wood Burning", duration: "15 min · Focus", moodId: "focus", category: "Focus" },
     { id: "rain", title: "Heavy Rain", duration: "60 min · Sleep", moodId: "sleep", category: "Sleep" },
