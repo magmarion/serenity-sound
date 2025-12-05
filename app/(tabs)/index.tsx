@@ -10,7 +10,15 @@ import {
     Text,
     View,
 } from "react-native";
-import { BatteryCharging, Heart, Moon, Play, Zap, Droplets } from "lucide-react-native";
+import {
+    BatteryCharging,
+    Heart,
+    Moon,
+    Play,
+    Zap,
+    Droplets,
+} from "lucide-react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import Colors from "@/constants/colors";
 
@@ -31,7 +39,8 @@ type Session = {
     category: string;
 };
 
-const avatarUri = "https://images.unsplash.com/photo-1544723795-3fb6469f5b39?auto=format&fit=crop&w=200&q=80";
+const avatarUri =
+    "https://images.unsplash.com/photo-1544723795-3fb6469f5b39?auto=format&fit=crop&w=200&q=80";
 
 const MOOD_CARDS: MoodCard[] = [
     {
@@ -75,7 +84,14 @@ const CONTINUE_SESSIONS: Session[] = [
     { id: "fire", title: "Cracking Fire", duration: "10 min · Focus", moodId: "focus", category: "Focus" },
 ];
 
-class HomeErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean }> {
+/* -------------------------
+   Error Boundary Wrapper
+-------------------------- */
+
+class HomeErrorBoundary extends React.Component<
+    { children: React.ReactNode },
+    { hasError: boolean }
+> {
     state = { hasError: false };
 
     static getDerivedStateFromError() {
@@ -95,7 +111,6 @@ class HomeErrorBoundary extends React.Component<{ children: React.ReactNode }, {
                 </View>
             );
         }
-
         return this.props.children;
     }
 }
@@ -108,8 +123,13 @@ export default function HomeScreen() {
     );
 }
 
+/* -------------------------
+   MAIN SCREEN CONTENT
+-------------------------- */
+
 function HomeContent() {
     const heroTilt = useRef(new Animated.ValueXY({ x: 0, y: 0 })).current;
+
     const resetHeroTilt = useCallback(() => {
         Animated.spring(heroTilt, {
             toValue: { x: 0, y: 0 },
@@ -117,13 +137,17 @@ function HomeContent() {
             speed: 14,
             bounciness: 8,
         }).start();
-    }, [heroTilt]);
+    }, []);
+
     const panResponder = useRef(
         PanResponder.create({
             onStartShouldSetPanResponder: () => true,
             onMoveShouldSetPanResponder: () => true,
-            onPanResponderMove: (_, gestureState) => {
-                heroTilt.setValue({ x: gestureState.dx * 0.05, y: gestureState.dy * 0.05 });
+            onPanResponderMove: (_, gesture) => {
+                heroTilt.setValue({
+                    x: gesture.dx * 0.05,
+                    y: gesture.dy * 0.05,
+                });
             },
             onPanResponderRelease: resetHeroTilt,
             onPanResponderTerminate: resetHeroTilt,
@@ -131,27 +155,24 @@ function HomeContent() {
     ).current;
 
     const moodMap = useMemo(() => {
-        const entries = new Map<string, MoodCard>();
-        MOOD_CARDS.forEach((card) => entries.set(card.id, card));
-        return entries;
-    }, []);
-
-    const handleMoodPress = useCallback((mood: MoodCard) => {
-        console.log(`[HomeScreen] mood tapped: ${mood.title}`);
-    }, []);
-
-    const handleSessionPress = useCallback((session: Session) => {
-        console.log(`[HomeScreen] session tapped: ${session.title}`);
+        const m = new Map<string, MoodCard>();
+        MOOD_CARDS.forEach((card) => m.set(card.id, card));
+        return m;
     }, []);
 
     useEffect(() => {
-        console.log(`[HomeScreen] loaded ${MOOD_CARDS.length} moods`);
-        console.log(`[HomeScreen] loaded ${CONTINUE_SESSIONS.length} sessions`);
+        console.log("[HomeScreen] loaded moods + sessions");
     }, []);
 
     return (
-        <View style={styles.screen} testID="home-screen">
-            <LinearGradient colors={["#0B0F2E", "#05060A"]} style={StyleSheet.absoluteFill} />
+        <SafeAreaView style={styles.safeArea} edges={["top"]}>
+            {/* Background */}
+            <LinearGradient
+                colors={["#0B0F2E", "#05060A"]}
+                style={StyleSheet.absoluteFill}
+            />
+
+            {/* HEADER */}
             <LinearGradient
                 colors={["#312C85", "#0F172B", "#0B0E14"]}
                 locations={[0, 0.4, 1]}
@@ -160,34 +181,47 @@ function HomeContent() {
             >
                 <View style={styles.headerRow}>
                     <View style={styles.profileRow}>
-                        <Image source={{ uri: avatarUri }} style={styles.avatar} testID="profile-avatar" />
+                        <Image source={{ uri: avatarUri }} style={styles.avatar} />
                         <View>
                             <Text style={styles.greetingLabel}>Good evening,</Text>
                             <Text style={styles.greetingName}>John</Text>
                         </View>
                     </View>
-                    <View style={styles.heartBadge} testID="favorite-button">
+
+                    <View style={styles.heartBadge}>
                         <Heart color={Colors.light.text} size={18} />
                     </View>
                 </View>
-                {/* FIX: Use nested Text component instead of span */}
-                <Text style={styles.topPrompt}>How do you want <Text style={styles.titlePrompt}>to feel today?</Text></Text>
+
+                <Text style={styles.topPrompt}>
+                    How do you want <Text style={styles.titlePrompt}>to feel today?</Text>
+                </Text>
             </LinearGradient>
-            <ScrollView style={styles.scrollArea} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+
+            {/* SCROLL AREA */}
+            <ScrollView
+                style={styles.scrollArea}
+                contentContainerStyle={styles.scrollContent}
+                showsVerticalScrollIndicator={false}
+            >
+                {/* Hero: Recommended */}
                 <Animated.View
                     style={[styles.heroCard, heroTilt.getTranslateTransform()]}
                     {...panResponder.panHandlers}
-                    testID="hero-card"
                 >
                     <LinearGradient colors={["#2F1A5A", "#131A3A"]} style={styles.heroGradient}>
                         <View style={styles.heroContent}>
                             <Text style={styles.heroLabel}>Recommended</Text>
                             <Text style={styles.heroTitle}>Deep Focus</Text>
-                            <Text style={styles.heroSubtitle}>Slip into a productive flow with layered ambient tones.</Text>
+                            <Text style={styles.heroSubtitle}>
+                                Slip into a productive flow with layered ambient tones.
+                            </Text>
+
                             <Pressable
-                                onPress={() => console.log("[HomeScreen] play hero recommendation")}
-                                style={({ pressed }) => [styles.playButton, pressed && styles.playButtonPressed]}
-                                testID="hero-play-button"
+                                style={({ pressed }) => [
+                                    styles.playButton,
+                                    pressed && styles.playButtonPressed,
+                                ]}
                             >
                                 <Play color={Colors.light.text} size={20} />
                                 <Text style={styles.playLabel}>Play</Text>
@@ -195,40 +229,49 @@ function HomeContent() {
                         </View>
                     </LinearGradient>
                 </Animated.View>
-                <View style={styles.sectionHeader}>
-                    <Text style={styles.sectionTitle}>Moods</Text>
-                </View>
-                <View style={styles.moodGrid} testID="mood-grid">
+
+                {/* Moods Section */}
+                <Text style={styles.sectionTitle}>Moods</Text>
+
+                <View style={styles.moodGrid}>
                     {MOOD_CARDS.map((mood) => (
-                        <MoodTile key={mood.id} mood={mood} onPress={handleMoodPress} />
+                        <MoodTile key={mood.id} mood={mood} />
                     ))}
                 </View>
-                <View style={styles.sectionHeader}>
-                    <Text style={styles.sectionTitle}>Continue Listening</Text>
-                </View>
-                <View style={styles.sessionList} testID="session-list">
+
+                {/* Continue Listening */}
+                <Text style={styles.sectionTitle}>Continue Listening</Text>
+
+                <View style={styles.sessionList}>
                     {CONTINUE_SESSIONS.map((session) => (
-                        <SessionRow key={session.id} session={session} mood={moodMap.get(session.moodId)} onPress={handleSessionPress} />
+                        <SessionRow
+                            key={session.id}
+                            session={session}
+                            mood={moodMap.get(session.moodId)}
+                        />
                     ))}
                 </View>
             </ScrollView>
-        </View>
+        </SafeAreaView>
     );
 }
 
-type MoodTileProps = {
-    mood: MoodCard;
-    onPress: (mood: MoodCard) => void;
-};
+/* -------------------------
+   COMPONENTS
+-------------------------- */
 
-const MoodTile = React.memo(({ mood, onPress }: MoodTileProps) => {
+const MoodTile = React.memo(function MoodTile({
+    mood,
+}: {
+    mood: MoodCard;
+}) {
     const Icon = mood.icon;
+
     return (
-        <Pressable
-            onPress={() => onPress(mood)}
-            style={({ pressed }) => [styles.moodTile, pressed && styles.moodTilePressed]}
-            testID={`mood-${mood.id}`}
-        >
+        <Pressable style={({ pressed }) => [
+            styles.moodTile,
+            pressed && styles.moodTilePressed,
+        ]}>
             <LinearGradient colors={mood.gradient} style={styles.moodGradient}>
                 <View style={styles.moodIconWrap}>
                     <Icon color={mood.accent} size={20} />
@@ -240,43 +283,51 @@ const MoodTile = React.memo(({ mood, onPress }: MoodTileProps) => {
     );
 });
 
-MoodTile.displayName = "MoodTile";
-
-type SessionRowProps = {
+const SessionRow = React.memo(function SessionRow({
+    session,
+    mood,
+}: {
     session: Session;
     mood?: MoodCard;
-    onPress: (session: Session) => void;
-};
+}) {
+    return (
+        <Pressable style={({ pressed }) => [
+            styles.sessionRow,
+            pressed && styles.sessionRowPressed,
+        ]}>
+            <View
+                style={[
+                    styles.sessionIconWrap,
+                    { backgroundColor: mood?.gradient[0] ?? Colors.palette.card },
+                ]}
+            >
+                <Play color={mood?.accent ?? Colors.light.text} size={18} />
+            </View>
 
-const SessionRow = React.memo(({ session, mood, onPress }: SessionRowProps) => (
-    <Pressable
-        onPress={() => onPress(session)}
-        style={({ pressed }) => [styles.sessionRow, pressed && styles.sessionRowPressed]}
-        testID={`session-${session.id}`}
-    >
-        <View style={[styles.sessionIconWrap, { backgroundColor: mood?.gradient[0] ?? Colors.palette.card }]}>
-            <Play color={mood?.accent ?? Colors.light.text} size={18} />
-        </View>
-        <View style={styles.sessionTextBlock}>
-            <Text style={styles.sessionTitle}>{session.title}</Text>
-            <Text style={styles.sessionMeta}>{session.duration}</Text>
-        </View>
-        <Heart color={Colors.palette.muted} size={20} />
-    </Pressable>
-));
+            <View style={styles.sessionTextBlock}>
+                <Text style={styles.sessionTitle}>{session.title}</Text>
+                <Text style={styles.sessionMeta}>{session.duration}</Text>
+            </View>
 
-SessionRow.displayName = "SessionRow";
+            <Heart color={Colors.palette.muted} size={20} />
+        </Pressable>
+    );
+});
+
+/* -------------------------
+   STYLES
+-------------------------- */
 
 const styles = StyleSheet.create({
-    screen: {
+    safeArea: {
         flex: 1,
         backgroundColor: Colors.palette.background,
     },
+
     topBar: {
-        paddingTop: 54,
+        paddingTop: 24, // SafeArea handles real top inset now
         paddingHorizontal: 20,
         paddingBottom: 24,
-        // REMOVED: backgroundColor: "linear-gradient(to bottom, #312C85 0%, #0F172B 40%, #0B0E14 100%)",
         borderBottomLeftRadius: 32,
         borderBottomRightRadius: 32,
         gap: 16,
@@ -287,25 +338,8 @@ const styles = StyleSheet.create({
         elevation: 24,
         zIndex: 2,
     },
-    topPrompt: {
-        color: Colors.light.text,
-        fontSize: 28,
-        fontWeight: "800",
-        lineHeight: 34,
-        maxWidth: 280,
-    },
-    titlePrompt: {
-        color: Colors.palette.accent, // This will make "to feel today?" a different color
-    },
-    scrollArea: {
-        flex: 1,
-    },
-    scrollContent: {
-        paddingHorizontal: 20,
-        paddingTop: 32,
-        paddingBottom: 120,
-        gap: 20,
-    },
+
+    /* Header */
     headerRow: {
         flexDirection: "row",
         justifyContent: "space-between",
@@ -338,6 +372,29 @@ const styles = StyleSheet.create({
         alignItems: "center",
         justifyContent: "center",
     },
+
+    topPrompt: {
+        color: Colors.light.text,
+        fontSize: 28,
+        fontWeight: "800",
+        lineHeight: 34,
+        maxWidth: 280,
+    },
+    titlePrompt: {
+        color: Colors.palette.accent,
+    },
+
+    scrollArea: {
+        flex: 1,
+    },
+    scrollContent: {
+        paddingHorizontal: 20,
+        paddingTop: 32,
+        paddingBottom: 120, // supports gesture bar spacing
+        gap: 20,
+    },
+
+    /* Hero */
     heroCard: {
         borderRadius: 28,
         overflow: "hidden",
@@ -384,19 +441,12 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: "600",
     },
-    sectionHeader: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "flex-end",
-    },
+
+    /* Moods */
     sectionTitle: {
         color: Colors.light.text,
         fontSize: 20,
         fontWeight: "700",
-    },
-    sectionHint: {
-        color: Colors.palette.muted,
-        fontSize: 14,
     },
     moodGrid: {
         flexDirection: "row",
@@ -434,6 +484,8 @@ const styles = StyleSheet.create({
         color: Colors.palette.muted,
         fontSize: 14,
     },
+
+    /* Continue Listening */
     sessionList: {
         gap: 14,
     },
@@ -467,6 +519,8 @@ const styles = StyleSheet.create({
         color: Colors.palette.muted,
         marginTop: 4,
     },
+
+    /* Error screen */
     errorContainer: {
         flex: 1,
         backgroundColor: Colors.palette.background,
