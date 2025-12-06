@@ -4,6 +4,7 @@ import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -17,21 +18,23 @@ export default function RootLayout() {
 
     return (
         <QueryClientProvider client={queryClient}>
-            <GestureHandlerRootView style={{ flex: 1 }}>
-                <Stack screenOptions={{ headerShown: false }}>
-                    {/* Your main tab navigation */}
-                    <Stack.Screen name="(tabs)" />
+            <SafeAreaProvider>
+                <GestureHandlerRootView style={{ flex: 1 }}>
+                    <Stack screenOptions={{ headerShown: false }}>
+                        {/* Your main tab navigation */}
+                        <Stack.Screen name="(tabs)" />
 
-                    {/* Enable modal presentation for the modals folder */}
-                    <Stack.Screen
-                        name="(modals)"
-                        options={{
-                            presentation: "modal",            // iOS-style modal
-                            animation: "slide_from_bottom",    // bottom slide animation
-                        }}
-                    />
-                </Stack>
-            </GestureHandlerRootView>
+                        {/* Enable modal presentation for the modals folder */}
+                        <Stack.Screen
+                            name="(modals)"
+                            options={{
+                                presentation: "modal",            // iOS-style modal
+                                animation: "slide_from_bottom",    // bottom slide animation
+                            }}
+                        />
+                    </Stack>
+                </GestureHandlerRootView>
+            </SafeAreaProvider>
         </QueryClientProvider>
     );
 }
