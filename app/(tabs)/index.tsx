@@ -137,7 +137,7 @@ function HomeContent() {
             speed: 14,
             bounciness: 8,
         }).start();
-    }, []);
+    }, [heroTilt]);
 
     const panResponder = useRef(
         PanResponder.create({
@@ -174,7 +174,7 @@ function HomeContent() {
 
             {/* HEADER */}
             <LinearGradient
-                colors={["#312C85", "#0F172B", "#0B0E14"]}
+                colors={["#591A1B", "#0F172B", "#0B0E14"]}
                 locations={[0, 0.4, 1]}
                 style={styles.topBar}
                 testID="home-top-bar"
@@ -186,10 +186,6 @@ function HomeContent() {
                             <Text style={styles.greetingLabel}>Good evening,</Text>
                             <Text style={styles.greetingName}>John</Text>
                         </View>
-                    </View>
-
-                    <View style={styles.heartBadge}>
-                        <Heart color={Colors.light.text} size={18} />
                     </View>
                 </View>
 
@@ -204,31 +200,6 @@ function HomeContent() {
                 contentContainerStyle={styles.scrollContent}
                 showsVerticalScrollIndicator={false}
             >
-                {/* Hero: Recommended */}
-                <Animated.View
-                    style={[styles.heroCard, heroTilt.getTranslateTransform()]}
-                    {...panResponder.panHandlers}
-                >
-                    <LinearGradient colors={["#2F1A5A", "#131A3A"]} style={styles.heroGradient}>
-                        <View style={styles.heroContent}>
-                            <Text style={styles.heroLabel}>Recommended</Text>
-                            <Text style={styles.heroTitle}>Deep Focus</Text>
-                            <Text style={styles.heroSubtitle}>
-                                Slip into a productive flow with layered ambient tones.
-                            </Text>
-
-                            <Pressable
-                                style={({ pressed }) => [
-                                    styles.playButton,
-                                    pressed && styles.playButtonPressed,
-                                ]}
-                            >
-                                <Play color={Colors.light.text} size={20} />
-                                <Text style={styles.playLabel}>Play</Text>
-                            </Pressable>
-                        </View>
-                    </LinearGradient>
-                </Animated.View>
 
                 {/* Moods Section */}
                 <Text style={styles.sectionTitle}>Moods</Text>
@@ -325,7 +296,7 @@ const styles = StyleSheet.create({
     },
 
     topBar: {
-        paddingTop: 24, // SafeArea handles real top inset
+        paddingTop: 45, // SafeArea handles real top inset
         paddingHorizontal: 20,
         paddingBottom: 24,
         borderBottomLeftRadius: 32,
@@ -356,7 +327,7 @@ const styles = StyleSheet.create({
         borderRadius: 24,
     },
     greetingLabel: {
-        color: Colors.palette.muted,
+        color: Colors.palette.text,
         fontSize: 14,
     },
     greetingName: {
@@ -481,7 +452,7 @@ const styles = StyleSheet.create({
         fontWeight: "700",
     },
     moodDescription: {
-        color: Colors.palette.muted,
+        color: Colors.palette.under_text,
         fontSize: 14,
     },
 
@@ -516,7 +487,7 @@ const styles = StyleSheet.create({
         fontWeight: "600",
     },
     sessionMeta: {
-        color: Colors.palette.muted,
+        color: Colors.palette.under_text,
         marginTop: 4,
     },
 

@@ -10,14 +10,6 @@ SplashScreen.preventAutoHideAsync();
 
 const queryClient = new QueryClient();
 
-function RootLayoutNav() {
-    return (
-        <Stack screenOptions={{ headerBackTitle: "Back" }}>
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        </Stack>
-    );
-}
-
 export default function RootLayout() {
     useEffect(() => {
         SplashScreen.hideAsync();
@@ -25,8 +17,20 @@ export default function RootLayout() {
 
     return (
         <QueryClientProvider client={queryClient}>
-            <GestureHandlerRootView>
-                <RootLayoutNav />
+            <GestureHandlerRootView style={{ flex: 1 }}>
+                <Stack screenOptions={{ headerShown: false }}>
+                    {/* Your main tab navigation */}
+                    <Stack.Screen name="(tabs)" />
+
+                    {/* Enable modal presentation for the modals folder */}
+                    <Stack.Screen
+                        name="(modals)"
+                        options={{
+                            presentation: "modal",            // iOS-style modal
+                            animation: "slide_from_bottom",    // bottom slide animation
+                        }}
+                    />
+                </Stack>
             </GestureHandlerRootView>
         </QueryClientProvider>
     );
