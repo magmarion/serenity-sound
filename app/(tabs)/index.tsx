@@ -84,9 +84,9 @@ const CONTINUE_SESSIONS: Session[] = [
     { id: "fire", title: "Cracking Fire", duration: "10 min · Focus", moodId: "focus", category: "Focus" },
 ];
 
-/* -------------------------
+/*
    Error Boundary Wrapper
--------------------------- */
+*/
 
 class HomeErrorBoundary extends React.Component<
     { children: React.ReactNode },
@@ -123,9 +123,9 @@ export default function HomeScreen() {
     );
 }
 
-/* -------------------------
+/*
    MAIN SCREEN CONTENT
--------------------------- */
+*/
 
 function HomeContent() {
     const heroTilt = useRef(new Animated.ValueXY({ x: 0, y: 0 })).current;
@@ -256,9 +256,9 @@ function HomeContent() {
     );
 }
 
-/* -------------------------
+/*
    COMPONENTS
--------------------------- */
+*/
 
 const MoodTile = React.memo(function MoodTile({
     mood,
@@ -314,9 +314,9 @@ const SessionRow = React.memo(function SessionRow({
     );
 });
 
-/* -------------------------
+/*
    STYLES
--------------------------- */
+*/
 
 const styles = StyleSheet.create({
     safeArea: {
@@ -325,7 +325,7 @@ const styles = StyleSheet.create({
     },
 
     topBar: {
-        paddingTop: 24, // SafeArea handles real top inset now
+        paddingTop: 24, // SafeArea handles real top inset
         paddingHorizontal: 20,
         paddingBottom: 24,
         borderBottomLeftRadius: 32,
