@@ -141,7 +141,7 @@ function HomeContent() {
             speed: 14,
             bounciness: 8,
         }).start();
-    }, []);
+    }, [heroTilt]);
 
     const panResponder = useRef(
         PanResponder.create({
