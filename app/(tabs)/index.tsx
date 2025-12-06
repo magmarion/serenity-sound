@@ -19,7 +19,7 @@ import {
     Droplets,
 } from "lucide-react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-
+import { router } from "expo-router";
 import Colors from "@/constants/colors";
 
 type MoodCard = {

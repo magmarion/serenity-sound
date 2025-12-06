@@ -26,7 +26,7 @@ export default function RootLayout() {
 
                         {/* Enable modal presentation for the modals folder */}
                         <Stack.Screen
-                            name="(modals)"
+                            name="(modal)"
                             options={{
                                 presentation: "modal",            // iOS-style modal
                                 animation: "slide_from_bottom",    // bottom slide animation

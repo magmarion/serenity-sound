@@ -130,7 +130,8 @@ export default function PlayerSheet() {
                                 {...(panResponder as any)}
                                 testID="player-progress-track"
                             >
-                                <View style={[styles.progressFill, { width: progressPercent }]} />
+                                <View style={[styles.progressFill, { width: progressPercent as unknown as number }
+]} />
                                 <RNAnimated.View
                                     style={[
                                         styles.progressThumb,
