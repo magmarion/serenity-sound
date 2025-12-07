@@ -24,14 +24,13 @@ export default function RootLayout() {
                         {/* Your main tab navigation */}
                         <Stack.Screen name="(tabs)" />
 
-                        {/* Enable modal presentation for the modals folder */}
+                        {/* Enable modal presentation for the modal folder */}
                         <Stack.Screen
                             name="(modal)"
                             options={{
-                                presentation: "modal",            // iOS-style modal
                                 animation: "slide_from_bottom",    // bottom slide animation
                             }}
-                        />
+                        />¢
                     </Stack>
                 </GestureHandlerRootView>
             </SafeAreaProvider>
