@@ -1,4 +1,6 @@
-const accent = "#ff8f32";
+const charcoal = "#0E101A";
+const slate = "#1F2230";
+const accent = "#FF8743";
 
 export default {
   palette: {
@@ -6,6 +8,8 @@ export default {
     surface: "#0D0F1C",
     card: "#15172A",
     muted: "#4D4F69",
+    text: "#FFFFFF",
+    under_text: "#E2E8F0",
     accent,
     violet: "#3E2C7C",
     cobalt: "#1F2C5C",
@@ -18,5 +22,9 @@ export default {
     tint: accent,
     tabIconDefault: "#4D4F69",
     tabIconSelected: accent,
+    surface: charcoal,
+    raised: slate,
+    border: "#2B3042",
+    danger: "#F97070",
   },
 };

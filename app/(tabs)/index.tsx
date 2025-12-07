@@ -18,8 +18,8 @@ import {
     Zap,
     Droplets,
 } from "lucide-react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { router } from "expo-router";
 import Colors from "@/constants/colors";
 
 /* -------------------------
@@ -88,24 +88,18 @@ const CONTINUE_SESSIONS: Session[] = [
     { id: "fire", title: "Cracking Fire", duration: "10 min · Focus", moodId: "focus", category: "Focus" },
 ];
 
-/* -------------------------
-   Error Boundary Wrapper
--------------------------- */
-
+/* ERROR BOUNDARY */
 class HomeErrorBoundary extends React.Component<
     { children: React.ReactNode },
     { hasError: boolean }
 > {
     state = { hasError: false };
-
     static getDerivedStateFromError() {
         return { hasError: true };
     }
-
     componentDidCatch(error: Error) {
         console.log("[HomeErrorBoundary]", error.message);
     }
-
     render() {
         if (this.state.hasError) {
             return (
@@ -127,11 +121,10 @@ export default function HomeScreen() {
     );
 }
 
-/* -------------------------
-   MAIN SCREEN CONTENT
--------------------------- */
-
+/* MAIN CONTENT */
 function HomeContent() {
+    const insets = useSafeAreaInsets();
+
     const heroTilt = useRef(new Animated.ValueXY({ x: 0, y: 0 })).current;
 
     const resetHeroTilt = useCallback(() => {
@@ -169,7 +162,7 @@ function HomeContent() {
     }, []);
 
     return (
-        <SafeAreaView style={styles.safeArea} edges={["top"]}>
+        <View style={[styles.safeArea, { paddingTop: insets.top }]}>
             {/* Background */}
             <LinearGradient
                 colors={["#0B0F2E", "#05060A"]}
@@ -178,7 +171,7 @@ function HomeContent() {
 
             {/* HEADER */}
             <LinearGradient
-                colors={["#312C85", "#0F172B", "#0B0E14"]}
+                colors={["#591A1B", "#0F172B", "#0B0E14"]}
                 locations={[0, 0.4, 1]}
                 style={styles.topBar}
                 testID="home-top-bar"
@@ -190,10 +183,6 @@ function HomeContent() {
                             <Text style={styles.greetingLabel}>Good evening,</Text>
                             <Text style={styles.greetingName}>John</Text>
                         </View>
-                    </View>
-
-                    <View style={styles.heartBadge}>
-                        <Heart color={Colors.light.text} size={18} />
                     </View>
                 </View>
 
@@ -208,33 +197,6 @@ function HomeContent() {
                 contentContainerStyle={styles.scrollContent}
                 showsVerticalScrollIndicator={false}
             >
-                {/* Hero: Recommended */}
-                <Animated.View
-                    style={[styles.heroCard, heroTilt.getTranslateTransform()]}
-                    {...panResponder.panHandlers}
-                >
-                    <LinearGradient colors={["#2F1A5A", "#131A3A"]} style={styles.heroGradient}>
-                        <View style={styles.heroContent}>
-                            <Text style={styles.heroLabel}>Recommended</Text>
-                            <Text style={styles.heroTitle}>Deep Focus</Text>
-                            <Text style={styles.heroSubtitle}>
-                                Slip into a productive flow with layered ambient tones.
-                            </Text>
-
-                            <Pressable
-                                style={({ pressed }) => [
-                                    styles.playButton,
-                                    pressed && styles.playButtonPressed,
-                                ]}
-                            >
-                                <Play color={Colors.light.text} size={20} />
-                                <Text style={styles.playLabel}>Play</Text>
-                            </Pressable>
-                        </View>
-                    </LinearGradient>
-                </Animated.View>
-
-                {/* Moods Section */}
                 <Text style={styles.sectionTitle}>Moods</Text>
 
                 <View style={styles.moodGrid}>
@@ -243,7 +205,6 @@ function HomeContent() {
                     ))}
                 </View>
 
-                {/* Continue Listening */}
                 <Text style={styles.sectionTitle}>Continue Listening</Text>
 
                 <View style={styles.sessionList}>
@@ -256,26 +217,21 @@ function HomeContent() {
                     ))}
                 </View>
             </ScrollView>
-        </SafeAreaView>
+        </View>
     );
 }
 
-/* -------------------------
-   COMPONENTS
--------------------------- */
-
-const MoodTile = React.memo(function MoodTile({
-    mood,
-}: {
-    mood: MoodCard;
-}) {
+/* COMPONENTS */
+const MoodTile = React.memo(function MoodTile({ mood }: { mood: MoodCard }) {
     const Icon = mood.icon;
 
     return (
-        <Pressable style={({ pressed }) => [
-            styles.moodTile,
-            pressed && styles.moodTilePressed,
-        ]}>
+        <Pressable
+            onPress={() => router.push("/(modal)/player")}
+            style={({ pressed }) => [
+                styles.moodTile,
+                pressed && styles.moodTilePressed,
+            ]}>
             <LinearGradient colors={mood.gradient} style={styles.moodGradient}>
                 <View style={styles.moodIconWrap}>
                     <Icon color={mood.accent} size={20} />
@@ -295,10 +251,12 @@ const SessionRow = React.memo(function SessionRow({
     mood?: MoodCard;
 }) {
     return (
-        <Pressable style={({ pressed }) => [
-            styles.sessionRow,
-            pressed && styles.sessionRowPressed,
-        ]}>
+        <Pressable
+            onPress={() => router.push("/(modal)/player")}
+            style={({ pressed }) => [
+                styles.sessionRow,
+                pressed && styles.sessionRowPressed,
+            ]}>
             <View
                 style={[
                     styles.sessionIconWrap,
@@ -318,10 +276,7 @@ const SessionRow = React.memo(function SessionRow({
     );
 });
 
-/* -------------------------
-   STYLES
--------------------------- */
-
+/* STYLES */
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
@@ -329,7 +284,7 @@ const styles = StyleSheet.create({
     },
 
     topBar: {
-        paddingTop: 24, // SafeArea handles real top inset now
+        paddingTop: 45,
         paddingHorizontal: 20,
         paddingBottom: 24,
         borderBottomLeftRadius: 32,
@@ -343,7 +298,6 @@ const styles = StyleSheet.create({
         zIndex: 2,
     },
 
-    /* Header */
     headerRow: {
         flexDirection: "row",
         justifyContent: "space-between",
@@ -360,21 +314,13 @@ const styles = StyleSheet.create({
         borderRadius: 24,
     },
     greetingLabel: {
-        color: Colors.palette.muted,
+        color: Colors.palette.text,
         fontSize: 14,
     },
     greetingName: {
         color: Colors.light.text,
         fontSize: 18,
         fontWeight: "700",
-    },
-    heartBadge: {
-        width: 42,
-        height: 42,
-        borderRadius: 21,
-        backgroundColor: "rgba(255,255,255,0.08)",
-        alignItems: "center",
-        justifyContent: "center",
     },
 
     topPrompt: {
@@ -394,64 +340,16 @@ const styles = StyleSheet.create({
     scrollContent: {
         paddingHorizontal: 20,
         paddingTop: 32,
-        paddingBottom: 120, // supports gesture bar spacing
+        paddingBottom: 120,
         gap: 20,
     },
 
-    /* Hero */
-    heroCard: {
-        borderRadius: 28,
-        overflow: "hidden",
-    },
-    heroGradient: {
-        padding: 24,
-        borderRadius: 28,
-    },
-    heroContent: {
-        gap: 12,
-    },
-    heroLabel: {
-        color: Colors.palette.muted,
-        fontSize: 14,
-        letterSpacing: 1,
-        textTransform: "uppercase",
-    },
-    heroTitle: {
-        color: Colors.light.text,
-        fontSize: 26,
-        fontWeight: "800",
-    },
-    heroSubtitle: {
-        color: Colors.palette.muted,
-        fontSize: 15,
-        lineHeight: 22,
-    },
-    playButton: {
-        marginTop: 4,
-        flexDirection: "row",
-        alignItems: "center",
-        alignSelf: "flex-start",
-        gap: 8,
-        paddingHorizontal: 18,
-        paddingVertical: 10,
-        borderRadius: 999,
-        backgroundColor: "rgba(255,255,255,0.12)",
-    },
-    playButtonPressed: {
-        opacity: 0.8,
-    },
-    playLabel: {
-        color: Colors.light.text,
-        fontSize: 16,
-        fontWeight: "600",
-    },
-
-    /* Moods */
     sectionTitle: {
         color: Colors.light.text,
         fontSize: 20,
         fontWeight: "700",
     },
+
     moodGrid: {
         flexDirection: "row",
         flexWrap: "wrap",
@@ -485,11 +383,10 @@ const styles = StyleSheet.create({
         fontWeight: "700",
     },
     moodDescription: {
-        color: Colors.palette.muted,
+        color: Colors.palette.under_text,
         fontSize: 14,
     },
 
-    /* Continue Listening */
     sessionList: {
         gap: 14,
     },
@@ -520,11 +417,10 @@ const styles = StyleSheet.create({
         fontWeight: "600",
     },
     sessionMeta: {
-        color: Colors.palette.muted,
+        color: Colors.palette.under_text,
         marginTop: 4,
     },
 
-    /* Error screen */
     errorContainer: {
         flex: 1,
         backgroundColor: Colors.palette.background,

@@ -3,15 +3,15 @@ import { StyleSheet, Text, View } from "react-native";
 
 import Colors from "@/constants/colors";
 
-export default function PlayerScreen() {
+export default function FavoritesScreen() {
     useEffect(() => {
-        console.log("[PlayerScreen] mounted");
+        console.log("[FavoritesScreen] mounted");
     }, []);
 
     return (
-        <View style={styles.container} testID="player-screen">
-            <Text style={styles.title}>Player</Text>
-            <Text style={styles.subtitle}>Audio controls will live here.</Text>
+        <View style={styles.container} testID="favorites-screen">
+            <Text style={styles.title}>Favorites</Text>
+            <Text style={styles.subtitle}>Here will the favorites live soon.</Text>
         </View>
     );
 }

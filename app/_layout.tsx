@@ -4,19 +4,12 @@ import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
 const queryClient = new QueryClient();
-
-function RootLayoutNav() {
-    return (
-        <Stack screenOptions={{ headerBackTitle: "Back" }}>
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        </Stack>
-    );
-}
 
 export default function RootLayout() {
     useEffect(() => {
@@ -25,9 +18,22 @@ export default function RootLayout() {
 
     return (
         <QueryClientProvider client={queryClient}>
-            <GestureHandlerRootView>
-                <RootLayoutNav />
-            </GestureHandlerRootView>
+            <SafeAreaProvider>
+                <GestureHandlerRootView style={{ flex: 1 }}>
+                    <Stack screenOptions={{ headerShown: false }}>
+                        {/* Your main tab navigation */}
+                        <Stack.Screen name="(tabs)" />
+
+                        {/* Enable modal presentation for the modal folder */}
+                        <Stack.Screen
+                            name="(modal)"
+                            options={{
+                                animation: "slide_from_bottom",    // bottom slide animation
+                            }}
+                        />¢
+                    </Stack>
+                </GestureHandlerRootView>
+            </SafeAreaProvider>
         </QueryClientProvider>
     );
 }
