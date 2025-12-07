@@ -15,6 +15,10 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import Colors from "@/constants/colors";
 
+/* -------------------------
+   Types & Data
+-------------------------- */
+
 type MoodCard = {
     id: string;
     title: string;
