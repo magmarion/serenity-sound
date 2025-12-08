@@ -11,7 +11,7 @@ import {
     View,
 } from "react-native";
 import { Ionicons } from '@expo/vector-icons';
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import Colors from "@/constants/colors";
 
@@ -47,7 +47,7 @@ const MOOD_CARDS: MoodCard[] = [
 ];
 
 const CONTINUE_SESSIONS: Session[] = [
-    { id: "ocean", title: "Ocean Waves", duration: "45 min · Sleep", moodId: "sleep", category: "Sleep" },
+    { id: "ocean", title: "Ocean Waves", duration: "3 min · Sleep", moodId: "sleep", category: "Sleep" },
     { id: "wood", title: "Wood Burning", duration: "15 min · Focus", moodId: "focus", category: "Focus" },
     { id: "rain", title: "Heavy Rain", duration: "60 min · Sleep", moodId: "sleep", category: "Sleep" },
     { id: "fire", title: "Cracking Fire", duration: "10 min · Focus", moodId: "focus", category: "Focus" },
@@ -88,8 +88,6 @@ export default function HomeScreen() {
 
 /* MAIN CONTENT */
 function HomeContent() {
-    const insets = useSafeAreaInsets();
-
     const heroTilt = useRef(new Animated.ValueXY({ x: 0, y: 0 })).current;
 
     const resetHeroTilt = useCallback(() => {
@@ -127,7 +125,7 @@ function HomeContent() {
     }, []);
 
     return (
-        <View style={[styles.safeArea, { paddingTop: insets.top }]}>
+        <SafeAreaView style={styles.safeArea}>
             {/* Background */}
             <LinearGradient
                 colors={["#0B0F2E", "#05060A"]}
@@ -182,7 +180,7 @@ function HomeContent() {
                     ))}
                 </View>
             </ScrollView>
-        </View>
+        </SafeAreaView>
     );
 }
 
@@ -204,7 +202,6 @@ const MoodTile = React.memo(function MoodTile({ mood }: { mood: MoodCard }) {
     );
 });
 
-
 const SessionRow = React.memo(function SessionRow({
     session,
     mood,
@@ -222,7 +219,6 @@ const SessionRow = React.memo(function SessionRow({
                 },
             });
         } else {
-            // Gör inget för andra sessioner
             console.log("This session is not clickable yet:", session.title);
         }
     };

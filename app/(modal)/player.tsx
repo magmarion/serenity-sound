@@ -10,13 +10,13 @@ import { Clock3, Heart, Maximize2, Pause, Play, Repeat2, SkipBack, SkipForward, 
 import { Audio } from "expo-av";
 import Colors from "@/constants/colors";
 
-const TRACK_DURATION = 45 * 60; // sekunder
+const TRACK_DURATION = 3 * 60 + 17; // 3 min 17 sec
 const ART_URL =
   "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80";
 
 // Gratis regnljud från freesound.org (CC0 eller royalty-free)
 const RAIN_URL =
-  "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3";
+  "https://orangefreesounds.com/wp-content/uploads/2022/08/Rain-and-thunder-with-ocean-waves-sound-effect.mp3";
 
 export default function PlayerSheet() {
   const [isPlaying, setIsPlaying] = useState(true);
@@ -161,8 +161,8 @@ const lastRouteRef = useRef<"/" | "/player">("/"); // only allowed routes
             <SafeAreaView style={styles.safeArea}>
               <View style={styles.topSpacer} />
               <View style={styles.content}>
-                <Text style={styles.title}>Rain Sounds</Text>
-                <Text style={styles.subtitle}>45 min • Relaxing Rain</Text>
+                <Text style={styles.title}>Ocean Waves</Text>
+                <Text style={styles.subtitle}>3 min • Waves</Text>
 
                 <View style={styles.artWrapper}>
                   <Image source={ART_URL} style={styles.art} contentFit="cover" />
