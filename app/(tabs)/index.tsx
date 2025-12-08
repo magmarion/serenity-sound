@@ -10,14 +10,7 @@ import {
     Text,
     View,
 } from "react-native";
-import {
-    BatteryCharging,
-    Heart,
-    Moon,
-    Play,
-    Zap,
-    Droplets,
-} from "lucide-react-native";
+import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import Colors from "@/constants/colors";
@@ -32,7 +25,7 @@ type MoodCard = {
     description: string;
     gradient: [string, string];
     accent: string;
-    icon: React.ComponentType<{ color?: string; size?: number }>;
+    icon: keyof typeof Ionicons.glyphMap;
 };
 
 type Session = {
@@ -44,41 +37,13 @@ type Session = {
 };
 
 const avatarUri =
-    "https://images.unsplash.com/photo-1544723795-3fb6469f5b39?auto=format&fit=crop&w=200&q=80";
+    "https://img.freepik.com/free-vector/smiling-young-man-illustration_1308-174669.jpg?semt=ais_hybrid&w=740&q=80";
 
 const MOOD_CARDS: MoodCard[] = [
-    {
-        id: "focus",
-        title: "Focus",
-        description: "Sharpen your mind",
-        gradient: ["#3A1C09", "#1B1C37"],
-        accent: "#F78A2C",
-        icon: Zap,
-    },
-    {
-        id: "calm",
-        title: "Calm",
-        description: "Reduce stress",
-        gradient: ["#1E1B4A", "#1A1034"],
-        accent: "#8F7CFF",
-        icon: Droplets,
-    },
-    {
-        id: "sleep",
-        title: "Sleep",
-        description: "Drift off easily",
-        gradient: ["#0E1C36", "#081125"],
-        accent: "#6DA7FF",
-        icon: Moon,
-    },
-    {
-        id: "recharge",
-        title: "Recharge",
-        description: "Boost energy",
-        gradient: ["#0C1F1A", "#05100F"],
-        accent: "#4DE2C3",
-        icon: BatteryCharging,
-    },
+    { id: "focus", title: "Focus", description: "Sharpen your mind", gradient: ["#3A1C09", "#1B1C37"], accent: "#F78A2C", icon: "flash" },
+    { id: "calm", title: "Calm", description: "Reduce stress", gradient: ["#1E1B4A", "#1A1034"], accent: "#8F7CFF", icon: "water" },
+    { id: "sleep", title: "Sleep", description: "Drift off easily", gradient: ["#0E1C36", "#081125"], accent: "#6DA7FF", icon: "moon" },
+    { id: "recharge", title: "Recharge", description: "Boost energy", gradient: ["#0C1F1A", "#05100F"], accent: "#4DE2C3", icon: "battery-charging" },
 ];
 
 const CONTINUE_SESSIONS: Session[] = [
@@ -223,18 +188,14 @@ function HomeContent() {
 
 /* COMPONENTS */
 const MoodTile = React.memo(function MoodTile({ mood }: { mood: MoodCard }) {
-    const Icon = mood.icon;
-
     return (
         <Pressable
-            onPress={() => router.push("/(modal)/player")}
-            style={({ pressed }) => [
-                styles.moodTile,
-                pressed && styles.moodTilePressed,
-            ]}>
+            onPress={() => console.log("Mood tile pressed, but no modal opens yet.")}
+            style={({ pressed }) => [styles.moodTile, pressed && styles.moodTilePressed]}
+        >
             <LinearGradient colors={mood.gradient} style={styles.moodGradient}>
                 <View style={styles.moodIconWrap}>
-                    <Icon color={mood.accent} size={20} />
+                    <Ionicons name={mood.icon} size={20} color={mood.accent} />
                 </View>
                 <Text style={styles.moodTitle}>{mood.title}</Text>
                 <Text style={styles.moodDescription}>{mood.description}</Text>
@@ -243,6 +204,7 @@ const MoodTile = React.memo(function MoodTile({ mood }: { mood: MoodCard }) {
     );
 });
 
+
 const SessionRow = React.memo(function SessionRow({
     session,
     mood,
@@ -250,20 +212,28 @@ const SessionRow = React.memo(function SessionRow({
     session: Session;
     mood?: MoodCard;
 }) {
+    const handlePress = () => {
+        if (session.id === "ocean") {
+            // Endast Ocean Waves öppnar modal
+            router.push({
+                pathname: "/(modal)/player",
+                params: {
+                    soundUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+                },
+            });
+        } else {
+            // Gör inget för andra sessioner
+            console.log("This session is not clickable yet:", session.title);
+        }
+    };
+
     return (
         <Pressable
-            onPress={() => router.push("/(modal)/player")}
-            style={({ pressed }) => [
-                styles.sessionRow,
-                pressed && styles.sessionRowPressed,
-            ]}>
-            <View
-                style={[
-                    styles.sessionIconWrap,
-                    { backgroundColor: mood?.gradient[0] ?? Colors.palette.card },
-                ]}
-            >
-                <Play color={mood?.accent ?? Colors.light.text} size={18} />
+            onPress={handlePress}
+            style={({ pressed }) => [styles.sessionRow, pressed && styles.sessionRowPressed]}
+        >
+            <View style={[styles.sessionIconWrap, { backgroundColor: mood?.gradient[0] ?? Colors.palette.card }]}>
+                <Ionicons name="play" size={18} color={mood?.accent ?? Colors.light.text} />
             </View>
 
             <View style={styles.sessionTextBlock}>
@@ -271,7 +241,7 @@ const SessionRow = React.memo(function SessionRow({
                 <Text style={styles.sessionMeta}>{session.duration}</Text>
             </View>
 
-            <Heart color={Colors.palette.muted} size={20} />
+            <Ionicons name="heart" size={20} color={Colors.palette.muted} />
         </Pressable>
     );
 });
@@ -309,8 +279,8 @@ const styles = StyleSheet.create({
         gap: 12,
     },
     avatar: {
-        width: 48,
-        height: 48,
+        width: 52,
+        height: 52,
         borderRadius: 24,
     },
     greetingLabel: {
