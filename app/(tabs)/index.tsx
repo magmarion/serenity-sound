@@ -190,7 +190,7 @@ function HomeContent() {
 const MoodTile = React.memo(function MoodTile({ mood }: { mood: MoodCard }) {
     return (
         <Pressable
-            onPress={() => router.push("/(modal)/player")}
+            onPress={() => console.log("Mood tile pressed, but no modal opens yet.")}
             style={({ pressed }) => [styles.moodTile, pressed && styles.moodTilePressed]}
         >
             <LinearGradient colors={mood.gradient} style={styles.moodGradient}>
@@ -204,6 +204,7 @@ const MoodTile = React.memo(function MoodTile({ mood }: { mood: MoodCard }) {
     );
 });
 
+
 const SessionRow = React.memo(function SessionRow({
     session,
     mood,
@@ -211,9 +212,24 @@ const SessionRow = React.memo(function SessionRow({
     session: Session;
     mood?: MoodCard;
 }) {
+    const handlePress = () => {
+        if (session.id === "ocean") {
+            // Endast Ocean Waves öppnar modal
+            router.push({
+                pathname: "/(modal)/player",
+                params: {
+                    soundUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+                },
+            });
+        } else {
+            // Gör inget för andra sessioner
+            console.log("This session is not clickable yet:", session.title);
+        }
+    };
+
     return (
         <Pressable
-            onPress={() => router.push("/(modal)/player")}
+            onPress={handlePress}
             style={({ pressed }) => [styles.sessionRow, pressed && styles.sessionRowPressed]}
         >
             <View style={[styles.sessionIconWrap, { backgroundColor: mood?.gradient[0] ?? Colors.palette.card }]}>
