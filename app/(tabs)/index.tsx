@@ -1,9 +1,7 @@
 import { LinearGradient } from "expo-linear-gradient";
-import React, { useCallback, useEffect, useMemo, useRef } from "react";
+import React, { useMemo } from "react";
 import {
-    Animated,
     Image,
-    PanResponder,
     Pressable,
     ScrollView,
     StyleSheet,
@@ -31,27 +29,88 @@ type MoodCard = {
 type Session = {
     id: string;
     title: string;
-    duration: string;
+    durationLabel: string;
     moodId: string;
     category: string;
+    soundUrl: string;
 };
 
 const avatarUri =
     "https://img.freepik.com/free-vector/smiling-young-man-illustration_1308-174669.jpg?semt=ais_hybrid&w=740&q=80";
 
-const MOOD_CARDS: MoodCard[] = [
-    { id: "focus", title: "Focus", description: "Sharpen your mind", gradient: ["#3A1C09", "#1B1C37"], accent: "#F78A2C", icon: "flash" },
-    { id: "calm", title: "Calm", description: "Reduce stress", gradient: ["#1E1B4A", "#1A1034"], accent: "#8F7CFF", icon: "water" },
-    { id: "sleep", title: "Sleep", description: "Drift off easily", gradient: ["#0E1C36", "#081125"], accent: "#6DA7FF", icon: "moon" },
-    { id: "recharge", title: "Recharge", description: "Boost energy", gradient: ["#0C1F1A", "#05100F"], accent: "#4DE2C3", icon: "battery-charging" },
+// Using Ionicons from first code structure but with Ionicons names
+const MOODS: MoodCard[] = [
+    {
+        id: "focus",
+        title: "Focus",
+        description: "Sharpen your mind",
+        gradient: ["#3A1C09", "#1B1C37"],
+        accent: "#F78A2C",
+        icon: "flash",
+    },
+    {
+        id: "calm",
+        title: "Calm",
+        description: "Reduce stress",
+        gradient: ["#1E1B4A", "#1A1034"],
+        accent: "#8F7CFF",
+        icon: "water",
+    },
+    {
+        id: "sleep",
+        title: "Sleep",
+        description: "Drift off easily",
+        gradient: ["#0E1C36", "#081125"],
+        accent: "#6DA7FF",
+        icon: "moon",
+    },
+    {
+        id: "recharge",
+        title: "Recharge",
+        description: "Boost energy",
+        gradient: ["#0C1F1A", "#05100F"],
+        accent: "#4DE2C3",
+        icon: "battery-charging",
+    },
 ];
 
-const CONTINUE_SESSIONS: Session[] = [
-    { id: "ocean", title: "Ocean Waves", duration: "3 min · Sleep", moodId: "sleep", category: "Sleep" },
-    { id: "wood", title: "Wood Burning", duration: "15 min · Focus", moodId: "focus", category: "Focus" },
-    { id: "rain", title: "Heavy Rain", duration: "60 min · Sleep", moodId: "sleep", category: "Sleep" },
-    { id: "fire", title: "Cracking Fire", duration: "10 min · Focus", moodId: "focus", category: "Focus" },
+// Sessions with sound URLs from first code
+const SESSIONS: Session[] = [
+    {
+        id: "rain-hero",
+        title: "Rain Sounds",
+        durationLabel: "45 min • Relaxing Rain",
+        moodId: "sleep",
+        category: "Sleep",
+        soundUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+    },
+    {
+        id: "wood",
+        title: "Wood Burning",
+        durationLabel: "15 min • Focus",
+        moodId: "focus",
+        category: "Focus",
+        soundUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
+    },
+    {
+        id: "rain",
+        title: "Heavy Rain",
+        durationLabel: "60 min • Sleep",
+        moodId: "sleep",
+        category: "Sleep",
+        soundUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3",
+    },
+    {
+        id: "fire",
+        title: "Cracking Fire",
+        durationLabel: "10 min • Focus",
+        moodId: "focus",
+        category: "Focus",
+        soundUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3",
+    },
 ];
+
+const CONTINUE = SESSIONS.slice(1);
 
 /* ERROR BOUNDARY */
 class HomeErrorBoundary extends React.Component<
@@ -88,169 +147,152 @@ export default function HomeScreen() {
 
 /* MAIN CONTENT */
 function HomeContent() {
-    const heroTilt = useRef(new Animated.ValueXY({ x: 0, y: 0 })).current;
-
-    const resetHeroTilt = useCallback(() => {
-        Animated.spring(heroTilt, {
-            toValue: { x: 0, y: 0 },
-            useNativeDriver: true,
-            speed: 14,
-            bounciness: 8,
-        }).start();
-    }, [heroTilt]);
-
-    const panResponder = useRef(
-        PanResponder.create({
-            onStartShouldSetPanResponder: () => true,
-            onMoveShouldSetPanResponder: () => true,
-            onPanResponderMove: (_, gesture) => {
-                heroTilt.setValue({
-                    x: gesture.dx * 0.05,
-                    y: gesture.dy * 0.05,
-                });
-            },
-            onPanResponderRelease: resetHeroTilt,
-            onPanResponderTerminate: resetHeroTilt,
-        })
-    ).current;
-
     const moodMap = useMemo(() => {
         const m = new Map<string, MoodCard>();
-        MOOD_CARDS.forEach((card) => m.set(card.id, card));
+        MOODS.forEach((card) => m.set(card.id, card));
         return m;
     }, []);
 
-    useEffect(() => {
-        console.log("[HomeScreen] loaded moods + sessions");
-    }, []);
+    const openPlayerForSession = (session: Session) => {
+        router.push({
+            pathname: "/(modal)/player",
+            params: {
+                soundUrl: session.soundUrl,
+                title: session.title,
+                subtitle: session.durationLabel,
+            },
+        });
+    };
 
     return (
-        <SafeAreaView style={styles.safeArea}>
+        <View style={styles.container}>
             {/* Background */}
             <LinearGradient
                 colors={["#0B0F2E", "#05060A"]}
                 style={StyleSheet.absoluteFill}
             />
 
-            {/* HEADER */}
+            {/* EXTRA GRADIENT ABOVE HEADER - This extends to top */}
             <LinearGradient
-                colors={["#591A1B", "#0F172B", "#0B0E14"]}
-                locations={[0, 0.4, 1]}
-                style={styles.topBar}
-                testID="home-top-bar"
-            >
-                <View style={styles.headerRow}>
-                    <View style={styles.profileRow}>
-                        <Image source={{ uri: avatarUri }} style={styles.avatar} />
-                        <View>
-                            <Text style={styles.greetingLabel}>Good evening,</Text>
-                            <Text style={styles.greetingName}>John</Text>
+                colors={["#591A1B", "#591A1B"]} // Solid color matching header top
+                style={styles.topGradientExtension}
+            />
+
+            {/* HEADER - Keep it as is */}
+            <SafeAreaView style={styles.safeArea} edges={["top"]}>
+                <LinearGradient
+                    colors={["#591A1B", "#0F172B", "#0B0E14"]}
+                    locations={[0, 0.4, 1]}
+                    style={styles.topBar}
+                    testID="home-top-bar"
+                >
+                    <View style={styles.headerRow}>
+                        <View style={styles.profileRow}>
+                            <Image source={{ uri: avatarUri }} style={styles.avatar} />
+                            <View>
+                                <Text style={styles.greetingLabel}>Good evening,</Text>
+                                <Text style={styles.greetingName}>John</Text>
+                            </View>
                         </View>
                     </View>
-                </View>
 
-                <Text style={styles.topPrompt}>
-                    How do you want <Text style={styles.titlePrompt}>to feel today?</Text>
-                </Text>
-            </LinearGradient>
+                    <Text style={styles.topPrompt}>
+                        How do you want <Text style={styles.titlePrompt}>to feel today?</Text>
+                    </Text>
+                </LinearGradient>
+            </SafeAreaView>
 
-            {/* SCROLL AREA */}
+            {/* SCROLL AREA - Content starts below header */}
             <ScrollView
                 style={styles.scrollArea}
                 contentContainerStyle={styles.scrollContent}
                 showsVerticalScrollIndicator={false}
             >
+                {/* MOODS SECTION */}
                 <Text style={styles.sectionTitle}>Moods</Text>
-
                 <View style={styles.moodGrid}>
-                    {MOOD_CARDS.map((mood) => (
-                        <MoodTile key={mood.id} mood={mood} />
+                    {MOODS.map((mood) => (
+                        <View key={mood.id} style={styles.moodTile}>
+                            <LinearGradient
+                                colors={mood.gradient}
+                                style={styles.moodGradient}
+                            >
+                                <View style={styles.moodIconWrap}>
+                                    <Ionicons name={mood.icon} color={mood.accent} size={20} />
+                                </View>
+                                <Text style={styles.moodTitle}>{mood.title}</Text>
+                                <Text style={styles.moodDescription}>
+                                    {mood.description}
+                                </Text>
+                            </LinearGradient>
+                        </View>
                     ))}
                 </View>
 
+                {/* CONTINUE LISTENING SECTION */}
                 <Text style={styles.sectionTitle}>Continue Listening</Text>
-
                 <View style={styles.sessionList}>
-                    {CONTINUE_SESSIONS.map((session) => (
-                        <SessionRow
-                            key={session.id}
-                            session={session}
-                            mood={moodMap.get(session.moodId)}
-                        />
-                    ))}
+                    {CONTINUE.map((session) => {
+                        const mood = moodMap.get(session.moodId);
+                        return (
+                            <Pressable
+                                key={session.id}
+                                style={styles.sessionRow}
+                                onPress={() => openPlayerForSession(session)}
+                            >
+                                <View
+                                    style={[
+                                        styles.sessionIconWrap,
+                                        { backgroundColor: mood?.gradient[0] ?? Colors.palette.card },
+                                    ]}
+                                >
+                                    <Ionicons
+                                        name="play"
+                                        color={mood?.accent ?? Colors.light.text}
+                                        size={18}
+                                    />
+                                </View>
+
+                                <View style={styles.sessionText}>
+                                    <Text style={styles.sessionTitle}>{session.title}</Text>
+                                    <Text style={styles.sessionMeta}>
+                                        {session.durationLabel}
+                                    </Text>
+                                </View>
+
+                                <Ionicons name="heart-outline" color={Colors.palette.muted} size={18} />
+                            </Pressable>
+                        );
+                    })}
                 </View>
             </ScrollView>
-        </SafeAreaView>
+        </View>
     );
 }
 
-/* COMPONENTS */
-const MoodTile = React.memo(function MoodTile({ mood }: { mood: MoodCard }) {
-    return (
-        <Pressable
-            onPress={() => console.log("Mood tile pressed, but no modal opens yet.")}
-            style={({ pressed }) => [styles.moodTile, pressed && styles.moodTilePressed]}
-        >
-            <LinearGradient colors={mood.gradient} style={styles.moodGradient}>
-                <View style={styles.moodIconWrap}>
-                    <Ionicons name={mood.icon} size={20} color={mood.accent} />
-                </View>
-                <Text style={styles.moodTitle}>{mood.title}</Text>
-                <Text style={styles.moodDescription}>{mood.description}</Text>
-            </LinearGradient>
-        </Pressable>
-    );
-});
-
-const SessionRow = React.memo(function SessionRow({
-    session,
-    mood,
-}: {
-    session: Session;
-    mood?: MoodCard;
-}) {
-    const handlePress = () => {
-        if (session.id === "ocean") {
-            // Endast Ocean Waves öppnar modal
-            router.push({
-                pathname: "/(modal)/player",
-                params: {
-                    soundUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
-                },
-            });
-        } else {
-            console.log("This session is not clickable yet:", session.title);
-        }
-    };
-
-    return (
-        <Pressable
-            onPress={handlePress}
-            style={({ pressed }) => [styles.sessionRow, pressed && styles.sessionRowPressed]}
-        >
-            <View style={[styles.sessionIconWrap, { backgroundColor: mood?.gradient[0] ?? Colors.palette.card }]}>
-                <Ionicons name="play" size={18} color={mood?.accent ?? Colors.light.text} />
-            </View>
-
-            <View style={styles.sessionTextBlock}>
-                <Text style={styles.sessionTitle}>{session.title}</Text>
-                <Text style={styles.sessionMeta}>{session.duration}</Text>
-            </View>
-
-            <Ionicons name="heart" size={20} color={Colors.palette.muted} />
-        </Pressable>
-    );
-});
-
 /* STYLES */
 const styles = StyleSheet.create({
-    safeArea: {
+    container: {
         flex: 1,
-        backgroundColor: Colors.palette.background,
     },
 
+    /* EXTRA GRADIENT ABOVE HEADER */
+    topGradientExtension: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: 100, // Extends above the header
+        zIndex: 1,
+    },
+
+    safeArea: {
+        zIndex: 2,
+    },
+
+    /* HEADER - Keep original positioning */
     topBar: {
-        paddingTop: 45,
+        paddingTop: 20, // Original padding
         paddingHorizontal: 20,
         paddingBottom: 24,
         borderBottomLeftRadius: 32,
@@ -261,7 +303,11 @@ const styles = StyleSheet.create({
         shadowRadius: 24,
         shadowOffset: { width: 0, height: 18 },
         elevation: 24,
-        zIndex: 2,
+    },
+
+    scrollArea: {
+        flex: 1,
+        marginTop: 0, // No margin - scroll starts below header
     },
 
     headerRow: {
@@ -300,22 +346,19 @@ const styles = StyleSheet.create({
         color: Colors.palette.accent,
     },
 
-    scrollArea: {
-        flex: 1,
-    },
     scrollContent: {
         paddingHorizontal: 20,
-        paddingTop: 32,
         paddingBottom: 120,
+        paddingTop: 20, // Small padding from header
         gap: 20,
     },
 
+    /* MOODS SECTION */
     sectionTitle: {
         color: Colors.light.text,
         fontSize: 20,
         fontWeight: "700",
     },
-
     moodGrid: {
         flexDirection: "row",
         flexWrap: "wrap",
@@ -327,45 +370,40 @@ const styles = StyleSheet.create({
         borderRadius: 24,
         overflow: "hidden",
     },
-    moodTilePressed: {
-        transform: [{ scale: 0.98 }],
-    },
     moodGradient: {
-        padding: 20,
         borderRadius: 24,
-        gap: 10,
+        padding: 16,
+        gap: 8,
     },
     moodIconWrap: {
         width: 34,
         height: 34,
         borderRadius: 17,
-        backgroundColor: "rgba(255,255,255,0.1)",
+        backgroundColor: "rgba(255,255,255,0.12)",
         alignItems: "center",
         justifyContent: "center",
     },
     moodTitle: {
         color: Colors.light.text,
-        fontSize: 18,
+        fontSize: 16,
         fontWeight: "700",
     },
     moodDescription: {
         color: Colors.palette.under_text,
-        fontSize: 14,
+        fontSize: 13,
     },
 
+    /* SESSION LIST */
     sessionList: {
-        gap: 14,
+        gap: 12,
     },
     sessionRow: {
         backgroundColor: Colors.palette.surface,
         borderRadius: 20,
-        padding: 18,
+        padding: 14,
         flexDirection: "row",
         alignItems: "center",
-        gap: 14,
-    },
-    sessionRowPressed: {
-        opacity: 0.85,
+        gap: 12,
     },
     sessionIconWrap: {
         width: 48,
@@ -374,7 +412,7 @@ const styles = StyleSheet.create({
         alignItems: "center",
         justifyContent: "center",
     },
-    sessionTextBlock: {
+    sessionText: {
         flex: 1,
     },
     sessionTitle: {
@@ -383,8 +421,9 @@ const styles = StyleSheet.create({
         fontWeight: "600",
     },
     sessionMeta: {
-        color: Colors.palette.under_text,
-        marginTop: 4,
+        color: Colors.palette.muted,
+        fontSize: 13,
+        marginTop: 2,
     },
 
     errorContainer: {
