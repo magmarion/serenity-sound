@@ -32,7 +32,6 @@ type Session = {
     durationLabel: string;
     moodId: string;
     category: string;
-    soundUrl: string;
 };
 
 const avatarUri =
@@ -82,7 +81,6 @@ const SESSIONS: Session[] = [
         durationLabel: "3 min 17 sec • Sleep",
         moodId: "sleep",
         category: "Sleep",
-        soundUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
     },
     {
         id: "wood",
@@ -90,7 +88,6 @@ const SESSIONS: Session[] = [
         durationLabel: "15 min • Focus",
         moodId: "focus",
         category: "Focus",
-        soundUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
     },
     {
         id: "rain",
@@ -98,7 +95,6 @@ const SESSIONS: Session[] = [
         durationLabel: "60 min • Sleep",
         moodId: "sleep",
         category: "Sleep",
-        soundUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3",
     },
     {
         id: "fire",
@@ -106,7 +102,6 @@ const SESSIONS: Session[] = [
         durationLabel: "10 min • Focus",
         moodId: "focus",
         category: "Focus",
-        soundUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3",
     },
 ];
 
@@ -157,7 +152,6 @@ function HomeContent() {
             router.push({
                 pathname: "/(modal)/player",
                 params: {
-                    soundUrl: session.soundUrl,
                     title: session.title,
                     subtitle: session.durationLabel,
                 },
