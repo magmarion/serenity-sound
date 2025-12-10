@@ -226,46 +226,41 @@ function HomeContent() {
                         </View>
                     ))}
                 </View>
-
                 {/* CONTINUE LISTENING SECTION - WITH CONTAINER PRESS ANIMATION */}
                 <Text style={styles.sectionTitle}>Continue Listening</Text>
                 <View style={styles.sessionList}>
                     {SESSIONS.map((session) => {
                         const mood = moodMap.get(session.moodId);
                         return (
-                            <Pressable
-                                key={session.id}
-                                onPress={() => openPlayerForSession(session)}
-                            >
-                                {({ pressed }) => (
-                                    <View style={[
-                                        styles.sessionRow,
-                                        pressed && { backgroundColor: 'rgba(255, 255, 255, 0.08)' }
-                                    ]}>
-                                        <View
-                                            style={[
-                                                styles.sessionIconWrap,
-                                                { backgroundColor: mood?.gradient[0] ?? Colors.palette.card },
-                                            ]}
-                                        >
+                            <View key={session.id} style={styles.sessionRow}>
+                                {/* Make ONLY the icon pressable */}
+                                <Pressable
+                                    onPress={() => openPlayerForSession(session)}
+                                >
+                                    {({ pressed }) => (
+                                        <View style={[
+                                            styles.sessionIconWrap,
+                                            { backgroundColor: mood?.gradient[0] ?? Colors.palette.card },
+                                            pressed && { opacity: 0.8 }
+                                        ]}>
                                             <Ionicons
                                                 name="play"
                                                 color={mood?.accent ?? Colors.light.text}
                                                 size={18}
                                             />
                                         </View>
+                                    )}
+                                </Pressable>
 
-                                        <View style={styles.sessionText}>
-                                            <Text style={styles.sessionTitle}>{session.title}</Text>
-                                            <Text style={styles.sessionMeta}>
-                                                {session.durationLabel}
-                                            </Text>
-                                        </View>
+                                <View style={styles.sessionText}>
+                                    <Text style={styles.sessionTitle}>{session.title}</Text>
+                                    <Text style={styles.sessionMeta}>
+                                        {session.durationLabel}
+                                    </Text>
+                                </View>
 
-                                        <Ionicons name="heart-outline" color={Colors.palette.muted} size={18} />
-                                    </View>
-                                )}
-                            </Pressable>
+                                <Ionicons name="heart-outline" color={Colors.palette.muted} size={18} />
+                            </View>
                         );
                     })}
                 </View>
