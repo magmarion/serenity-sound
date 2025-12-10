@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Animated, Dimensions, PanResponder, Pressable, StyleSheet, Text, View } from "react-native";
 import BottomSheet, { BottomSheetBackdrop, BottomSheetView } from "@gorhom/bottom-sheet";
 import { router, useLocalSearchParams } from "expo-router";
-import { Clock3, Heart, Pause, Play, Repeat2, Shuffle, SkipBack, SkipForward } from "lucide-react-native";
+import { Ionicons } from '@expo/vector-icons';
 import { Audio } from "expo-av";
 import Colors from "@/constants/colors";
 
@@ -17,7 +17,7 @@ const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 export default function PlayerSheet() {
   const params = useLocalSearchParams();
   const soundUrl = (params.soundUrl as string) || DEFAULT_SOUND_URL;
-  const title = (params.title as string) || "Ocean Waves";
+  const title = (params.title as string) || "Ohsjccean Waves";
   const subtitle = (params.subtitle as string) || "3 min • Waves";
 
   const [isPlaying, setIsPlaying] = useState(true);
@@ -270,7 +270,7 @@ export default function PlayerSheet() {
                         styles.iconButton,
                         pressed && styles.iconButtonPressed
                       ]}>
-                        <Repeat2 color={Colors.light.tabIconDefault} size={24} />
+                        <Ionicons name="repeat" color={Colors.light.tabIconDefault} size={24} />
                         <Text style={styles.iconLabel}>Repeat</Text>
                       </View>
                     )}
@@ -282,7 +282,7 @@ export default function PlayerSheet() {
                         styles.skipButton,
                         pressed && styles.skipButtonPressed
                       ]}>
-                        <SkipBack color={Colors.light.text} size={28} />
+                        <Ionicons name="play-skip-back" color={Colors.light.text} size={28} />
                       </View>
                     )}
                   </Pressable>
@@ -294,9 +294,9 @@ export default function PlayerSheet() {
                         pressed && styles.playButtonPressed
                       ]}>
                         {isPlaying ? (
-                          <Pause color={Colors.light.surface} size={32} />
+                          <Ionicons name="pause" color={Colors.light.surface} size={32} />
                         ) : (
-                          <Play color={Colors.light.surface} size={32} />
+                          <Ionicons name="play" color={Colors.light.surface} size={32} />
                         )}
                       </View>
                     )}
@@ -308,7 +308,7 @@ export default function PlayerSheet() {
                         styles.skipButton,
                         pressed && styles.skipButtonPressed
                       ]}>
-                        <SkipForward color={Colors.light.text} size={28} />
+                        <Ionicons name="play-skip-forward" color={Colors.light.text} size={28} />
                       </View>
                     )}
                   </Pressable>
@@ -319,7 +319,7 @@ export default function PlayerSheet() {
                         styles.iconButton,
                         pressed && styles.iconButtonPressed
                       ]}>
-                        <Shuffle color={Colors.light.tabIconDefault} size={24} />
+                        <Ionicons name="shuffle" color={Colors.light.tabIconDefault} size={24} />
                         <Text style={styles.iconLabel}>Shuffle</Text>
                       </View>
                     )}
@@ -336,10 +336,10 @@ export default function PlayerSheet() {
                         pressed && styles.actionButtonPressed,
                         isFavorite && styles.actionButtonActive
                       ]}>
-                        <Heart
-                          color={isFavorite ? Colors.light.accent : Colors.light.text}
+                        <Ionicons
+                          name={isFavorite ? "heart" : "heart-outline"}
+                          color={isFavorite ? Colors.light.favorited : Colors.light.text}
                           size={18}
-                          strokeWidth={2.5}
                         />
                         <Text style={[
                           styles.actionLabel,
@@ -360,10 +360,10 @@ export default function PlayerSheet() {
                         pressed && styles.actionButtonPressed,
                         sleepTimer && styles.actionButtonActive
                       ]}>
-                        <Clock3
+                        <Ionicons
+                          name="time-outline"
                           color={sleepTimer ? Colors.light.accent : Colors.light.text}
                           size={18}
-                          strokeWidth={2.5}
                         />
                         <Text style={[
                           styles.actionLabel,

@@ -1,5 +1,9 @@
+import Colors from "@/constants/colors";
+import * as Haptics from "expo-haptics";
+import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from "expo-linear-gradient";
-import React, { useMemo } from "react";
+import { router } from "expo-router";
+import React, { useMemo, useState } from "react";
 import {
     Image,
     Pressable,
@@ -8,10 +12,7 @@ import {
     Text,
     View,
 } from "react-native";
-import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from "react-native-safe-area-context";
-import { router } from "expo-router";
-import Colors from "@/constants/colors";
 
 /* -------------------------
    Types & Data
@@ -146,6 +147,8 @@ function HomeContent() {
         return m;
     }, []);
 
+    const [isFavorite, setFavorites] = useState<Record<string, boolean>>({});
+
     const openPlayerForSession = (session: Session) => {
         // Only Ocean Waves opens the player for now
         if (session.id === "ocean") {
@@ -160,6 +163,14 @@ function HomeContent() {
             // Other sessions do nothing (or you can add console.log)
             console.log(`Session "${session.title}" is not clickable yet.`);
         }
+    };
+
+    const toggleFavorite = async (sessionId: string) => {
+        await Haptics.selectionAsync(); // ← ADD HAPTIC FEEDBACK
+        setFavorites(prev => ({
+            ...prev,
+            [sessionId]: !prev[sessionId]
+        }));
     };
 
     return (
@@ -226,11 +237,14 @@ function HomeContent() {
                         </View>
                     ))}
                 </View>
-                {/* CONTINUE LISTENING SECTION - WITH CONTAINER PRESS ANIMATION */}
+
+                {/* CONTINUE LISTENING SECTION */}
                 <Text style={styles.sectionTitle}>Continue Listening</Text>
                 <View style={styles.sessionList}>
                     {SESSIONS.map((session) => {
                         const mood = moodMap.get(session.moodId);
+                        const sessionIsFavorite = isFavorite[session.id] || false; // Check favorite status for THIS session
+
                         return (
                             <View key={session.id} style={styles.sessionRow}>
                                 {/* Make ONLY the icon pressable */}
@@ -259,7 +273,25 @@ function HomeContent() {
                                     </Text>
                                 </View>
 
-                                <Ionicons name="heart-outline" color={Colors.palette.muted} size={18} />
+                                {/* Heart icon - pressable for favorites */}
+                                <Pressable
+                                    onPress={() => toggleFavorite(session.id)}
+                                >
+                                    {({ pressed }) => (
+                                        <View style={[
+                                            styles.sessionHeartButton,
+                                            sessionIsFavorite && styles.sessionHeartButtonFavorited,
+                                            // Add pressed state styling directly
+                                            pressed && { transform: [{ scale: 0.9 }], opacity: 0.8 }
+                                        ]}>
+                                            <Ionicons
+                                                name={sessionIsFavorite ? "heart" : "heart-outline"}
+                                                color={sessionIsFavorite ? Colors.light.favorited : Colors.palette.muted}
+                                                size={24}
+                                            />
+                                        </View>
+                                    )}
+                                </Pressable>
                             </View>
                         );
                     })}
@@ -405,8 +437,8 @@ const styles = StyleSheet.create({
         gap: 12,
     },
     sessionIconWrap: {
-        width: 48,
-        height: 48,
+        width: 60,
+        height: 50,
         borderRadius: 16,
         alignItems: "center",
         justifyContent: "center",
@@ -423,6 +455,22 @@ const styles = StyleSheet.create({
         color: Colors.palette.muted,
         fontSize: 13,
         marginTop: 2,
+    },
+    sessionHeartButton: {
+        padding: 8,
+        marginRight: 4,
+        borderRadius: 20,
+        width: 40,
+        height: 40,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    sessionHeartButtonFavorited: {
+        shadowColor: Colors.light.favorited,
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.6,
+        shadowRadius: 10,
+        elevation: 6,
     },
 
     errorContainer: {
