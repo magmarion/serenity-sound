@@ -19,7 +19,7 @@ export default {
   light: {
     text: "#FFFFFF",
     background: "#05060A",
-    tint: accent,
+    accent: accent,
     tabIconDefault: "#4D4F69",
     tabIconSelected: accent,
     surface: charcoal,
