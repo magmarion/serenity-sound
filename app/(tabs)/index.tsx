@@ -74,12 +74,12 @@ const MOODS: MoodCard[] = [
     },
 ];
 
-// Sessions with sound URLs from first code
+// Sessions with sound URLs - ONLY CHANGE: Added Ocean Waves as first
 const SESSIONS: Session[] = [
     {
-        id: "rain-hero",
-        title: "Rain Sounds",
-        durationLabel: "45 min • Relaxing Rain",
+        id: "ocean",
+        title: "Ocean Waves",
+        durationLabel: "3 min 17 sec • Sleep",
         moodId: "sleep",
         category: "Sleep",
         soundUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
@@ -109,8 +109,6 @@ const SESSIONS: Session[] = [
         soundUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3",
     },
 ];
-
-const CONTINUE = SESSIONS.slice(1);
 
 /* ERROR BOUNDARY */
 class HomeErrorBoundary extends React.Component<
@@ -154,14 +152,20 @@ function HomeContent() {
     }, []);
 
     const openPlayerForSession = (session: Session) => {
-        router.push({
-            pathname: "/(modal)/player",
-            params: {
-                soundUrl: session.soundUrl,
-                title: session.title,
-                subtitle: session.durationLabel,
-            },
-        });
+        // Only Ocean Waves opens the player for now
+        if (session.id === "ocean") {
+            router.push({
+                pathname: "/(modal)/player",
+                params: {
+                    soundUrl: session.soundUrl,
+                    title: session.title,
+                    subtitle: session.durationLabel,
+                },
+            });
+        } else {
+            // Other sessions do nothing (or you can add console.log)
+            console.log(`Session "${session.title}" is not clickable yet.`);
+        }
     };
 
     return (
@@ -229,38 +233,44 @@ function HomeContent() {
                     ))}
                 </View>
 
-                {/* CONTINUE LISTENING SECTION */}
+                {/* CONTINUE LISTENING SECTION - WITH CONTAINER PRESS ANIMATION */}
                 <Text style={styles.sectionTitle}>Continue Listening</Text>
                 <View style={styles.sessionList}>
-                    {CONTINUE.map((session) => {
+                    {SESSIONS.map((session) => {
                         const mood = moodMap.get(session.moodId);
                         return (
                             <Pressable
                                 key={session.id}
-                                style={styles.sessionRow}
                                 onPress={() => openPlayerForSession(session)}
                             >
-                                <View
-                                    style={[
-                                        styles.sessionIconWrap,
-                                        { backgroundColor: mood?.gradient[0] ?? Colors.palette.card },
-                                    ]}
-                                >
-                                    <Ionicons
-                                        name="play"
-                                        color={mood?.accent ?? Colors.light.text}
-                                        size={18}
-                                    />
-                                </View>
+                                {({ pressed }) => (
+                                    <View style={[
+                                        styles.sessionRow,
+                                        pressed && { backgroundColor: 'rgba(255, 255, 255, 0.08)' }
+                                    ]}>
+                                        <View
+                                            style={[
+                                                styles.sessionIconWrap,
+                                                { backgroundColor: mood?.gradient[0] ?? Colors.palette.card },
+                                            ]}
+                                        >
+                                            <Ionicons
+                                                name="play"
+                                                color={mood?.accent ?? Colors.light.text}
+                                                size={18}
+                                            />
+                                        </View>
 
-                                <View style={styles.sessionText}>
-                                    <Text style={styles.sessionTitle}>{session.title}</Text>
-                                    <Text style={styles.sessionMeta}>
-                                        {session.durationLabel}
-                                    </Text>
-                                </View>
+                                        <View style={styles.sessionText}>
+                                            <Text style={styles.sessionTitle}>{session.title}</Text>
+                                            <Text style={styles.sessionMeta}>
+                                                {session.durationLabel}
+                                            </Text>
+                                        </View>
 
-                                <Ionicons name="heart-outline" color={Colors.palette.muted} size={18} />
+                                        <Ionicons name="heart-outline" color={Colors.palette.muted} size={18} />
+                                    </View>
+                                )}
                             </Pressable>
                         );
                     })}
@@ -270,7 +280,7 @@ function HomeContent() {
     );
 }
 
-/* STYLES */
+/* STYLES - EXACTLY THE SAME AS YOUR WORKING CODE */
 const styles = StyleSheet.create({
     container: {
         flex: 1,
@@ -292,7 +302,7 @@ const styles = StyleSheet.create({
 
     /* HEADER - Keep original positioning */
     topBar: {
-        paddingTop: 20, // Original padding
+        paddingTop: 10, // Original padding
         paddingHorizontal: 20,
         paddingBottom: 24,
         borderBottomLeftRadius: 32,

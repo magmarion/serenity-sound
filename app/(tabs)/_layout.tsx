@@ -10,14 +10,17 @@ export default function TabLayout() {
         headerShown: false,
         tabBarStyle: {
           backgroundColor: Colors.palette.surface,
-          borderTopColor: "transparent",
-          height: 74,
+          borderTopColor: "#FF8743",
+          height: 99,
+          paddingTop: 8, // Add padding at the top of the tab bar
+          paddingBottom: 30, // Add padding at the bottom for safe area
         },
         tabBarActiveTintColor: Colors.light.tabIconSelected,
         tabBarInactiveTintColor: Colors.light.tabIconDefault,
         tabBarLabelStyle: {
           fontSize: 12,
           fontWeight: "600",
+          marginTop: 4,
         },
       }}
     >
