@@ -1,5 +1,5 @@
 import Colors from "@/constants/colors";
-import { fetchSounds } from "@/services/api";
+import { fetchSoundEffects } from "@/services/api";
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
@@ -164,26 +164,57 @@ function HomeContent() {
         loadSessions();
     }, []);
 
+    // Inside your HomeContent component, find the loadSessions function:
+    // Fetch sounds for a specific mood
     const loadSessions = async () => {
         try {
             setLoading(true);
             setError(null);
 
-            // Call WITHOUT query parameters - just get popular tracks
-            const fetchedSessions = await fetchSounds();
+            // Option 1: Fetch all sounds
+            const fetchedSessions = await fetchSoundEffects();
+
+            // Option 2: Fetch for specific mood
+            // const fetchedSessions = await fetchSoundEffects('sleep');
+            // const fetchedSessions = await fetchSoundEffects('focus');
 
             if (fetchedSessions.length > 0) {
                 setSessions(fetchedSessions);
-                console.log('Successfully loaded', fetchedSessions.length, 'sessions');
             } else {
-                // Fallback to hardcoded sessions if API returns empty
                 setSessions(SESSIONS);
-                setError('Using sample sounds (API returned no results)');
+                setError('Using sample sounds');
             }
         } catch (err) {
-            console.error('Error loading sessions:', err);
-            setError('Failed to load sounds. Using sample sounds.');
-            setSessions(SESSIONS); // Fallback to hardcoded
+            console.error('Error:', err);
+            setSessions(SESSIONS);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // In your HomeContent component, add this function:
+    const handleMoodPress = async (moodId: string) => {
+        console.log(`Fetching sounds for mood: ${moodId}`);
+
+        try {
+            setLoading(true);
+            setError(`Loading ${moodId} sounds...`);
+
+            // Fetch sounds specifically for this mood
+            const moodSessions = await fetchSoundEffects(moodId);
+
+            if (moodSessions.length > 0) {
+                setSessions(moodSessions);
+                console.log(`Loaded ${moodSessions.length} ${moodId} sounds`);
+            } else {
+                // Fallback to showing all sounds
+                const allSessions = await fetchSoundEffects();
+                setSessions(allSessions);
+                setError(`No ${moodId} sounds found. Showing all sounds.`);
+            }
+        } catch (err) {
+            console.error(`Error loading ${moodId} sounds:`, err);
+            setError('Failed to load sounds. Try again.');
         } finally {
             setLoading(false);
         }
