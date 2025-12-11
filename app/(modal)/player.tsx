@@ -1,57 +1,87 @@
 import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode, } from "react";
-import { Animated, PanResponder, Pressable, StyleSheet, Text, View, } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import BottomSheet, { BottomSheetBackdrop, BottomSheetView, } from "@gorhom/bottom-sheet";
-import { router } from "expo-router";
-import { Clock3, Heart, Maximize2, Pause, Play, Repeat2, SkipBack, SkipForward, } from "lucide-react-native";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Animated, Dimensions, PanResponder, Pressable, StyleSheet, Text, View } from "react-native";
+import BottomSheet, { BottomSheetBackdrop, BottomSheetView } from "@gorhom/bottom-sheet";
+import { router, useLocalSearchParams } from "expo-router";
+import { Ionicons } from '@expo/vector-icons';
 import { Audio } from "expo-av";
 import Colors from "@/constants/colors";
 
-const TRACK_DURATION = 45 * 60; // sekunder
-const ART_URL =
-  "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80";
+const ART_URL = "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80";
+const DEFAULT_SOUND_URL = "https://orangefreesounds.com/wp-content/uploads/2022/08/Rain-and-thunder-with-ocean-waves-sound-effect.mp3";
 
-// Gratis regnljud från freesound.org (CC0 eller royalty-free)
-const RAIN_URL =
-  "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3";
+const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 export default function PlayerSheet() {
+  const params = useLocalSearchParams();
+  const soundUrl = (params.soundUrl as string) || DEFAULT_SOUND_URL;
+  const title = (params.title as string) || "Ohsjccean Waves";
+  const subtitle = (params.subtitle as string) || "3 min • Waves";
+
   const [isPlaying, setIsPlaying] = useState(true);
   const [isFavorite, setIsFavorite] = useState(false);
   const [sleepTimer, setSleepTimer] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [trackDuration, setTrackDuration] = useState(197);
   const [sliderWidth, setSliderWidth] = useState(0);
   const [sound, setSound] = useState<Audio.Sound | null>(null);
 
-const lastRouteRef = useRef<"/" | "/player">("/"); // only allowed routes
+  useEffect(() => {
+    const match = subtitle.match(/(\d+)\s*min/);
+    if (match) {
+      const minutes = parseInt(match[1]);
+      const secondsMatch = subtitle.match(/(\d+)\s*sec/);
+      const seconds = secondsMatch ? parseInt(secondsMatch[1]) : 0;
+      setTrackDuration(minutes * 60 + seconds);
+    }
+  }, [subtitle]);
 
-  // Load sound from URL
   useEffect(() => {
     let mounted = true;
     let player: Audio.Sound;
 
     const loadSound = async () => {
       try {
-        const { sound: loadedSound, status } = await Audio.Sound.createAsync(
-          { uri: RAIN_URL },
-          { shouldPlay: false } // start paused
+        console.log("Loading sound from:", soundUrl);
+
+        if (sound) {
+          await sound.unloadAsync();
+        }
+
+        const { sound: loadedSound } = await Audio.Sound.createAsync(
+          { uri: soundUrl },
+          { shouldPlay: true }
         );
 
-        player = loadedSound;
-        if (!mounted) return;
+        if (!mounted) {
+          loadedSound.unloadAsync();
+          return;
+        }
 
+        player = loadedSound;
         setSound(player);
-        setProgress(0);
+
+        const status = await loadedSound.getStatusAsync();
+        if (status.isLoaded && status.durationMillis) {
+          setTrackDuration(status.durationMillis / 1000);
+        }
 
         loadedSound.setOnPlaybackStatusUpdate((status) => {
+          if (!mounted) return;
+
           if (status.isLoaded) {
             setProgress(status.positionMillis / 1000);
             setIsPlaying(status.isPlaying);
+
+            if (status.didJustFinish) {
+              loadedSound.setPositionAsync(0);
+              loadedSound.pauseAsync();
+            }
           }
         });
+
       } catch (err) {
         console.error("Error loading sound:", err);
       }
@@ -61,22 +91,31 @@ const lastRouteRef = useRef<"/" | "/player">("/"); // only allowed routes
 
     return () => {
       mounted = false;
-      if (player) player.unloadAsync();
+      if (player) {
+        player.setOnPlaybackStatusUpdate(null);
+        player.unloadAsync();
+      }
     };
-  }, []);
+  }, [soundUrl]);
 
-
-  // BottomSheet
   const sheetRef = useRef<BottomSheet>(null);
-  const snapPoints = useMemo(() => ["100%"], []);
+  const snapPoints = useMemo(() => [SCREEN_HEIGHT * 0.92], []);
 
   const handleClose = useCallback(() => {
-    router.replace(lastRouteRef.current); // go to last route
-  }, []);
+    if (sound) {
+      sound.pauseAsync();
+    }
+    router.back();
+  }, [sound]);
 
   const renderBackdrop = useCallback(
     (props: any) => (
-      <BottomSheetBackdrop {...props} disappearsOnIndex={-1} appearsOnIndex={0} opacity={0.7} />
+      <BottomSheetBackdrop
+        {...props}
+        disappearsOnIndex={-1}
+        appearsOnIndex={0}
+        opacity={0.7}
+      />
     ),
     []
   );
@@ -84,30 +123,32 @@ const lastRouteRef = useRef<"/" | "/player">("/"); // only allowed routes
   const progressAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    Animated.timing(progressAnim, {
-      toValue: progress / TRACK_DURATION,
-      duration: 240,
-      useNativeDriver: false,
-    }).start();
-  }, [progress, progressAnim]);
+    if (trackDuration > 0) {
+      Animated.timing(progressAnim, {
+        toValue: progress / trackDuration,
+        duration: 240,
+        useNativeDriver: false,
+      }).start();
+    }
+  }, [progress, trackDuration, progressAnim]);
 
   const handlePlayToggle = useCallback(async () => {
     await Haptics.selectionAsync();
     if (!sound) return;
 
-    const status = await sound.getStatusAsync();
-    if (!status.isLoaded) {
-      console.warn("Sound not loaded yet");
-      return;
-    }
+    try {
+      const status = await sound.getStatusAsync();
+      if (!status.isLoaded) return;
 
-    if (status.isPlaying) {
-      await sound.pauseAsync();
-    } else {
-      await sound.playAsync();
+      if (status.isPlaying) {
+        await sound.pauseAsync();
+      } else {
+        await sound.playAsync();
+      }
+    } catch (error) {
+      console.error("Error toggling playback:", error);
     }
   }, [sound]);
-
 
   const handleFavorite = useCallback(async () => {
     await Haptics.selectionAsync();
@@ -121,12 +162,14 @@ const lastRouteRef = useRef<"/" | "/player">("/"); // only allowed routes
 
   const handleScrubFromLocation = useCallback(
     (locationX: number) => {
-      if (!sound || sliderWidth <= 0) return;
+      if (!sound || sliderWidth <= 0 || trackDuration <= 0) return;
 
       const ratio = Math.max(0, Math.min(locationX / sliderWidth, 1));
-      sound.setPositionAsync(ratio * TRACK_DURATION * 1000);
+      const newPosition = ratio * trackDuration * 1000;
+      sound.setPositionAsync(newPosition);
+      setProgress(ratio * trackDuration);
     },
-    [sliderWidth, sound]
+    [sliderWidth, sound, trackDuration]
   );
 
   const panResponder = useMemo(
@@ -140,9 +183,30 @@ const lastRouteRef = useRef<"/" | "/player">("/"); // only allowed routes
   );
 
   const progressPercentage = useMemo(() => {
-    if (sliderWidth <= 0) return 0;
-    return (progress / TRACK_DURATION) * sliderWidth;
-  }, [progress, sliderWidth]);
+    if (sliderWidth <= 0 || trackDuration <= 0) return 0;
+    return (progress / trackDuration) * sliderWidth;
+  }, [progress, sliderWidth, trackDuration]);
+
+  const handleSkipBack = useCallback(async () => {
+    if (!sound) return;
+    const status = await sound.getStatusAsync();
+    if (status.isLoaded) {
+      const newPosition = Math.max(0, status.positionMillis - 10000);
+      sound.setPositionAsync(newPosition);
+    }
+  }, [sound]);
+
+  const handleSkipForward = useCallback(async () => {
+    if (!sound) return;
+    const status = await sound.getStatusAsync();
+    if (status.isLoaded) {
+      const newPosition = Math.min(
+        trackDuration * 1000,
+        status.positionMillis + 10000
+      );
+      sound.setPositionAsync(newPosition);
+    }
+  }, [sound, trackDuration]);
 
   return (
     <View style={styles.container}>
@@ -153,19 +217,30 @@ const lastRouteRef = useRef<"/" | "/player">("/"); // only allowed routes
         enablePanDownToClose
         onClose={handleClose}
         backdropComponent={renderBackdrop}
-        handleIndicatorStyle={styles.handleIndicator}
         backgroundStyle={styles.background}
+        handleComponent={null} // ← Hide default handle
       >
         <BottomSheetView style={styles.sheetContent}>
-          <LinearGradient colors={["#03040A", Colors.light.background]} style={styles.gradient}>
-            <SafeAreaView style={styles.safeArea}>
-              <View style={styles.topSpacer} />
-              <View style={styles.content}>
-                <Text style={styles.title}>Rain Sounds</Text>
-                <Text style={styles.subtitle}>45 min • Relaxing Rain</Text>
+          <LinearGradient
+            colors={["#03040A", Colors.light.background]}
+            style={styles.gradient}
+          >
+            <View style={styles.contentContainer}>
+              {/* CUSTOM HANDLE - Added here */}
+              <View style={styles.customHandle}>
+                <View style={styles.handleIndicator} />
+              </View>
 
-                <View style={styles.artWrapper}>
-                  <Image source={ART_URL} style={styles.art} contentFit="cover" />
+              <View style={styles.content}>
+                <View style={styles.header}>
+                  <Text style={styles.title}>{title}</Text>
+                  <Text style={styles.subtitle}>{subtitle}</Text>
+                </View>
+
+                <View style={styles.artContainer}>
+                  <View style={styles.artWrapper}>
+                    <Image source={ART_URL} style={styles.art} contentFit="cover" />
+                  </View>
                 </View>
 
                 <View style={styles.progressSection}>
@@ -181,36 +256,127 @@ const lastRouteRef = useRef<"/" | "/player">("/"); // only allowed routes
                         { transform: [{ translateX: progressPercentage }] },
                       ]}
                     />
-
                   </View>
                   <View style={styles.progressLabels}>
                     <Text style={styles.progressText}>{formatTime(progress)}</Text>
-                    <Text style={styles.progressText}>{formatTime(TRACK_DURATION)}</Text>
+                    <Text style={styles.progressText}>{formatTime(trackDuration)}</Text>
                   </View>
                 </View>
 
                 <View style={styles.controlsRow}>
-                  <IconButton icon={<Repeat2 color={Colors.light.tabIconDefault} size={24} />} label="Repeat" onPress={() => { }} />
-                  <IconButton icon={<SkipBack color={Colors.light.text} size={28} />} onPress={() => { }} />
-                  <Pressable style={({ pressed }) => [styles.playButton, pressed && { transform: [{ scale: 0.96 }] }]} onPress={handlePlayToggle}>
-                    {isPlaying ? <Pause color={Colors.light.surface} size={32} /> : <Play color={Colors.light.surface} size={32} />}
+                  <Pressable onPress={() => { }}>
+                    {({ pressed }) => (
+                      <View style={[
+                        styles.iconButton,
+                        pressed && styles.iconButtonPressed
+                      ]}>
+                        <Ionicons name="repeat" color={Colors.light.tabIconDefault} size={24} />
+                        <Text style={styles.iconLabel}>Repeat</Text>
+                      </View>
+                    )}
                   </Pressable>
-                  <IconButton icon={<SkipForward color={Colors.light.text} size={28} />} onPress={() => { }} />
-                  <IconButton icon={<Maximize2 color={Colors.light.tabIconDefault} size={24} />} label="Shuffle" onPress={() => { }} />
+
+                  <Pressable onPress={handleSkipBack}>
+                    {({ pressed }) => (
+                      <View style={[
+                        styles.skipButton,
+                        pressed && styles.skipButtonPressed
+                      ]}>
+                        <Ionicons name="play-skip-back" color={Colors.light.text} size={28} />
+                      </View>
+                    )}
+                  </Pressable>
+
+                  <Pressable onPress={handlePlayToggle}>
+                    {({ pressed }) => (
+                      <View style={[
+                        styles.playButton,
+                        pressed && styles.playButtonPressed
+                      ]}>
+                        {isPlaying ? (
+                          <Ionicons name="pause" color={Colors.light.surface} size={32} />
+                        ) : (
+                          <Ionicons name="play" color={Colors.light.surface} size={32} />
+                        )}
+                      </View>
+                    )}
+                  </Pressable>
+
+                  <Pressable onPress={handleSkipForward}>
+                    {({ pressed }) => (
+                      <View style={[
+                        styles.skipButton,
+                        pressed && styles.skipButtonPressed
+                      ]}>
+                        <Ionicons name="play-skip-forward" color={Colors.light.text} size={28} />
+                      </View>
+                    )}
+                  </Pressable>
+
+                  <Pressable onPress={() => { }}>
+                    {({ pressed }) => (
+                      <View style={[
+                        styles.iconButton,
+                        pressed && styles.iconButtonPressed
+                      ]}>
+                        <Ionicons name="shuffle" color={Colors.light.tabIconDefault} size={24} />
+                        <Text style={styles.iconLabel}>Shuffle</Text>
+                      </View>
+                    )}
+                  </Pressable>
                 </View>
 
                 <View style={styles.actionRow}>
-                  <Pressable style={({ pressed }) => [styles.actionButton, pressed && { transform: [{ scale: 0.97 }] }, isFavorite && { borderColor: Colors.light.tint }]} onPress={handleFavorite}>
-                    <Heart color={isFavorite ? Colors.light.tint : Colors.light.text} />
-                    <Text style={styles.actionLabel}>Add to favorites</Text>
+                  {/* Add to Favorites Button */}
+                  <Pressable onPress={handleFavorite}>
+                    {({ pressed }) => (
+                      <View style={[
+                        styles.actionButton,
+                        styles.actionButtonFavorite, // Separate style for favorites
+                        pressed && styles.actionButtonPressed,
+                        isFavorite && styles.actionButtonActive
+                      ]}>
+                        <Ionicons
+                          name={isFavorite ? "heart" : "heart-outline"}
+                          color={isFavorite ? Colors.light.favorited : Colors.light.text}
+                          size={18}
+                        />
+                        <Text style={[
+                          styles.actionLabel,
+                          isFavorite && styles.actionLabelActive
+                        ]}>
+                          Add to favorites
+                        </Text>
+                      </View>
+                    )}
                   </Pressable>
-                  <Pressable style={({ pressed }) => [styles.actionButton, pressed && { transform: [{ scale: 0.97 }] }, sleepTimer && { borderColor: Colors.light.tint }]} onPress={handleSleep}>
-                    <Clock3 color={sleepTimer ? Colors.light.tint : Colors.light.text} />
-                    <Text style={styles.actionLabel}>Sleep timer</Text>
+
+                  {/* Sleep Timer Button */}
+                  <Pressable onPress={handleSleep}>
+                    {({ pressed }) => (
+                      <View style={[
+                        styles.actionButton,
+                        styles.actionButtonSleep, // Separate style for sleep timer
+                        pressed && styles.actionButtonPressed,
+                        sleepTimer && styles.actionButtonActive
+                      ]}>
+                        <Ionicons
+                          name="time-outline"
+                          color={sleepTimer ? Colors.light.accent : Colors.light.text}
+                          size={18}
+                        />
+                        <Text style={[
+                          styles.actionLabel,
+                          sleepTimer && styles.actionLabelActive
+                        ]}>
+                          Sleep timer
+                        </Text>
+                      </View>
+                    )}
                   </Pressable>
                 </View>
               </View>
-            </SafeAreaView>
+            </View>
           </LinearGradient>
         </BottomSheetView>
       </BottomSheet>
@@ -218,19 +384,15 @@ const lastRouteRef = useRef<"/" | "/player">("/"); // only allowed routes
   );
 }
 
-const IconButton = ({ icon, label, onPress }: { icon: ReactNode; label?: string; onPress: () => void }) => (
-  <Pressable style={({ pressed }) => [styles.iconButton, pressed && { opacity: 0.6 }]} onPress={onPress}>
-    {icon}
-    {label ? <Text style={styles.iconLabel}>{label}</Text> : null}
-  </Pressable>
-);
-
 function formatTime(totalSeconds: number) {
-  const minutes = Math.floor(totalSeconds / 60).toString().padStart(2, "0");
-  const seconds = Math.floor(totalSeconds % 60).toString().padStart(2, "0");
+  const minutes = Math.floor(totalSeconds / 60)
+    .toString()
+    .padStart(2, "0");
+  const seconds = Math.floor(totalSeconds % 60)
+    .toString()
+    .padStart(2, "0");
   return `${minutes}:${seconds}`;
 }
-
 
 const styles = StyleSheet.create({
   container: {
@@ -244,6 +406,7 @@ const styles = StyleSheet.create({
   background: {
     backgroundColor: "transparent",
   },
+
   sheetContent: {
     flex: 1,
     borderTopLeftRadius: 32,
@@ -253,45 +416,61 @@ const styles = StyleSheet.create({
   gradient: {
     flex: 1,
   },
-  safeArea: {
+  contentContainer: {
     flex: 1,
-  },
-  topSpacer: {
-    height: 12,
+    paddingBottom: 34,
   },
   content: {
     flex: 1,
     paddingHorizontal: 24,
+    justifyContent: "space-between",
+    // paddingTop: 0, // no need for extra top padding due to custom handle
     paddingBottom: 40,
-    gap: 24,
+  },
+  header: {
+    alignItems: "center",
+    marginTop: 10,
+    marginBottom: 20,
   },
   title: {
-    fontSize: 34,
+    fontSize: 30,
     color: Colors.light.text,
     fontWeight: "700",
+    textAlign: "center",
+    marginBottom: 4,
   },
   subtitle: {
     fontSize: 16,
     color: Colors.light.tabIconDefault,
+    textAlign: "center",
+  },
+  artContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    maxHeight: 300,
+    marginVertical: 20,
   },
   artWrapper: {
-    borderRadius: 40,
-    padding: 12,
+    borderRadius: 32,
+    padding: 10,
     backgroundColor: Colors.light.surface,
     borderWidth: 1,
     borderColor: Colors.light.border,
+    width: "105%",
+    aspectRatio: 1.4,
   },
   art: {
     width: "100%",
-    aspectRatio: 1,
-    borderRadius: 32,
+    height: "100%",
+    borderRadius: 26,
   },
   progressSection: {
-    gap: 12,
-    marginTop: 8,
+    marginVertical: 24,
+    gap: 8,
   },
   progressTrack: {
-    height: 8,
+    height: 6,
     borderRadius: 999,
     backgroundColor: Colors.light.border,
     overflow: "hidden",
@@ -302,15 +481,16 @@ const styles = StyleSheet.create({
     left: 0,
     top: 0,
     bottom: 0,
-    backgroundColor: Colors.light.tint,
+    backgroundColor: Colors.light.accent,
   },
   progressThumb: {
     position: "absolute",
     width: 16,
     height: 16,
     borderRadius: 16,
-    backgroundColor: Colors.light.tint,
-    top: -4,
+    backgroundColor: Colors.light.accent,
+    top: -5,
+    left: -8,
   },
   progressLabels: {
     flexDirection: "row",
@@ -324,55 +504,95 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-  },
-  playButton: {
-    width: 88,
-    height: 88,
-    borderRadius: 54,
-    backgroundColor: Colors.light.tint,
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: Colors.light.tint,
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.45,
-    shadowRadius: 18,
-    elevation: 8,
+    marginVertical: 24,
   },
   iconButton: {
     alignItems: "center",
-    gap: 6,
+    gap: 4,
     padding: 8,
+    minWidth: 50,
+  },
+  iconButtonPressed: {
+    opacity: 0.6,
   },
   iconLabel: {
-    fontSize: 12,
+    fontSize: 11,
     color: Colors.light.tabIconDefault,
     marginTop: 2,
+  },
+  skipButton: {
+    alignItems: "center",
+    justifyContent: "center",
+    width: 44,
+    height: 44,
+  },
+  skipButtonPressed: {
+    opacity: 0.6,
+  },
+  playButton: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: Colors.light.accent,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: Colors.light.accent,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  playButtonPressed: {
+    transform: [{ scale: 0.96 }],
   },
   actionRow: {
     flexDirection: "row",
     gap: 16,
-    marginTop: 8,
+    marginTop: 20,
+    justifyContent: 'center',
   },
   actionButton: {
-    flex: 1,
     borderWidth: 1,
-    borderColor: Colors.light.border,
-    borderRadius: 999,
-    paddingVertical: 16,
-    backgroundColor: Colors.light.surface,
+    borderColor: 'rgba(255, 255, 255, 0.15)',
+    borderRadius: 24,
+    paddingVertical: 18,
+    paddingHorizontal: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
   },
+  actionButtonFavorite: {
+    width: 180,
+  },
+  actionButtonSleep: {
+    width: 180,
+  },
+  actionButtonPressed: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  actionButtonActive: {
+    borderColor: Colors.light.accent,
+    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+  },
   actionLabel: {
     color: Colors.light.text,
     fontSize: 15,
-    fontWeight: "600",
+    fontWeight: "500",
+  },
+  actionLabelActive: {
+    color: Colors.light.accent,
+  },
+  customHandle: {
+    width: '100%',
+    alignItems: 'center',
+    paddingTop: 12,
+    paddingBottom: 8,
   },
   handleIndicator: {
     backgroundColor: "rgba(255, 255, 255, 0.3)",
-    width: 40,
+    width: 60,
     height: 4,
     borderRadius: 2,
   },

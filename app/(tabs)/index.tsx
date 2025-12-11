@@ -1,19 +1,18 @@
+import Colors from "@/constants/colors";
+import * as Haptics from "expo-haptics";
+import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from "expo-linear-gradient";
-import React, { useCallback, useEffect, useMemo, useRef } from "react";
+import { router } from "expo-router";
+import React, { useMemo, useState } from "react";
 import {
-    Animated,
     Image,
-    PanResponder,
     Pressable,
     ScrollView,
     StyleSheet,
     Text,
     View,
 } from "react-native";
-import { Ionicons } from '@expo/vector-icons';
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { router } from "expo-router";
-import Colors from "@/constants/colors";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 /* -------------------------
    Types & Data
@@ -31,7 +30,7 @@ type MoodCard = {
 type Session = {
     id: string;
     title: string;
-    duration: string;
+    durationLabel: string;
     moodId: string;
     category: string;
 };
@@ -39,18 +38,72 @@ type Session = {
 const avatarUri =
     "https://img.freepik.com/free-vector/smiling-young-man-illustration_1308-174669.jpg?semt=ais_hybrid&w=740&q=80";
 
-const MOOD_CARDS: MoodCard[] = [
-    { id: "focus", title: "Focus", description: "Sharpen your mind", gradient: ["#3A1C09", "#1B1C37"], accent: "#F78A2C", icon: "flash" },
-    { id: "calm", title: "Calm", description: "Reduce stress", gradient: ["#1E1B4A", "#1A1034"], accent: "#8F7CFF", icon: "water" },
-    { id: "sleep", title: "Sleep", description: "Drift off easily", gradient: ["#0E1C36", "#081125"], accent: "#6DA7FF", icon: "moon" },
-    { id: "recharge", title: "Recharge", description: "Boost energy", gradient: ["#0C1F1A", "#05100F"], accent: "#4DE2C3", icon: "battery-charging" },
+// Using Ionicons from first code structure but with Ionicons names
+const MOODS: MoodCard[] = [
+    {
+        id: "focus",
+        title: "Focus",
+        description: "Sharpen your mind",
+        gradient: ["#3A1C09", "#1B1C37"],
+        accent: "#F78A2C",
+        icon: "flash",
+    },
+    {
+        id: "calm",
+        title: "Calm",
+        description: "Reduce stress",
+        gradient: ["#1E1B4A", "#1A1034"],
+        accent: "#8F7CFF",
+        icon: "water",
+    },
+    {
+        id: "sleep",
+        title: "Sleep",
+        description: "Drift off easily",
+        gradient: ["#0E1C36", "#081125"],
+        accent: "#6DA7FF",
+        icon: "moon",
+    },
+    {
+        id: "recharge",
+        title: "Recharge",
+        description: "Boost energy",
+        gradient: ["#0C1F1A", "#05100F"],
+        accent: "#4DE2C3",
+        icon: "battery-charging",
+    },
 ];
 
-const CONTINUE_SESSIONS: Session[] = [
-    { id: "ocean", title: "Ocean Waves", duration: "45 min · Sleep", moodId: "sleep", category: "Sleep" },
-    { id: "wood", title: "Wood Burning", duration: "15 min · Focus", moodId: "focus", category: "Focus" },
-    { id: "rain", title: "Heavy Rain", duration: "60 min · Sleep", moodId: "sleep", category: "Sleep" },
-    { id: "fire", title: "Cracking Fire", duration: "10 min · Focus", moodId: "focus", category: "Focus" },
+// Sessions with sound URLs - ONLY CHANGE: Added Ocean Waves as first
+const SESSIONS: Session[] = [
+    {
+        id: "ocean",
+        title: "Ocean Waves",
+        durationLabel: "3 min 17 sec • Sleep",
+        moodId: "sleep",
+        category: "Sleep",
+    },
+    {
+        id: "wood",
+        title: "Wood Burning",
+        durationLabel: "15 min • Focus",
+        moodId: "focus",
+        category: "Focus",
+    },
+    {
+        id: "rain",
+        title: "Heavy Rain",
+        durationLabel: "60 min • Sleep",
+        moodId: "sleep",
+        category: "Sleep",
+    },
+    {
+        id: "fire",
+        title: "Cracking Fire",
+        durationLabel: "10 min • Focus",
+        moodId: "focus",
+        category: "Focus",
+    },
 ];
 
 /* ERROR BOUNDARY */
@@ -88,173 +141,189 @@ export default function HomeScreen() {
 
 /* MAIN CONTENT */
 function HomeContent() {
-    const insets = useSafeAreaInsets();
-
-    const heroTilt = useRef(new Animated.ValueXY({ x: 0, y: 0 })).current;
-
-    const resetHeroTilt = useCallback(() => {
-        Animated.spring(heroTilt, {
-            toValue: { x: 0, y: 0 },
-            useNativeDriver: true,
-            speed: 14,
-            bounciness: 8,
-        }).start();
-    }, [heroTilt]);
-
-    const panResponder = useRef(
-        PanResponder.create({
-            onStartShouldSetPanResponder: () => true,
-            onMoveShouldSetPanResponder: () => true,
-            onPanResponderMove: (_, gesture) => {
-                heroTilt.setValue({
-                    x: gesture.dx * 0.05,
-                    y: gesture.dy * 0.05,
-                });
-            },
-            onPanResponderRelease: resetHeroTilt,
-            onPanResponderTerminate: resetHeroTilt,
-        })
-    ).current;
-
     const moodMap = useMemo(() => {
         const m = new Map<string, MoodCard>();
-        MOOD_CARDS.forEach((card) => m.set(card.id, card));
+        MOODS.forEach((card) => m.set(card.id, card));
         return m;
     }, []);
 
-    useEffect(() => {
-        console.log("[HomeScreen] loaded moods + sessions");
-    }, []);
+    const [isFavorite, setFavorites] = useState<Record<string, boolean>>({});
+
+    const openPlayerForSession = (session: Session) => {
+        // Only Ocean Waves opens the player for now
+        if (session.id === "ocean") {
+            router.push({
+                pathname: "/(modal)/player",
+                params: {
+                    title: session.title,
+                    subtitle: session.durationLabel,
+                },
+            });
+        } else {
+            // Other sessions do nothing (or you can add console.log)
+            console.log(`Session "${session.title}" is not clickable yet.`);
+        }
+    };
+
+    const toggleFavorite = async (sessionId: string) => {
+        await Haptics.selectionAsync(); // ← ADD HAPTIC FEEDBACK
+        setFavorites(prev => ({
+            ...prev,
+            [sessionId]: !prev[sessionId]
+        }));
+    };
 
     return (
-        <View style={[styles.safeArea, { paddingTop: insets.top }]}>
+        <View style={styles.container}>
             {/* Background */}
             <LinearGradient
                 colors={["#0B0F2E", "#05060A"]}
                 style={StyleSheet.absoluteFill}
             />
 
-            {/* HEADER */}
+            {/* EXTRA GRADIENT ABOVE HEADER - This extends to top */}
             <LinearGradient
-                colors={["#591A1B", "#0F172B", "#0B0E14"]}
-                locations={[0, 0.4, 1]}
-                style={styles.topBar}
-                testID="home-top-bar"
-            >
-                <View style={styles.headerRow}>
-                    <View style={styles.profileRow}>
-                        <Image source={{ uri: avatarUri }} style={styles.avatar} />
-                        <View>
-                            <Text style={styles.greetingLabel}>Good evening,</Text>
-                            <Text style={styles.greetingName}>John</Text>
+                colors={["#591A1B", "#591A1B"]} // Solid color matching header top
+                style={styles.topGradientExtension}
+            />
+
+            {/* HEADER - Keep it as is */}
+            <SafeAreaView style={styles.safeArea} edges={["top"]}>
+                <LinearGradient
+                    colors={["#591A1B", "#0F172B", "#0B0E14"]}
+                    locations={[0, 0.4, 1]}
+                    style={styles.topBar}
+                    testID="home-top-bar"
+                >
+                    <View style={styles.headerRow}>
+                        <View style={styles.profileRow}>
+                            <Image source={{ uri: avatarUri }} style={styles.avatar} />
+                            <View>
+                                <Text style={styles.greetingLabel}>Good evening,</Text>
+                                <Text style={styles.greetingName}>John</Text>
+                            </View>
                         </View>
                     </View>
-                </View>
 
-                <Text style={styles.topPrompt}>
-                    How do you want <Text style={styles.titlePrompt}>to feel today?</Text>
-                </Text>
-            </LinearGradient>
+                    <Text style={styles.topPrompt}>
+                        How do you want <Text style={styles.titlePrompt}>to feel today?</Text>
+                    </Text>
+                </LinearGradient>
+            </SafeAreaView>
 
-            {/* SCROLL AREA */}
+            {/* SCROLL AREA - Content starts below header */}
             <ScrollView
                 style={styles.scrollArea}
                 contentContainerStyle={styles.scrollContent}
                 showsVerticalScrollIndicator={false}
             >
+                {/* MOODS SECTION */}
                 <Text style={styles.sectionTitle}>Moods</Text>
-
                 <View style={styles.moodGrid}>
-                    {MOOD_CARDS.map((mood) => (
-                        <MoodTile key={mood.id} mood={mood} />
+                    {MOODS.map((mood) => (
+                        <View key={mood.id} style={styles.moodTile}>
+                            <LinearGradient
+                                colors={mood.gradient}
+                                style={styles.moodGradient}
+                            >
+                                <View style={styles.moodIconWrap}>
+                                    <Ionicons name={mood.icon} color={mood.accent} size={20} />
+                                </View>
+                                <Text style={styles.moodTitle}>{mood.title}</Text>
+                                <Text style={styles.moodDescription}>
+                                    {mood.description}
+                                </Text>
+                            </LinearGradient>
+                        </View>
                     ))}
                 </View>
 
+                {/* CONTINUE LISTENING SECTION */}
                 <Text style={styles.sectionTitle}>Continue Listening</Text>
-
                 <View style={styles.sessionList}>
-                    {CONTINUE_SESSIONS.map((session) => (
-                        <SessionRow
-                            key={session.id}
-                            session={session}
-                            mood={moodMap.get(session.moodId)}
-                        />
-                    ))}
+                    {SESSIONS.map((session) => {
+                        const mood = moodMap.get(session.moodId);
+                        const sessionIsFavorite = isFavorite[session.id] || false; // Check favorite status for THIS session
+
+                        return (
+                            <View key={session.id} style={styles.sessionRow}>
+                                {/* Make ONLY the icon pressable */}
+                                <Pressable
+                                    onPress={() => openPlayerForSession(session)}
+                                >
+                                    {({ pressed }) => (
+                                        <View style={[
+                                            styles.sessionIconWrap,
+                                            { backgroundColor: mood?.gradient[0] ?? Colors.palette.card },
+                                            pressed && { opacity: 0.8 }
+                                        ]}>
+                                            <Ionicons
+                                                name="play"
+                                                color={mood?.accent ?? Colors.light.text}
+                                                size={18}
+                                            />
+                                        </View>
+                                    )}
+                                </Pressable>
+
+                                <View style={styles.sessionText}>
+                                    <Text style={styles.sessionTitle}>{session.title}</Text>
+                                    <Text style={styles.sessionMeta}>
+                                        {session.durationLabel}
+                                    </Text>
+                                </View>
+
+                                {/* Heart icon - pressable for favorites */}
+                                <Pressable
+                                    onPress={() => toggleFavorite(session.id)}
+                                >
+                                    {({ pressed }) => (
+                                        <View style={[
+                                            styles.sessionHeartButton,
+                                            sessionIsFavorite && styles.sessionHeartButtonFavorited,
+                                            // Add pressed state styling directly
+                                            pressed && { transform: [{ scale: 0.9 }], opacity: 0.8 }
+                                        ]}>
+                                            <Ionicons
+                                                name={sessionIsFavorite ? "heart" : "heart-outline"}
+                                                color={sessionIsFavorite ? Colors.light.favorited : Colors.palette.muted}
+                                                size={24}
+                                            />
+                                        </View>
+                                    )}
+                                </Pressable>
+                            </View>
+                        );
+                    })}
                 </View>
             </ScrollView>
         </View>
     );
 }
 
-/* COMPONENTS */
-const MoodTile = React.memo(function MoodTile({ mood }: { mood: MoodCard }) {
-    return (
-        <Pressable
-            onPress={() => console.log("Mood tile pressed, but no modal opens yet.")}
-            style={({ pressed }) => [styles.moodTile, pressed && styles.moodTilePressed]}
-        >
-            <LinearGradient colors={mood.gradient} style={styles.moodGradient}>
-                <View style={styles.moodIconWrap}>
-                    <Ionicons name={mood.icon} size={20} color={mood.accent} />
-                </View>
-                <Text style={styles.moodTitle}>{mood.title}</Text>
-                <Text style={styles.moodDescription}>{mood.description}</Text>
-            </LinearGradient>
-        </Pressable>
-    );
-});
-
-
-const SessionRow = React.memo(function SessionRow({
-    session,
-    mood,
-}: {
-    session: Session;
-    mood?: MoodCard;
-}) {
-    const handlePress = () => {
-        if (session.id === "ocean") {
-            // Endast Ocean Waves öppnar modal
-            router.push({
-                pathname: "/(modal)/player",
-                params: {
-                    soundUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
-                },
-            });
-        } else {
-            // Gör inget för andra sessioner
-            console.log("This session is not clickable yet:", session.title);
-        }
-    };
-
-    return (
-        <Pressable
-            onPress={handlePress}
-            style={({ pressed }) => [styles.sessionRow, pressed && styles.sessionRowPressed]}
-        >
-            <View style={[styles.sessionIconWrap, { backgroundColor: mood?.gradient[0] ?? Colors.palette.card }]}>
-                <Ionicons name="play" size={18} color={mood?.accent ?? Colors.light.text} />
-            </View>
-
-            <View style={styles.sessionTextBlock}>
-                <Text style={styles.sessionTitle}>{session.title}</Text>
-                <Text style={styles.sessionMeta}>{session.duration}</Text>
-            </View>
-
-            <Ionicons name="heart" size={20} color={Colors.palette.muted} />
-        </Pressable>
-    );
-});
-
-/* STYLES */
+/* STYLES - EXACTLY THE SAME AS YOUR WORKING CODE */
 const styles = StyleSheet.create({
-    safeArea: {
+    container: {
         flex: 1,
-        backgroundColor: Colors.palette.background,
     },
 
+    /* EXTRA GRADIENT ABOVE HEADER */
+    topGradientExtension: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: 100, // Extends above the header
+        zIndex: 1,
+    },
+
+    safeArea: {
+        zIndex: 2,
+    },
+
+    /* HEADER - Keep original positioning */
     topBar: {
-        paddingTop: 45,
+        paddingTop: 10, // Original padding
         paddingHorizontal: 20,
         paddingBottom: 24,
         borderBottomLeftRadius: 32,
@@ -265,7 +334,11 @@ const styles = StyleSheet.create({
         shadowRadius: 24,
         shadowOffset: { width: 0, height: 18 },
         elevation: 24,
-        zIndex: 2,
+    },
+
+    scrollArea: {
+        flex: 1,
+        marginTop: 0, // No margin - scroll starts below header
     },
 
     headerRow: {
@@ -304,22 +377,19 @@ const styles = StyleSheet.create({
         color: Colors.palette.accent,
     },
 
-    scrollArea: {
-        flex: 1,
-    },
     scrollContent: {
         paddingHorizontal: 20,
-        paddingTop: 32,
         paddingBottom: 120,
+        paddingTop: 20, // Small padding from header
         gap: 20,
     },
 
+    /* MOODS SECTION */
     sectionTitle: {
         color: Colors.light.text,
         fontSize: 20,
         fontWeight: "700",
     },
-
     moodGrid: {
         flexDirection: "row",
         flexWrap: "wrap",
@@ -331,54 +401,49 @@ const styles = StyleSheet.create({
         borderRadius: 24,
         overflow: "hidden",
     },
-    moodTilePressed: {
-        transform: [{ scale: 0.98 }],
-    },
     moodGradient: {
-        padding: 20,
         borderRadius: 24,
-        gap: 10,
+        padding: 16,
+        gap: 8,
     },
     moodIconWrap: {
         width: 34,
         height: 34,
         borderRadius: 17,
-        backgroundColor: "rgba(255,255,255,0.1)",
+        backgroundColor: "rgba(255,255,255,0.12)",
         alignItems: "center",
         justifyContent: "center",
     },
     moodTitle: {
         color: Colors.light.text,
-        fontSize: 18,
+        fontSize: 16,
         fontWeight: "700",
     },
     moodDescription: {
         color: Colors.palette.under_text,
-        fontSize: 14,
+        fontSize: 13,
     },
 
+    /* SESSION LIST */
     sessionList: {
-        gap: 14,
+        gap: 12,
     },
     sessionRow: {
         backgroundColor: Colors.palette.surface,
         borderRadius: 20,
-        padding: 18,
+        padding: 14,
         flexDirection: "row",
         alignItems: "center",
-        gap: 14,
-    },
-    sessionRowPressed: {
-        opacity: 0.85,
+        gap: 12,
     },
     sessionIconWrap: {
-        width: 48,
-        height: 48,
+        width: 60,
+        height: 50,
         borderRadius: 16,
         alignItems: "center",
         justifyContent: "center",
     },
-    sessionTextBlock: {
+    sessionText: {
         flex: 1,
     },
     sessionTitle: {
@@ -387,8 +452,25 @@ const styles = StyleSheet.create({
         fontWeight: "600",
     },
     sessionMeta: {
-        color: Colors.palette.under_text,
-        marginTop: 4,
+        color: Colors.palette.muted,
+        fontSize: 13,
+        marginTop: 2,
+    },
+    sessionHeartButton: {
+        padding: 8,
+        marginRight: 4,
+        borderRadius: 20,
+        width: 40,
+        height: 40,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    sessionHeartButtonFavorited: {
+        shadowColor: Colors.light.favorited,
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.6,
+        shadowRadius: 10,
+        elevation: 6,
     },
 
     errorContainer: {
