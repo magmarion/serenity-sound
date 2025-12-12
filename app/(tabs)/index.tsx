@@ -1,9 +1,10 @@
 import Colors from "@/constants/colors";
-import * as Haptics from "expo-haptics";
+import { fetchSoundEffects } from "@/services/api";
 import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
     Image,
     Pressable,
@@ -33,10 +34,18 @@ type Session = {
     durationLabel: string;
     moodId: string;
     category: string;
+    soundUrl?: string; // Optional
+    duration?: number; // Optional  
+    artworkUrl?: string; // Optional
 };
 
 const avatarUri =
     "https://img.freepik.com/free-vector/smiling-young-man-illustration_1308-174669.jpg?semt=ais_hybrid&w=740&q=80";
+
+const ART_URL = "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80";
+const DEFAULT_SOUND_URL = "https://orangefreesounds.com/wp-content/uploads/2022/08/Rain-and-thunder-with-ocean-waves-sound-effect.mp3";
+
+
 
 // Using Ionicons from first code structure but with Ionicons names
 const MOODS: MoodCard[] = [
@@ -74,7 +83,6 @@ const MOODS: MoodCard[] = [
     },
 ];
 
-// Sessions with sound URLs - ONLY CHANGE: Added Ocean Waves as first
 const SESSIONS: Session[] = [
     {
         id: "ocean",
@@ -148,23 +156,84 @@ function HomeContent() {
     }, []);
 
     const [isFavorite, setFavorites] = useState<Record<string, boolean>>({});
+    const [sessions, setSessions] = useState<Session[]>(SESSIONS); // Start with hardcoded
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
-    const openPlayerForSession = (session: Session) => {
-        // Only Ocean Waves opens the player for now
-        if (session.id === "ocean") {
-            router.push({
-                pathname: "/(modal)/player",
-                params: {
-                    title: session.title,
-                    subtitle: session.durationLabel,
-                },
-            });
-        } else {
-            // Other sessions do nothing (or you can add console.log)
-            console.log(`Session "${session.title}" is not clickable yet.`);
+    useEffect(() => {
+        loadSessions();
+    }, []);
+
+    // Inside your HomeContent component, find the loadSessions function:
+    // Fetch sounds for a specific mood
+    const loadSessions = async () => {
+        try {
+            setLoading(true);
+            setError(null);
+
+            // Option 1: Fetch all sounds
+            const fetchedSessions = await fetchSoundEffects();
+
+            // Option 2: Fetch for specific mood
+            // const fetchedSessions = await fetchSoundEffects('sleep');
+            // const fetchedSessions = await fetchSoundEffects('focus');
+
+            if (fetchedSessions.length > 0) {
+                setSessions(fetchedSessions);
+            } else {
+                setSessions(SESSIONS);
+                setError('Using sample sounds');
+            }
+        } catch (err) {
+            console.error('Error:', err);
+            setSessions(SESSIONS);
+        } finally {
+            setLoading(false);
         }
     };
 
+    // In your HomeContent component, add this function:
+    const handleMoodPress = async (moodId: string) => {
+        console.log(`Fetching sounds for mood: ${moodId}`);
+
+        try {
+            setLoading(true);
+            setError(`Loading ${moodId} sounds...`);
+
+            // Fetch sounds specifically for this mood
+            const moodSessions = await fetchSoundEffects(moodId);
+
+            if (moodSessions.length > 0) {
+                setSessions(moodSessions);
+                console.log(`Loaded ${moodSessions.length} ${moodId} sounds`);
+            } else {
+                // Fallback to showing all sounds
+                const allSessions = await fetchSoundEffects();
+                setSessions(allSessions);
+                setError(`No ${moodId} sounds found. Showing all sounds.`);
+            }
+        } catch (err) {
+            console.error(`Error loading ${moodId} sounds:`, err);
+            setError('Failed to load sounds. Try again.');
+        } finally {
+            setLoading(false);
+        }
+    };
+    const openPlayerForSession = (session: Session) => {
+        // Use default URLs if session doesn't have them
+        const soundUrl = session.soundUrl || DEFAULT_SOUND_URL;
+        const artworkUrl = session.artworkUrl || ART_URL;
+
+        router.push({
+            pathname: '/(modal)/player',
+            params: {
+                soundUrl: soundUrl,
+                title: session.title || 'Sound',
+                subtitle: session.durationLabel || '3 min • Ambient',
+                artworkUrl: artworkUrl,
+            },
+        });
+    };
     const toggleFavorite = async (sessionId: string) => {
         await Haptics.selectionAsync(); // ← ADD HAPTIC FEEDBACK
         setFavorites(prev => ({
@@ -240,62 +309,79 @@ function HomeContent() {
 
                 {/* CONTINUE LISTENING SECTION */}
                 <Text style={styles.sectionTitle}>Continue Listening</Text>
-                <View style={styles.sessionList}>
-                    {SESSIONS.map((session) => {
-                        const mood = moodMap.get(session.moodId);
-                        const sessionIsFavorite = isFavorite[session.id] || false; // Check favorite status for THIS session
+                {loading ? (
+                    <View style={styles.loadingContainer}>
+                        <Text style={styles.loadingText}>Loading sounds...</Text>
+                    </View>
+                ) : error ? (
+                    <View style={styles.errorMessage}>
+                        <Text style={styles.errorText}>{error}</Text>
+                        <Pressable onPress={loadSessions} style={styles.retryButton}>
+                            <Text style={styles.retryText}>Retry</Text>
+                        </Pressable>
+                    </View>
+                ) : sessions.length === 0 ? (
+                    <View style={styles.emptyContainer}>
+                        <Text style={styles.emptyText}>No sounds available</Text>
+                    </View>
+                ) : (
+                    <View style={styles.sessionList}>
+                        {sessions.map((session) => {
+                            const mood = moodMap.get(session.moodId);
+                            const sessionIsFavorite = isFavorite[session.id] || false; // Check favorite status for THIS session
 
-                        return (
-                            <View key={session.id} style={styles.sessionRow}>
-                                {/* Make ONLY the icon pressable */}
-                                <Pressable
-                                    onPress={() => openPlayerForSession(session)}
-                                >
-                                    {({ pressed }) => (
-                                        <View style={[
-                                            styles.sessionIconWrap,
-                                            { backgroundColor: mood?.gradient[0] ?? Colors.palette.card },
-                                            pressed && { opacity: 0.8 }
-                                        ]}>
-                                            <Ionicons
-                                                name="play"
-                                                color={mood?.accent ?? Colors.light.text}
-                                                size={18}
-                                            />
-                                        </View>
-                                    )}
-                                </Pressable>
+                            return (
+                                <View key={session.id} style={styles.sessionRow}>
+                                    {/* Make ONLY the icon pressable */}
+                                    <Pressable
+                                        onPress={() => openPlayerForSession(session)}
+                                    >
+                                        {({ pressed }) => (
+                                            <View style={[
+                                                styles.sessionIconWrap,
+                                                { backgroundColor: mood?.gradient[0] ?? Colors.palette.card },
+                                                pressed && { opacity: 0.8 }
+                                            ]}>
+                                                <Ionicons
+                                                    name="play"
+                                                    color={mood?.accent ?? Colors.light.text}
+                                                    size={18}
+                                                />
+                                            </View>
+                                        )}
+                                    </Pressable>
 
-                                <View style={styles.sessionText}>
-                                    <Text style={styles.sessionTitle}>{session.title}</Text>
-                                    <Text style={styles.sessionMeta}>
-                                        {session.durationLabel}
-                                    </Text>
+                                    <View style={styles.sessionText}>
+                                        <Text style={styles.sessionTitle}>{session.title}</Text>
+                                        <Text style={styles.sessionMeta}>
+                                            {session.durationLabel}
+                                        </Text>
+                                    </View>
+
+                                    {/* Heart icon - pressable for favorites */}
+                                    <Pressable
+                                        onPress={() => toggleFavorite(session.id)}
+                                    >
+                                        {({ pressed }) => (
+                                            <View style={[
+                                                styles.sessionHeartButton,
+                                                sessionIsFavorite && styles.sessionHeartButtonFavorited,
+                                                // Add pressed state styling directly
+                                                pressed && { transform: [{ scale: 0.9 }], opacity: 0.8 }
+                                            ]}>
+                                                <Ionicons
+                                                    name={sessionIsFavorite ? "heart" : "heart-outline"}
+                                                    color={sessionIsFavorite ? Colors.light.favorited : Colors.palette.muted}
+                                                    size={24}
+                                                />
+                                            </View>
+                                        )}
+                                    </Pressable>
                                 </View>
-
-                                {/* Heart icon - pressable for favorites */}
-                                <Pressable
-                                    onPress={() => toggleFavorite(session.id)}
-                                >
-                                    {({ pressed }) => (
-                                        <View style={[
-                                            styles.sessionHeartButton,
-                                            sessionIsFavorite && styles.sessionHeartButtonFavorited,
-                                            // Add pressed state styling directly
-                                            pressed && { transform: [{ scale: 0.9 }], opacity: 0.8 }
-                                        ]}>
-                                            <Ionicons
-                                                name={sessionIsFavorite ? "heart" : "heart-outline"}
-                                                color={sessionIsFavorite ? Colors.light.favorited : Colors.palette.muted}
-                                                size={24}
-                                            />
-                                        </View>
-                                    )}
-                                </Pressable>
-                            </View>
-                        );
-                    })}
-                </View>
+                            );
+                        })}
+                    </View>
+                )}
             </ScrollView>
         </View>
     );
@@ -490,5 +576,43 @@ const styles = StyleSheet.create({
         marginTop: 8,
         fontSize: 16,
         textAlign: "center",
+    },
+
+    loadingContainer: {
+        padding: 20,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    loadingText: {
+        color: Colors.palette.muted,
+        fontSize: 16,
+    },
+    errorMessage: {
+        padding: 20,
+        alignItems: 'center',
+        gap: 10,
+    },
+    errorText: {
+        color: Colors.palette.muted,
+        fontSize: 14,
+        textAlign: 'center',
+    },
+    retryButton: {
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        backgroundColor: Colors.light.accent,
+        borderRadius: 8,
+    },
+    retryText: {
+        color: Colors.light.surface,
+        fontWeight: '600',
+    },
+    emptyContainer: {
+        padding: 20,
+        alignItems: 'center',
+    },
+    emptyText: {
+        color: Colors.palette.muted,
+        fontSize: 16,
     },
 });
