@@ -171,53 +171,35 @@ function HomeContent() {
             setLoading(true);
             setError(null);
 
-            // Option 1: Fetch all sounds
+            // Fetch ALL sounds (no mood filter)
             const fetchedSessions = await fetchSoundEffects();
-
-            // Option 2: Fetch for specific mood
-            // const fetchedSessions = await fetchSoundEffects('sleep');
-            // const fetchedSessions = await fetchSoundEffects('focus');
 
             if (fetchedSessions.length > 0) {
                 setSessions(fetchedSessions);
             } else {
+                // Fallback to hardcoded sounds
                 setSessions(SESSIONS);
-                setError('Using sample sounds');
+                console.log('Using sample sounds as fallback');
             }
         } catch (err) {
-            console.error('Error:', err);
-            setSessions(SESSIONS);
+            console.error('Error loading sounds:', err);
+            setError('Failed to load sounds');
+            setSessions(SESSIONS); // Fallback
         } finally {
             setLoading(false);
         }
     };
 
     // In your HomeContent component, add this function:
-    const handleMoodPress = async (moodId: string) => {
-        console.log(`Fetching sounds for mood: ${moodId}`);
+    // Replace the current handleMoodPress function with:
+    const handleMoodPress = (moodId: string) => {
+        console.log(`Opening category: ${moodId}`);
 
-        try {
-            setLoading(true);
-            setError(`Loading ${moodId} sounds...`);
-
-            // Fetch sounds specifically for this mood
-            const moodSessions = await fetchSoundEffects(moodId);
-
-            if (moodSessions.length > 0) {
-                setSessions(moodSessions);
-                console.log(`Loaded ${moodSessions.length} ${moodId} sounds`);
-            } else {
-                // Fallback to showing all sounds
-                const allSessions = await fetchSoundEffects();
-                setSessions(allSessions);
-                setError(`No ${moodId} sounds found. Showing all sounds.`);
-            }
-        } catch (err) {
-            console.error(`Error loading ${moodId} sounds:`, err);
-            setError('Failed to load sounds. Try again.');
-        } finally {
-            setLoading(false);
-        }
+        // Navigate to category detail page OUTSIDE tabs
+        router.push({
+            pathname: '/category/[id]',  // ← REMOVED /(tabs)/ prefix
+            params: { id: moodId }
+        });
     };
     const openPlayerForSession = (session: Session) => {
         // Use default URLs if session doesn't have them
@@ -290,20 +272,29 @@ function HomeContent() {
                 <Text style={styles.sectionTitle}>Moods</Text>
                 <View style={styles.moodGrid}>
                     {MOODS.map((mood) => (
-                        <View key={mood.id} style={styles.moodTile}>
-                            <LinearGradient
-                                colors={mood.gradient}
-                                style={styles.moodGradient}
-                            >
-                                <View style={styles.moodIconWrap}>
-                                    <Ionicons name={mood.icon} color={mood.accent} size={20} />
-                                </View>
-                                <Text style={styles.moodTitle}>{mood.title}</Text>
-                                <Text style={styles.moodDescription}>
-                                    {mood.description}
-                                </Text>
-                            </LinearGradient>
-                        </View>
+                        <Pressable
+                            key={mood.id}
+                            onPress={() => handleMoodPress(mood.id)}
+                            style={styles.moodTile}
+                        >
+                            {({ pressed }) => (
+                                <LinearGradient
+                                    colors={mood.gradient}
+                                    style={[
+                                        styles.moodGradient,
+                                        pressed && { opacity: 0.9 }
+                                    ]}
+                                >
+                                    <View style={styles.moodIconWrap}>
+                                        <Ionicons name={mood.icon} color={mood.accent} size={20} />
+                                    </View>
+                                    <Text style={styles.moodTitle}>{mood.title}</Text>
+                                    <Text style={styles.moodDescription}>
+                                        {mood.description}
+                                    </Text>
+                                </LinearGradient>
+                            )}
+                        </Pressable>
                     ))}
                 </View>
 
