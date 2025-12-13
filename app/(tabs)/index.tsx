@@ -1,3 +1,4 @@
+// app/(tabs)/index.tsx
 import Colors from "@/constants/colors";
 import { fetchSoundEffects } from "@/services/api";
 import { Ionicons } from '@expo/vector-icons';
@@ -83,37 +84,6 @@ const MOODS: MoodCard[] = [
     },
 ];
 
-const SESSIONS: Session[] = [
-    {
-        id: "ocean",
-        title: "Ocean Waves",
-        durationLabel: "3 min 17 sec • Sleep",
-        moodId: "sleep",
-        category: "Sleep",
-    },
-    {
-        id: "wood",
-        title: "Wood Burning",
-        durationLabel: "15 min • Focus",
-        moodId: "focus",
-        category: "Focus",
-    },
-    {
-        id: "rain",
-        title: "Heavy Rain",
-        durationLabel: "60 min • Sleep",
-        moodId: "sleep",
-        category: "Sleep",
-    },
-    {
-        id: "fire",
-        title: "Cracking Fire",
-        durationLabel: "10 min • Focus",
-        moodId: "focus",
-        category: "Focus",
-    },
-];
-
 /* ERROR BOUNDARY */
 class HomeErrorBoundary extends React.Component<
     { children: React.ReactNode },
@@ -156,7 +126,7 @@ function HomeContent() {
     }, []);
 
     const [isFavorite, setFavorites] = useState<Record<string, boolean>>({});
-    const [sessions, setSessions] = useState<Session[]>(SESSIONS); // Start with hardcoded
+    const [sessions, setSessions] = useState<Session[]>([]); // Start empty
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -164,7 +134,6 @@ function HomeContent() {
         loadSessions();
     }, []);
 
-    // Inside your HomeContent component, find the loadSessions function:
     // Fetch sounds for a specific mood
     const loadSessions = async () => {
         try {
@@ -174,30 +143,24 @@ function HomeContent() {
             // Fetch ALL sounds (no mood filter)
             const fetchedSessions = await fetchSoundEffects();
 
-            if (fetchedSessions.length > 0) {
-                setSessions(fetchedSessions);
-            } else {
-                // Fallback to hardcoded sounds
-                setSessions(SESSIONS);
-                console.log('Using sample sounds as fallback');
-            }
+            // API returns [] on error, so we just set whatever we get
+            setSessions(fetchedSessions);
+
         } catch (err) {
             console.error('Error loading sounds:', err);
             setError('Failed to load sounds');
-            setSessions(SESSIONS); // Fallback
+            setSessions([]); // Set empty array on error
         } finally {
             setLoading(false);
         }
     };
 
-    // In your HomeContent component, add this function:
-    // Replace the current handleMoodPress function with:
     const handleMoodPress = (moodId: string) => {
         console.log(`Opening category: ${moodId}`);
 
         // Navigate to category detail page OUTSIDE tabs
         router.push({
-            pathname: '/category/[id]',  // ← REMOVED /(tabs)/ prefix
+            pathname: '/category/[id]',
             params: { id: moodId }
         });
     };
@@ -234,7 +197,7 @@ function HomeContent() {
 
             {/* EXTRA GRADIENT ABOVE HEADER - This extends to top */}
             <LinearGradient
-                colors={["#591A1B", "#591A1B"]} // Solid color matching header top
+                colors={["#591A1B", "#591A1B"]}
                 style={styles.topGradientExtension}
             />
 
@@ -298,8 +261,8 @@ function HomeContent() {
                     ))}
                 </View>
 
-                {/* CONTINUE LISTENING SECTION */}
-                <Text style={styles.sectionTitle}>Continue Listening</Text>
+                {/* RECOMMENDED SECTION */}
+                <Text style={styles.sectionTitle}>Recommended</Text>
                 {loading ? (
                     <View style={styles.loadingContainer}>
                         <Text style={styles.loadingText}>Loading sounds...</Text>
@@ -378,19 +341,17 @@ function HomeContent() {
     );
 }
 
-/* STYLES - EXACTLY THE SAME AS YOUR WORKING CODE */
 const styles = StyleSheet.create({
     container: {
         flex: 1,
     },
 
-    /* EXTRA GRADIENT ABOVE HEADER */
     topGradientExtension: {
         position: 'absolute',
         top: 0,
         left: 0,
         right: 0,
-        height: 100, // Extends above the header
+        height: 100,
         zIndex: 1,
     },
 
@@ -398,9 +359,9 @@ const styles = StyleSheet.create({
         zIndex: 2,
     },
 
-    /* HEADER - Keep original positioning */
+    /* HEADER */
     topBar: {
-        paddingTop: 10, // Original padding
+        paddingTop: 10,
         paddingHorizontal: 20,
         paddingBottom: 24,
         borderBottomLeftRadius: 32,
@@ -457,7 +418,7 @@ const styles = StyleSheet.create({
     scrollContent: {
         paddingHorizontal: 20,
         paddingBottom: 120,
-        paddingTop: 20, // Small padding from header
+        paddingTop: 20, // padding from header
         gap: 20,
     },
 
