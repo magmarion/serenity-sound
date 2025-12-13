@@ -1,5 +1,5 @@
-// services/api.ts - NO FALLBACKS VERSION
-const FREESOUND_API_KEY = 'EJPFkrS7ZjLIwX14CQyVPZw3gDmqNqEd17nUz4TY'; // ← ADD YOUR API KEY HERE
+// services/api.ts
+const FREESOUND_API_KEY = 'EJPFkrS7ZjLIwX14CQyVPZw3gDmqNqEd17nUz4TY';
 
 export interface Session {
     id: string;
