@@ -302,10 +302,10 @@ const styles = StyleSheet.create({
         textAlign: "center",
     },
     headerSubtitle: {
-        color: "rgba(255,255,255,0.55)",
+        color: "rgba(255,255,255,0.75)",
         fontSize: 13,
         fontWeight: "500",
-        textAlign: "center",
+        textAlign: "left",
         letterSpacing: 0.3,
     },
     listContent: {

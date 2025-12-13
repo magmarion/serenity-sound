@@ -217,6 +217,8 @@ function SettingsScreen() {
         />
 
         <SafeAreaView style={styles.safeArea} edges={["top"]}>
+          <View style={styles.header} />
+
           <ScrollView
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
@@ -257,6 +259,13 @@ const styles = StyleSheet.create({
   },
   safeArea: {
     flex: 1,
+  },
+  // Empty header with same dimensions as Favorites
+  header: {
+    paddingTop: 20,
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+    // No alignItems, no text
   },
   scrollContent: {
     paddingTop: 20,
