@@ -1,8 +1,9 @@
 import { Ionicons, Feather } from '@expo/vector-icons';
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
-import React, { memo, useCallback, useMemo, useState } from "react";
-import { Alert, FlatList, Pressable, StyleSheet, Text, View, } from "react-native";
+import React, { memo, useCallback, useState } from "react";
+import { Alert, FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 type FavoriteKey =
     | "rain"
@@ -139,7 +140,6 @@ const FavoriteRow = memo(function FavoriteRow({
 
     const IconComponent = (item.iconSet === 'Feather' ? Feather : Ionicons) as React.ComponentType<any>;
 
-
     const onPressPlay = useCallback(() => {
         onPlay(item.key);
     }, [item.key, onPlay]);
@@ -193,7 +193,7 @@ const FavoriteRow = memo(function FavoriteRow({
                         ]}
                     >
                         <Ionicons
-                            name={isFavorite ? "heart" : "heart"}
+                            name={isFavorite ? "heart" : "heart-outline"}
                             size={20}
                             color="#FFFFFF"
                         />
@@ -221,8 +221,6 @@ export default function FavoritesScreen() {
 
     const haptics = useHaptics();
 
-    const headerGradient = useMemo(() => ["#07090D", "#1A2534", "#6E8FB1"] as const, []);
-
     const onToggleFavorite = useCallback(
         async (key: FavoriteKey) => {
             await haptics("light");
@@ -245,38 +243,39 @@ export default function FavoritesScreen() {
     );
 
     return (
-        <View style={styles.screen} testID="favorites.screen">
+        <View style={styles.screen}>
+            {/* Background - Same as Settings */}
             <LinearGradient
                 colors={["#0B0F2E", "#05060A"]}
                 style={StyleSheet.absoluteFill}
             />
-            <LinearGradient
-                colors={headerGradient}
-                start={{ x: 0.5, y: 0 }}
-                end={{ x: 0.5, y: 1 }}
-                style={styles.header}
-            >
-                <Text style={styles.headerTitle}>Favorites</Text>
-                <Text style={styles.headerSubtitle}>
-                    Your most loved sounds in one place
-                </Text>
-            </LinearGradient>
 
-            <FlatList
-                testID="favorites.list"
-                data={ITEMS}
-                keyExtractor={(item, index) => `${item.key}-${index}`}
-                contentContainerStyle={styles.listContent}
-                ItemSeparatorComponent={() => <View style={{ height: 14 }} />}
-                renderItem={({ item }) => (
-                    <FavoriteRow
-                        item={item}
-                        isFavorite={favorites[item.key] ?? false}
-                        onToggleFavorite={onToggleFavorite}
-                        onPlay={onPlay}
-                    />
-                )}
-            />
+            <SafeAreaView style={styles.safeArea} edges={["top"]}>
+                <View style={styles.header}>
+                    <Text style={styles.headerTitle}>Favorites</Text>
+                    <Text style={styles.headerSubtitle}>
+                        Your most loved sounds in one place
+                    </Text>
+                </View>
+
+                <FlatList
+                    testID="favorites.list"
+                    data={ITEMS}
+                    keyExtractor={(item, index) => `${item.key}-${index}`}
+                    contentContainerStyle={styles.listContent}
+                    ItemSeparatorComponent={() => <View style={{ height: 14 }} />}
+                    showsVerticalScrollIndicator={false}
+                    showsHorizontalScrollIndicator={false}
+                    renderItem={({ item }) => (
+                        <FavoriteRow
+                            item={item}
+                            isFavorite={favorites[item.key] ?? false}
+                            onToggleFavorite={onToggleFavorite}
+                            onPlay={onPlay}
+                        />
+                    )}
+                />
+            </SafeAreaView>
         </View>
     );
 }
@@ -285,29 +284,34 @@ const styles = StyleSheet.create({
     screen: {
         flex: 1,
     },
+    safeArea: {
+        flex: 1,
+    },
+    // Simple fixed header - similar to Settings but with subtitle
     header: {
-        paddingTop: 54,
+        paddingTop: 20,
         paddingHorizontal: 20,
-        paddingBottom: 18,
-        borderBottomLeftRadius: 18,
-        borderBottomRightRadius: 18,
+        paddingBottom: 20,
+        alignItems: "center",
     },
     headerTitle: {
         color: "#FFFFFF",
-        fontSize: 32,
-        fontWeight: "800",
-        letterSpacing: 0.2,
+        fontSize: 24,
+        fontWeight: "700",
+        marginBottom: 6,
+        textAlign: "center",
     },
     headerSubtitle: {
-        marginTop: 6,
-        color: "rgba(255,255,255,0.75)",
+        color: "rgba(255,255,255,0.55)",
         fontSize: 13,
-        lineHeight: 18,
+        fontWeight: "500",
+        textAlign: "center",
+        letterSpacing: 0.3,
     },
     listContent: {
-        paddingTop: 16,
-        paddingHorizontal: 14,
-        paddingBottom: 24,
+        paddingHorizontal: 20,
+        paddingBottom: 40,
+        paddingTop: 20,
     },
     card: {
         borderRadius: 16,

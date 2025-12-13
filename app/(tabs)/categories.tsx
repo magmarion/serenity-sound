@@ -129,7 +129,7 @@ const CATEGORIES: Category[] = [
 
 function CategoryIcon({ name }: { name: Category["icon"] }) {
     const iconColor = "rgba(255,255,255,0.92)";
-    const iconSize = 20; // Slightly larger for clean look
+    const iconSize = 20;
 
     switch (name) {
         case "CloudRain":
@@ -257,6 +257,10 @@ export default function CategoriesScreen() {
             <Stack.Screen options={{ title: "Categories" }} />
             <SafeAreaView style={styles.safeArea} edges={["top"]}>
 
+                <View style={styles.header}>
+                    <Text style={styles.headerTitle}>Categories</Text>
+                </View>
+
                 {/* Search bar */}
                 <View style={styles.searchWrap}>
                     <View style={styles.searchInner}>
@@ -283,6 +287,7 @@ export default function CategoriesScreen() {
                     contentContainerStyle={styles.listContent}
                     columnWrapperStyle={styles.rowWrapper}
                     showsVerticalScrollIndicator={false}
+                    showsHorizontalScrollIndicator={false}
                     keyboardShouldPersistTaps="handled"
                     testID="categories-list"
                 />
@@ -294,15 +299,27 @@ export default function CategoriesScreen() {
 const styles = StyleSheet.create({
     screen: {
         flex: 1,
-        backgroundColor: "#070C16",
     },
     safeArea: {
         flex: 1,
     },
+    header: {
+        paddingTop: 20,
+        paddingHorizontal: 20,
+        paddingBottom: 20,
+        alignItems: "center",
+    },
+    headerTitle: {
+        color: "#FFFFFF",
+        fontSize: 24,
+        fontWeight: "700",
+        textAlign: "center",
+    },
+
     searchWrap: {
-        paddingHorizontal: 16,
-        paddingTop: 8,
-        paddingBottom: 10,
+        paddingHorizontal: 20,
+        paddingTop: 0,
+        paddingBottom: 20,
     },
     searchInner: {
         height: 44,
@@ -322,10 +339,11 @@ const styles = StyleSheet.create({
         paddingVertical: 0,
     },
     listContent: {
+        paddingTop: 8,
         paddingBottom: 18,
     },
     rowWrapper: {
-        paddingHorizontal: 16,
+        paddingHorizontal: 20,
         marginBottom: 12,
         justifyContent: "space-between",
     },
