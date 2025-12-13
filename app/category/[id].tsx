@@ -7,7 +7,6 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-    Image,
     Pressable,
     ScrollView,
     StyleSheet,
@@ -67,6 +66,7 @@ export default function CategoryDetailScreen() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [isFavorite, setFavorites] = useState<Record<string, boolean>>({});
+    const [showInfoModal, setShowInfoModal] = useState(false);
 
     useEffect(() => {
         loadCategorySounds();
@@ -121,6 +121,11 @@ export default function CategoryDetailScreen() {
         router.back();
     };
 
+    const handleInfoPress = () => {
+        Haptics.selectionAsync();
+        setShowInfoModal(true);
+    };
+
     return (
         <View style={styles.container}>
             {/* Background Gradient */}
@@ -133,19 +138,19 @@ export default function CategoryDetailScreen() {
             <SafeAreaView style={styles.safeArea} edges={["top"]}>
                 <View style={styles.header}>
                     <Pressable onPress={handleBack} style={styles.backButton}>
-                        <Ionicons name="chevron-back" size={28} color={Colors.light.text} />
+                        <Ionicons name="chevron-back" size={24} color={Colors.light.text} />
                     </Pressable>
 
                     <View style={styles.headerCenter}>
-                        <View style={styles.moodIconWrap}>
-                            <Ionicons name={moodConfig.icon} color={moodConfig.accent} size={24} />
-                        </View>
                         <Text style={styles.categoryTitle}>{moodConfig.title}</Text>
                     </View>
 
-                    <View style={styles.headerRight} />
+                    <Pressable onPress={handleInfoPress} style={styles.infoButton}>
+                        <Ionicons name="information-circle-outline" size={24} color={Colors.light.text} />
+                    </Pressable>
                 </View>
             </SafeAreaView>
+
 
             {/* Content */}
             <ScrollView
@@ -153,19 +158,6 @@ export default function CategoryDetailScreen() {
                 contentContainerStyle={styles.scrollContent}
                 showsVerticalScrollIndicator={false}
             >
-                {/* Description */}
-                <View style={styles.descriptionContainer}>
-                    <Text style={styles.descriptionText}>
-                        {moodId === 'sleep' && 'Soothing sounds to help you relax and fall asleep peacefully.'}
-                        {moodId === 'focus' && 'Concentration-enhancing sounds to boost productivity and focus.'}
-                        {moodId === 'calm' && 'Peaceful nature sounds to reduce stress and find tranquility.'}
-                        {moodId === 'recharge' && 'Energetic sounds to uplift your mood and boost motivation.'}
-                    </Text>
-                </View>
-
-                {/* Sounds List */}
-                <Text style={styles.sectionTitle}>Sounds</Text>
-
                 {loading ? (
                     <View style={styles.loadingContainer}>
                         <Text style={styles.loadingText}>Loading sounds...</Text>
@@ -232,6 +224,36 @@ export default function CategoryDetailScreen() {
                     </View>
                 )}
             </ScrollView>
+
+            {/* Info Modal */}
+            {showInfoModal && (
+                <Pressable
+                    style={styles.modalOverlay}
+                    onPress={() => setShowInfoModal(false)}
+                >
+                    <View style={[styles.modalContent, { backgroundColor: moodConfig.gradient[0] }]}>
+                        <View style={styles.modalHeader}>
+                            <View style={[styles.modalIconWrap, { backgroundColor: moodConfig.accent + '20' }]}>
+                                <Ionicons name={moodConfig.icon} color={moodConfig.accent} size={24} />
+                            </View>
+                            <Text style={styles.modalTitle}>{moodConfig.title}</Text>
+                            <Pressable
+                                onPress={() => setShowInfoModal(false)}
+                                style={styles.modalCloseButton}
+                            >
+                                <Ionicons name="close" size={24} color={Colors.light.text} />
+                            </Pressable>
+                        </View>
+
+                        <Text style={styles.modalDescription}>
+                            {moodId === 'sleep' && "Gentle sounds and calming frequencies designed to help you relax, unwind, and prepare for restful sleep."}
+                            {moodId === 'focus' && "Concentration-enhancing audio to help you stay focused, productive, and in the zone during work or study sessions."}
+                            {moodId === 'calm' && "Nature-inspired sounds and peaceful atmospheres to reduce stress and bring tranquility to your day."}
+                            {moodId === 'recharge' && "Energetic sounds and uplifting frequencies to boost your motivation, energy, and mental clarity."}
+                        </Text>
+                    </View>
+                </Pressable>
+            )}
         </View>
     );
 }
@@ -242,6 +264,8 @@ const styles = StyleSheet.create({
     },
     safeArea: {
         zIndex: 2,
+        backgroundColor: 'rgba(0, 0, 0, 0.3)',
+        paddingBottom: 10,
     },
     header: {
         flexDirection: 'row',
@@ -249,37 +273,31 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         paddingHorizontal: 20,
         paddingTop: 10,
-        paddingBottom: 20,
+        paddingBottom: 10,
     },
     backButton: {
-        width: 44,
-        height: 44,
+        width: 40,
+        height: 40,
         alignItems: 'center',
         justifyContent: 'center',
-        borderRadius: 22,
+        borderRadius: 20,
         backgroundColor: 'rgba(255, 255, 255, 0.1)',
     },
     headerCenter: {
         alignItems: 'center',
         flex: 1,
     },
-    moodIconWrap: {
-        width: 50,
-        height: 50,
-        borderRadius: 25,
-        backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    infoButton: {
+        width: 40,
+        height: 40,
         alignItems: 'center',
         justifyContent: 'center',
-        marginBottom: 10,
     },
     categoryTitle: {
         color: Colors.light.text,
-        fontSize: 24,
-        fontWeight: "800",
+        fontSize: 18,
+        fontWeight: "600",
         textAlign: 'center',
-    },
-    headerRight: {
-        width: 44,
     },
     scrollArea: {
         flex: 1,
@@ -288,24 +306,6 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
         paddingBottom: 100,
         paddingTop: 10,
-    },
-    descriptionContainer: {
-        backgroundColor: 'rgba(255, 255, 255, 0.08)',
-        borderRadius: 20,
-        padding: 20,
-        marginBottom: 30,
-    },
-    descriptionText: {
-        color: Colors.light.text,
-        fontSize: 16,
-        lineHeight: 24,
-        textAlign: 'center',
-    },
-    sectionTitle: {
-        color: Colors.light.text,
-        fontSize: 22,
-        fontWeight: "700",
-        marginBottom: 20,
     },
     loadingContainer: {
         padding: 40,
@@ -392,5 +392,63 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.6,
         shadowRadius: 10,
         elevation: 6,
+    },
+    // Modal Styles
+    modalOverlay: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        zIndex: 1000,
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 20,
+    },
+    modalContent: {
+        width: '100%',
+        borderRadius: 24,
+        padding: 24,
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.1)',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.3,
+        shadowRadius: 20,
+        elevation: 10,
+    },
+    modalHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 20,
+        gap: 12,
+    },
+    modalIconWrap: {
+        width: 48,
+        height: 48,
+        borderRadius: 24,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    modalTitle: {
+        color: Colors.light.text,
+        fontSize: 20,
+        fontWeight: '700',
+        flex: 1,
+    },
+    modalCloseButton: {
+        width: 40,
+        height: 40,
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderRadius: 20,
+        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    },
+    modalDescription: {
+        color: Colors.palette.muted,
+        fontSize: 16,
+        lineHeight: 24,
+        textAlign: 'center',
     },
 });
