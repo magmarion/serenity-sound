@@ -249,14 +249,13 @@ export default function CategoriesScreen() {
 
     return (
         <View style={styles.screen} testID="categories-screen">
+            {/* Background gradient */}
+            <LinearGradient
+                colors={["#0B0F2E", "#05060A"]}
+                style={StyleSheet.absoluteFill}
+            />
             <Stack.Screen options={{ title: "Categories" }} />
-
             <SafeAreaView style={styles.safeArea} edges={["top"]}>
-                {/* Background */}
-                <LinearGradient
-                    colors={["#070C16", "#070C16"]}
-                    style={StyleSheet.absoluteFill}
-                />
 
                 {/* Search bar */}
                 <View style={styles.searchWrap}>
