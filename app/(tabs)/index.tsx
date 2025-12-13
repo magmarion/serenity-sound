@@ -16,10 +16,6 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-/* -------------------------
-   Types & Data
--------------------------- */
-
 type MoodCard = {
     id: string;
     title: string;
@@ -35,9 +31,9 @@ type Session = {
     durationLabel: string;
     moodId: string;
     category: string;
-    soundUrl?: string; // Optional
-    duration?: number; // Optional  
-    artworkUrl?: string; // Optional
+    soundUrl?: string;
+    duration?: number;
+    artworkUrl?: string;
 };
 
 const avatarUri =
@@ -47,8 +43,6 @@ const ART_URL = "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?au
 const DEFAULT_SOUND_URL = "https://orangefreesounds.com/wp-content/uploads/2022/08/Rain-and-thunder-with-ocean-waves-sound-effect.mp3";
 
 
-
-// Using Ionicons from first code structure but with Ionicons names
 const MOODS: MoodCard[] = [
     {
         id: "focus",

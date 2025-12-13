@@ -1,6 +1,7 @@
 const charcoal = "#0E101A";
 const slate = "#1F2230";
 const accent = "#FF8743";
+const tintColorLight = "#2f95dc";
 
 export default {
   palette: {
@@ -28,5 +29,12 @@ export default {
     raised: slate,
     border: "#2B3042",
     danger: "#F97070",
+  },
+   favorites: {
+    text: "#000",
+    background: "#fff",
+    tint: tintColorLight,
+    tabIconDefault: "#ccc",
+    tabIconSelected: tintColorLight,
   },
 };
