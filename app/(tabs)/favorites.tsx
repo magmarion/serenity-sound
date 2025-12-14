@@ -1,113 +1,15 @@
+// app/(tabs)/favorites.tsx - FULL FILE with original styling
 import { Ionicons, Feather } from '@expo/vector-icons';
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { memo, useCallback, useState } from "react";
-import { Alert, FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useFavoritesStore } from '@/store/favoritesStore';
+import { router } from 'expo-router';
 
-type FavoriteKey =
-    | "rain"
-    | "fireplace"
-    | "forest"
-    | "thunder"
-    | "ocean"
-    | "wind"
-    | "meditation"
-    | "water"
-    | "white-noise"
-    | "campfire";
-
-type FavoriteItem = {
-    key: FavoriteKey;
-    title: string;
-    gradient: readonly [string, string];
-    iconBg: string;
-    iconName: React.ComponentProps<typeof Ionicons>["name"] | React.ComponentProps<typeof Feather>["name"];
-    iconSet: "Ionicons" | "Feather";
-};
-
-const ITEMS: FavoriteItem[] = [
-    {
-        key: "rain",
-        title: "Rain",
-        gradient: ["#2B3442", "#121720"],
-        iconBg: "rgba(255,255,255,0.12)",
-        iconName: "rainy",
-        iconSet: "Ionicons"
-    },
-    {
-        key: "fireplace",
-        title: "Fireplace",
-        gradient: ["#F26B1D", "#C43C07"],
-        iconBg: "rgba(255,255,255,0.16)",
-        iconName: "flame",
-        iconSet: "Ionicons"
-    },
-    {
-        key: "forest",
-        title: "Forest",
-        gradient: ["#1B8C7A", "#0F5B4F"],
-        iconBg: "rgba(255,255,255,0.14)",
-        iconName: "leaf",
-        iconSet: "Ionicons"
-    },
-    {
-        key: "thunder",
-        title: "Thunder",
-        gradient: ["#2A63FF", "#1236A7"],
-        iconBg: "rgba(255,255,255,0.16)",
-        iconName: "thunderstorm",
-        iconSet: "Ionicons"
-    },
-    {
-        key: "ocean",
-        title: "Ocean",
-        gradient: ["#2B3442", "#131A23"],
-        iconBg: "rgba(255,255,255,0.12)",
-        iconName: "water",
-        iconSet: "Ionicons"
-    },
-    {
-        key: "wind",
-        title: "Wind",
-        gradient: ["#2B3442", "#141A23"],
-        iconBg: "rgba(255,255,255,0.16)",
-        iconName: "wind",
-        iconSet: "Feather"
-    },
-    {
-        key: "meditation",
-        title: "Meditation",
-        gradient: ["#2A63FF", "#163DBA"],
-        iconBg: "rgba(255,255,255,0.16)",
-        iconName: "moon",
-        iconSet: "Ionicons"
-    },
-    {
-        key: "water",
-        title: "Water",
-        gradient: ["#17B69C", "#0B6E60"],
-        iconBg: "rgba(255,255,255,0.14)",
-        iconName: "water",
-        iconSet: "Ionicons"
-    },
-    {
-        key: "white-noise",
-        title: "White Noise",
-        gradient: ["#2B3442", "#141A23"],
-        iconBg: "rgba(255,255,255,0.12)",
-        iconName: "radio",
-        iconSet: "Feather"
-    },
-    {
-        key: "campfire",
-        title: "Campfire",
-        gradient: ["#F26B1D", "#B62F0A"],
-        iconBg: "rgba(255,255,255,0.16)",
-        iconName: "bonfire",
-        iconSet: "Ionicons"
-    },
-];
+const ART_URL = "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80";
+const DEFAULT_SOUND_URL = "https://orangefreesounds.com/wp-content/uploads/2022/08/Rain-and-thunder-with-ocean-waves-sound-effect.mp3";
 
 function useHaptics() {
     return useCallback(async (type: "light" | "success") => {
@@ -123,45 +25,171 @@ function useHaptics() {
     }, []);
 }
 
+// Helper function to get the icon and gradient based on session data
+const getSessionConfig = (session: any) => {
+    // Try to match with common sound types
+    const title = session.title?.toLowerCase() || '';
+    const moodId = session.moodId?.toLowerCase() || '';
+    
+    if (title.includes('rain') || title.includes('rainy')) {
+        return {
+            gradient: ["#2B3442", "#121720"] as const,
+            iconName: "rainy" as const,
+            iconSet: "Ionicons" as const,
+            iconBg: "rgba(255,255,255,0.12)"
+        };
+    }
+    if (title.includes('fire') || title.includes('fireplace')) {
+        return {
+            gradient: ["#F26B1D", "#C43C07"] as const,
+            iconName: "flame" as const,
+            iconSet: "Ionicons" as const,
+            iconBg: "rgba(255,255,255,0.16)"
+        };
+    }
+    if (title.includes('forest') || title.includes('woods')) {
+        return {
+            gradient: ["#1B8C7A", "#0F5B4F"] as const,
+            iconName: "leaf" as const,
+            iconSet: "Ionicons" as const,
+            iconBg: "rgba(255,255,255,0.14)"
+        };
+    }
+    if (title.includes('thunder') || title.includes('storm')) {
+        return {
+            gradient: ["#2A63FF", "#1236A7"] as const,
+            iconName: "thunderstorm" as const,
+            iconSet: "Ionicons" as const,
+            iconBg: "rgba(255,255,255,0.16)"
+        };
+    }
+    if (title.includes('ocean') || title.includes('sea')) {
+        return {
+            gradient: ["#2B3442", "#131A23"] as const,
+            iconName: "water" as const,
+            iconSet: "Ionicons" as const,
+            iconBg: "rgba(255,255,255,0.12)"
+        };
+    }
+    if (title.includes('wind') || title.includes('breeze')) {
+        return {
+            gradient: ["#2B3442", "#141A23"] as const,
+            iconName: "wind" as const,
+            iconSet: "Feather" as const,
+            iconBg: "rgba(255,255,255,0.16)"
+        };
+    }
+    if (title.includes('meditation') || title.includes('relax')) {
+        return {
+            gradient: ["#2A63FF", "#163DBA"] as const,
+            iconName: "moon" as const,
+            iconSet: "Ionicons" as const,
+            iconBg: "rgba(255,255,255,0.16)"
+        };
+    }
+    if (title.includes('water') || title.includes('stream')) {
+        return {
+            gradient: ["#17B69C", "#0B6E60"] as const,
+            iconName: "water" as const,
+            iconSet: "Ionicons" as const,
+            iconBg: "rgba(255,255,255,0.14)"
+        };
+    }
+    if (title.includes('white noise') || title.includes('static')) {
+        return {
+            gradient: ["#2B3442", "#141A23"] as const,
+            iconName: "radio" as const,
+            iconSet: "Feather" as const,
+            iconBg: "rgba(255,255,255,0.12)"
+        };
+    }
+    if (title.includes('campfire') || title.includes('bonfire')) {
+        return {
+            gradient: ["#F26B1D", "#B62F0A"] as const,
+            iconName: "bonfire" as const,
+            iconSet: "Ionicons" as const,
+            iconBg: "rgba(255,255,255,0.16)"
+        };
+    }
+    
+    // Fallback based on moodId
+    switch (moodId) {
+        case 'focus':
+            return {
+                gradient: ["#3A1C09", "#1B1C37"] as const,
+                iconName: "flash" as const,
+                iconSet: "Ionicons" as const,
+                iconBg: "rgba(255,255,255,0.12)"
+            };
+        case 'calm':
+            return {
+                gradient: ["#1E1B4A", "#1A1034"] as const,
+                iconName: "water" as const,
+                iconSet: "Ionicons" as const,
+                iconBg: "rgba(255,255,255,0.12)"
+            };
+        case 'sleep':
+            return {
+                gradient: ["#0E1C36", "#081125"] as const,
+                iconName: "moon" as const,
+                iconSet: "Ionicons" as const,
+                iconBg: "rgba(255,255,255,0.12)"
+            };
+        case 'recharge':
+            return {
+                gradient: ["#0C1F1A", "#05100F"] as const,
+                iconName: "battery-charging" as const,
+                iconSet: "Ionicons" as const,
+                iconBg: "rgba(255,255,255,0.12)"
+            };
+        default:
+            return {
+                gradient: ["#2B3442", "#121720"] as const,
+                iconName: "musical-notes" as const,
+                iconSet: "Ionicons" as const,
+                iconBg: "rgba(255,255,255,0.12)"
+            };
+    }
+};
+
 type RowProps = {
-    item: FavoriteItem;
-    isFavorite: boolean;
-    onToggleFavorite: (key: FavoriteKey) => void;
-    onPlay: (key: FavoriteKey) => void;
+    session: any;
+    onToggleFavorite: (session: any) => void;
+    onPlay: (session: any) => void;
 };
 
 const FavoriteRow = memo(function FavoriteRow({
-    item,
-    isFavorite,
+    session,
     onToggleFavorite,
     onPlay,
 }: RowProps) {
     const [isPressed, setIsPressed] = useState(false);
-
-    const IconComponent = (item.iconSet === 'Feather' ? Feather : Ionicons) as React.ComponentType<any>;
+    
+    const config = getSessionConfig(session);
+    const IconComponent = (config.iconSet === 'Feather' ? Feather : Ionicons) as React.ComponentType<any>;
 
     const onPressPlay = useCallback(() => {
-        onPlay(item.key);
-    }, [item.key, onPlay]);
+        onPlay(session);
+    }, [session, onPlay]);
 
     const onPressHeart = useCallback(() => {
-        onToggleFavorite(item.key);
-    }, [item.key, onToggleFavorite]);
+        onToggleFavorite(session);
+    }, [session, onToggleFavorite]);
 
     return (
         <LinearGradient
-            colors={item.gradient}
+            colors={config.gradient}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.card}
         >
             <View style={styles.cardInner}>
                 <View style={styles.left}>
-                    <View style={[styles.iconWrap, { backgroundColor: item.iconBg }]}>
-                        <IconComponent name={item.iconName} size={18} color="#FFFFFF" />
+                    <View style={[styles.iconWrap, { backgroundColor: config.iconBg }]}>
+                        <IconComponent name={config.iconName} size={18} color="#FFFFFF" />
                     </View>
                     <Text style={styles.cardTitle} numberOfLines={1}>
-                        {item.title}
+                        {session.title}
                     </Text>
                 </View>
 
@@ -171,7 +199,7 @@ const FavoriteRow = memo(function FavoriteRow({
                         isPressed && { transform: [{ scale: 0.9 }] }
                     ]}>
                         <Pressable
-                            testID={`favorites.play.${item.key}`}
+                            testID={`favorites.play.${session.id}`}
                             accessibilityRole="button"
                             onPress={onPressPlay}
                             onPressIn={() => setIsPressed(true)}
@@ -183,7 +211,7 @@ const FavoriteRow = memo(function FavoriteRow({
                     </View>
 
                     <Pressable
-                        testID={`favorites.heart.${item.key}`}
+                        testID={`favorites.heart.${session.id}`}
                         accessibilityRole="button"
                         onPress={onPressHeart}
                         hitSlop={10}
@@ -193,7 +221,7 @@ const FavoriteRow = memo(function FavoriteRow({
                         ]}
                     >
                         <Ionicons
-                            name={isFavorite ? "heart" : "heart-outline"}
+                            name="heart"
                             size={20}
                             color="#FFFFFF"
                         />
@@ -204,40 +232,34 @@ const FavoriteRow = memo(function FavoriteRow({
     );
 });
 
-
 export default function FavoritesScreen() {
-    const [favorites, setFavorites] = useState<Record<FavoriteKey, boolean>>({
-        rain: true,
-        fireplace: true,
-        forest: true,
-        thunder: true,
-        ocean: true,
-        wind: true,
-        meditation: true,
-        water: true,
-        "white-noise": true,
-        campfire: true,
-    });
-
+    const { favorites, removeFavorite } = useFavoritesStore();
     const haptics = useHaptics();
 
     const onToggleFavorite = useCallback(
-        async (key: FavoriteKey) => {
+        async (session: any) => {
             await haptics("light");
-            setFavorites((prev) => {
-                const next: Record<FavoriteKey, boolean> = { ...prev, [key]: !prev[key] };
-                console.log("Favorite toggled:", key, "=>", next[key]);
-                return next;
-            });
+            removeFavorite(session.id);
         },
-        [haptics]
+        [haptics, removeFavorite]
     );
 
     const onPlay = useCallback(
-        async (key: FavoriteKey) => {
+        async (session: any) => {
             await haptics("success");
-            console.log("Play pressed:", key);
-            Alert.alert("Play", `Playing ${key}...`);
+            
+            const soundUrl = session.soundUrl || DEFAULT_SOUND_URL;
+            const artworkUrl = session.artworkUrl || ART_URL;
+
+            router.push({
+                pathname: '/(modal)/player',
+                params: {
+                    soundUrl: soundUrl,
+                    title: session.title || 'Sound',
+                    subtitle: session.durationLabel || '3 min • Ambient',
+                    artworkUrl: artworkUrl,
+                },
+            });
         },
         [haptics]
     );
@@ -258,23 +280,32 @@ export default function FavoritesScreen() {
                     </Text>
                 </View>
 
-                <FlatList
-                    testID="favorites.list"
-                    data={ITEMS}
-                    keyExtractor={(item, index) => `${item.key}-${index}`}
-                    contentContainerStyle={styles.listContent}
-                    ItemSeparatorComponent={() => <View style={{ height: 14 }} />}
-                    showsVerticalScrollIndicator={false}
-                    showsHorizontalScrollIndicator={false}
-                    renderItem={({ item }) => (
-                        <FavoriteRow
-                            item={item}
-                            isFavorite={favorites[item.key] ?? false}
-                            onToggleFavorite={onToggleFavorite}
-                            onPlay={onPlay}
-                        />
-                    )}
-                />
+                {favorites.length === 0 ? (
+                    <View style={styles.emptyContainer}>
+                        <Ionicons name="heart-outline" size={64} color="rgba(255,255,255,0.3)" />
+                        <Text style={styles.emptyTitle}>No favorites yet</Text>
+                        <Text style={styles.emptyText}>
+                            Tap the heart icon on any sound to add it here
+                        </Text>
+                    </View>
+                ) : (
+                    <FlatList
+                        testID="favorites.list"
+                        data={favorites}
+                        keyExtractor={(item) => item.id}
+                        contentContainerStyle={styles.listContent}
+                        ItemSeparatorComponent={() => <View style={{ height: 14 }} />}
+                        showsVerticalScrollIndicator={false}
+                        showsHorizontalScrollIndicator={false}
+                        renderItem={({ item }) => (
+                            <FavoriteRow
+                                session={item}
+                                onToggleFavorite={onToggleFavorite}
+                                onPlay={onPlay}
+                            />
+                        )}
+                    />
+                )}
             </SafeAreaView>
         </View>
     );
@@ -312,6 +343,25 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
         paddingBottom: 40,
         paddingTop: 20,
+    },
+    emptyContainer: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingHorizontal: 40,
+    },
+    emptyTitle: {
+        color: "#FFFFFF",
+        fontSize: 20,
+        fontWeight: "600",
+        marginTop: 16,
+        marginBottom: 8,
+    },
+    emptyText: {
+        color: "rgba(255,255,255,0.6)",
+        fontSize: 14,
+        textAlign: 'center',
+        lineHeight: 20,
     },
     card: {
         borderRadius: 16,
@@ -358,7 +408,7 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         backgroundColor: "rgba(255, 255, 255, 0.1)",
         borderWidth: 1,
-        borderColor: "rgba(255, 255, 255, 0.1)",
+        borderColor: "rgba(255, 255,255, 0.1)",
         height: 36,
         paddingHorizontal: 16,
         alignItems: "center",
