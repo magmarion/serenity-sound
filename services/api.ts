@@ -1,4 +1,3 @@
-// services/api.ts
 const FREESOUND_API_KEY = 'EJPFkrS7ZjLIwX14CQyVPZw3gDmqNqEd17nUz4TY';
 
 export interface Session {
@@ -12,9 +11,9 @@ export interface Session {
     artworkUrl?: string;
 }
 
-/* ============================================================================
-   MAIN API FUNCTION WITH PROPER FILTERING
-============================================================================ */
+/* 
+MAIN API FUNCTION WITH PROPER FILTERING
+ */
 export async function fetchSoundEffects(moodFilter?: string): Promise<Session[]> {
     try {
         console.log(`🔍 fetchSoundEffects called with moodFilter: ${moodFilter || 'none (home screen)'}`);
@@ -33,9 +32,9 @@ export async function fetchSoundEffects(moodFilter?: string): Promise<Session[]>
     }
 }
 
-/* ============================================================================
+/* 
    HOME SCREEN: MIXED SOUNDS (100+ sounds)
-============================================================================ */
+ */
 async function fetchHomeScreenSounds(): Promise<Session[]> {
     console.log('🏠 Fetching MIXED sounds for home screen...');
 
@@ -121,9 +120,9 @@ async function fetchHomeScreenSounds(): Promise<Session[]> {
     return shuffledSessions;
 }
 
-/* ============================================================================
+/* 
    CATEGORY PAGES: FILTERED SOUNDS
-============================================================================ */
+ */
 async function fetchCategorySounds(moodFilter: string): Promise<Session[]> {
     console.log(`🎯 Fetching FILTERED sounds for mood: ${moodFilter}`);
 
@@ -181,14 +180,14 @@ async function fetchCategorySounds(moodFilter: string): Promise<Session[]> {
     return uniqueSessions.slice(0, 30); // Limit to 30 for category pages
 }
 
-/* ============================================================================
+/* 
    QUERY CONFIGURATION
-============================================================================ */
+ */
 function getCategoryQuery(moodId: string): {
     queries: string[];
     description: string;
 } {
-    const configs = {
+    const configs: Record<string, { queries: string[]; description: string }> = {
         sleep: {
             queries: [
                 'rain OR thunder OR storm',
@@ -232,12 +231,123 @@ function getCategoryQuery(moodId: string): {
                 'power OR strength'
             ],
             description: 'Energy & Motivation'
+        },
+        // Sound-specific categories
+        rain: {
+            queries: [
+                'rain',
+                'rainfall',
+                'downpour',
+                'rainstorm',
+                'gentle rain',
+                'heavy rain'
+            ],
+            description: 'Rain Sounds'
+        },
+        fireplace: {
+            queries: [
+                'fireplace',
+                'fire',
+                'crackling fire',
+                'bonfire',
+                'campfire',
+                'fire crackling'
+            ],
+            description: 'Fireplace Sounds'
+        },
+        thunder: {
+            queries: [
+                'thunder',
+                'thunderstorm',
+                'lightning',
+                'storm',
+                'thunder and lightning',
+                'thunderclap'
+            ],
+            description: 'Thunder & Storm'
+        },
+        forest: {
+            queries: [
+                'forest',
+                'woods',
+                'birds',
+                'birdsong',
+                'forest ambience',
+                'nature sounds'
+            ],
+            description: 'Forest Sounds'
+        },
+        cafe: {
+            queries: [
+                'cafe',
+                'coffee shop',
+                'restaurant ambience',
+                'people talking',
+                'background chatter',
+                'coffee shop ambience'
+            ],
+            description: 'Cafe Sounds'
+        },
+        bricks: {
+            queries: [
+                'ambient',
+                'ambient music',
+                'atmospheric',
+                'soundscape',
+                'background',
+                'environmental'
+            ],
+            description: 'Ambient Sounds'
+        },
+        wind: {
+            queries: [
+                'wind',
+                'breeze',
+                'wind blowing',
+                'gusty wind',
+                'wind through trees',
+                'howling wind'
+            ],
+            description: 'Wind Sounds'
+        },
+        night: {
+            queries: [
+                'night',
+                'night sounds',
+                'crickets',
+                'night ambience',
+                'nocturnal',
+                'nighttime'
+            ],
+            description: 'Night Sounds'
+        },
+        water: {
+            queries: [
+                'water',
+                'stream',
+                'river',
+                'waterfall',
+                'flowing water',
+                'babbling brook'
+            ],
+            description: 'Water Sounds'
+        },
+        ocean: {
+            queries: [
+                'ocean',
+                'waves',
+                'sea',
+                'beach',
+                'shore',
+                'ocean waves'
+            ],
+            description: 'Ocean Sounds'
         }
     };
 
-    return configs[moodId as keyof typeof configs] || {
+    return configs[moodId] || {
         queries: ['ambient OR nature'],
-        description: 'Ambient'
+        description: 'Ambient Sounds'
     };
 }
 
@@ -271,50 +381,80 @@ function createSessionFromSound(sound: any): Session | null {
 
 function determineMoodFromTags(tags: string[], duration: number): string {
     const tagString = tags.join(' ').toLowerCase();
-
-    // Check each category in priority order
-    if (tagString.includes('rain') || tagString.includes('ocean') || tagString.includes('waves') ||
-        tagString.includes('thunder') || tagString.includes('storm') ||
-        tagString.includes('white noise') || tagString.includes('pink noise') ||
-        tagString.includes('sleep') || tagString.includes('meditation')) {
+    
+    // Check for specific sound categories first
+    if (tagString.includes('rain') || tagString.includes('rainfall') || tagString.includes('downpour')) {
+        return 'rain';
+    }
+    if (tagString.includes('fire') || tagString.includes('fireplace') || tagString.includes('crackling')) {
+        return 'fireplace';
+    }
+    if (tagString.includes('thunder') || tagString.includes('storm') || tagString.includes('lightning')) {
+        return 'thunder';
+    }
+    if (tagString.includes('forest') || tagString.includes('woods') || tagString.includes('birds')) {
+        return 'forest';
+    }
+    if (tagString.includes('cafe') || tagString.includes('coffee shop') || tagString.includes('restaurant')) {
+        return 'cafe';
+    }
+    if (tagString.includes('wind') || tagString.includes('breeze')) {
+        return 'wind';
+    }
+    if (tagString.includes('night') || tagString.includes('cricket')) {
+        return 'night';
+    }
+    if (tagString.includes('water') && !tagString.includes('ocean')) {
+        return 'water';
+    }
+    if (tagString.includes('ocean') || tagString.includes('waves') || tagString.includes('sea')) {
+        return 'ocean';
+    }
+    
+    // Then check mood categories
+    if (tagString.includes('sleep') || tagString.includes('meditation') || 
+        tagString.includes('relaxing') || tagString.includes('white noise')) {
         return duration > 300 ? 'sleep' : 'calm';
     }
-
     if (tagString.includes('piano') || tagString.includes('instrumental') ||
         tagString.includes('classical') || tagString.includes('study') ||
         tagString.includes('concentration') || tagString.includes('work') ||
         tagString.includes('focus') || tagString.includes('productivity')) {
         return 'focus';
     }
-
-    if (tagString.includes('nature') || tagString.includes('forest') ||
-        tagString.includes('birds') || tagString.includes('stream') ||
-        tagString.includes('waterfall') || tagString.includes('river') ||
-        tagString.includes('fire') || tagString.includes('fireplace') ||
-        tagString.includes('calm') || tagString.includes('peaceful')) {
+    if (tagString.includes('nature') || tagString.includes('calm') ||
+        tagString.includes('peaceful') || tagString.includes('tranquil')) {
         return 'calm';
     }
-
     if (tagString.includes('energy') || tagString.includes('upbeat') ||
         tagString.includes('motivation') || tagString.includes('inspiring') ||
-        tagString.includes('positive') || tagString.includes('uplifting') ||
-        tagString.includes('happy') || tagString.includes('joyful')) {
+        tagString.includes('positive') || tagString.includes('uplifting')) {
         return 'recharge';
     }
-
-    // Default based on duration
-    return duration > 600 ? 'sleep' : 'calm';
+    
+    // Default
+    return 'bricks'; // Use bricks as default for ambient sounds
 }
 
 function getMinDurationForCategory(category: string): number {
-    const minDurations = {
-        sleep: 60,     // 1 minute for sleep
-        focus: 60,     // 1 minute for focus
-        calm: 60,      // 1 minute for calm
-        recharge: 30   // 30 seconds for recharge
+    const minDurations: Record<string, number> = {
+        sleep: 60,
+        focus: 60,
+        calm: 60,
+        recharge: 30,
+        rain: 60,
+        fireplace: 60,
+        thunder: 60,
+        forest: 60,
+        cafe: 60,
+        bricks: 60,
+        wind: 60,
+        night: 60,
+        water: 60,
+        ocean: 60
     };
 
-    return minDurations[category as keyof typeof minDurations] || 30;
+    return minDurations[category] || 30;
 }
 
 /* ============================================================================
@@ -344,6 +484,8 @@ function cleanSoundTitle(rawName: string, username?: string): string {
         if (lowerName.includes('thunder') || lowerName.includes('storm')) return 'Thunderstorm';
         if (lowerName.includes('stream') || lowerName.includes('river')) return 'Flowing Water';
         if (lowerName.includes('study') || lowerName.includes('focus')) return 'Study Music';
+        if (lowerName.includes('cafe') || lowerName.includes('coffee')) return 'Coffee Shop';
+        if (lowerName.includes('night') || lowerName.includes('cricket')) return 'Night Sounds';
 
         return username ? `${username}'s Sound` : 'Ambient Sound';
     }
@@ -367,13 +509,25 @@ function formatDurationLabel(durationSeconds: number, moodId: string): string {
 }
 
 function getCategoryLabel(moodId: string): string {
-    const labels = {
+    const labels: Record<string, string> = {
+        // Mood categories
         sleep: 'Sleep & Relaxation',
         focus: 'Focus & Concentration',
         calm: 'Calm & Nature',
-        recharge: 'Energy & Motivation'
+        recharge: 'Energy & Motivation',
+        // Sound categories
+        rain: 'Rain Sounds',
+        fireplace: 'Fireplace Sounds',
+        thunder: 'Thunder & Storm',
+        forest: 'Forest Sounds',
+        cafe: 'Cafe Sounds',
+        bricks: 'Ambient Sounds',
+        wind: 'Wind Sounds',
+        night: 'Night Sounds',
+        water: 'Water Sounds',
+        ocean: 'Ocean Sounds'
     };
-    return labels[moodId as keyof typeof labels] || 'Ambient';
+    return labels[moodId] || 'Ambient Sounds';
 }
 
 function getArtworkUrl(images: any): string | undefined {
