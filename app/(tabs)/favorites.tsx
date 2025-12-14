@@ -1,15 +1,207 @@
-// app/(tabs)/favorites.tsx - FULL FILE with original styling
-import { Ionicons, Feather } from '@expo/vector-icons';
+// app/(tabs)/favorites.tsx - Simplified with best practice
+import { useFavoritesStore } from '@/store/favoritesStore';
+import { Feather, Ionicons } from '@expo/vector-icons';
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
-import React, { memo, useCallback, useState } from "react";
-import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { useFavoritesStore } from '@/store/favoritesStore';
 import { router } from 'expo-router';
+import React, { memo, useCallback, useState } from "react";
+import { FlatList, Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import {
+    Gesture,
+    GestureDetector,
+    GestureHandlerRootView,
+} from 'react-native-gesture-handler';
+import Animated, {
+    runOnJS,
+    useAnimatedStyle,
+    useSharedValue,
+    withSpring,
+    withTiming,
+} from 'react-native-reanimated';
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const ART_URL = "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80";
 const DEFAULT_SOUND_URL = "https://orangefreesounds.com/wp-content/uploads/2022/08/Rain-and-thunder-with-ocean-waves-sound-effect.mp3";
+
+// Swipeable row component
+const SwipeableRow = memo(function SwipeableRow({
+    session,
+    onToggleFavorite,
+    onPlay,
+}: {
+    session: any;
+    onToggleFavorite: (session: any) => void;
+    onPlay: (session: any) => void;
+}) {
+    const [isPressed, setIsPressed] = useState(false);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const translateX = useSharedValue(0);
+    const deleteWidth = useSharedValue(0);
+
+    const scale = useSharedValue(1);
+    const opacity = useSharedValue(1);
+    const rowHeight = useSharedValue(68);
+
+    const config = getSessionConfig(session);
+    const IconComponent = (config.iconSet === 'Feather' ? Feather : Ionicons) as React.ComponentType<any>;
+
+    const onPressPlay = useCallback(() => {
+        onPlay(session);
+    }, [session, onPlay]);
+
+    const handleDelete = useCallback(() => {
+        // Store the function to call on JS thread
+        const deleteOnJS = () => {
+            onToggleFavorite(session);
+        };
+
+        // Start animations
+        translateX.value = withTiming(-200, { duration: 400 });
+        scale.value = withTiming(0.8, { duration: 400 });
+        opacity.value = withTiming(0, { duration: 400 });
+        rowHeight.value = withTiming(0, { duration: 400 });
+
+        // Call JS function after animation
+        setTimeout(() => {
+            deleteOnJS();
+        }, 400);
+    }, [session, onToggleFavorite, translateX, scale, opacity, rowHeight]);
+
+    const panGesture = Gesture.Pan()
+        .activeOffsetX([-10, 10])
+        .onUpdate((event) => {
+            // Only allow left swipe (negative values)
+            if (event.translationX < 0) {
+                translateX.value = Math.max(event.translationX, -100);
+                // Expand delete width as user swipes
+                deleteWidth.value = Math.min(Math.abs(event.translationX), 100);
+            }
+        })
+        .onEnd((event) => {
+            if (event.translationX < -60) {
+                // Swiped past threshold - show confirmation modal
+                translateX.value = withSpring(-100);
+                deleteWidth.value = 100;
+                runOnJS(Haptics.selectionAsync)();
+                runOnJS(setShowDeleteConfirm)(true);
+            } else {
+                // Return to original position
+                translateX.value = withSpring(0);
+                deleteWidth.value = withSpring(0);
+            }
+        });
+
+    const animatedRowStyle = useAnimatedStyle(() => ({
+        transform: [{ translateX: translateX.value }, { scale: scale.value }],
+        opacity: opacity.value,
+        height: rowHeight.value,
+        marginVertical: rowHeight.value === 0 ? 0 : 3.5,
+    }));
+
+    const deleteBackgroundStyle = useAnimatedStyle(() => ({
+        width: deleteWidth.value,
+        opacity: deleteWidth.value > 0 ? 1 : 0,
+    }));
+
+    const handleCancelDelete = useCallback(() => {
+        setShowDeleteConfirm(false);
+        translateX.value = withSpring(0);
+        deleteWidth.value = withSpring(0);
+    }, [translateX, deleteWidth]);
+
+    const handleConfirmDelete = useCallback(() => {
+        setShowDeleteConfirm(false);
+        handleDelete();
+    }, [handleDelete]);
+
+    return (
+        <View style={styles.swipeableContainer}>
+            {/* Red delete background that expands as you swipe */}
+            <Animated.View style={[styles.deleteBackground, deleteBackgroundStyle]}>
+                <View style={styles.deleteContent}>
+                    <Ionicons name="trash-outline" size={24} color="#FFFFFF" />
+                    <Text style={styles.deleteText}>Delete</Text>
+                </View>
+            </Animated.View>
+
+            {/* The actual swipable card */}
+            <GestureDetector gesture={panGesture}>
+                <Animated.View style={animatedRowStyle}>
+                    <LinearGradient
+                        colors={config.gradient}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={styles.card}
+                    >
+                        <View style={styles.cardInner}>
+                            <View style={styles.left}>
+                                <View style={[styles.iconWrap, { backgroundColor: config.iconBg }]}>
+                                    <IconComponent name={config.iconName} size={18} color="#FFFFFF" />
+                                </View>
+                                <Text style={styles.cardTitle} numberOfLines={1}>
+                                    {session.title}
+                                </Text>
+                            </View>
+
+                            <View style={styles.actions}>
+                                {/* Original play button style */}
+                                <View style={[
+                                    styles.playContainer,
+                                    isPressed && { transform: [{ scale: 0.9 }] }
+                                ]}>
+                                    <Pressable
+                                        testID={`favorites.play.${session.id}`}
+                                        accessibilityRole="button"
+                                        onPress={onPressPlay}
+                                        onPressIn={() => setIsPressed(true)}
+                                        onPressOut={() => setIsPressed(false)}
+                                        style={styles.playButton}
+                                    >
+                                        <Text style={styles.playText}>Play</Text>
+                                    </Pressable>
+                                </View>
+                            </View>
+                        </View>
+                    </LinearGradient>
+                </Animated.View>
+            </GestureDetector>
+
+            {/* Delete Confirmation Modal */}
+            <Modal
+                visible={showDeleteConfirm}
+                transparent
+                animationType="fade"
+                onRequestClose={handleCancelDelete}
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={styles.confirmationBox}>
+                        <View style={styles.confirmationIcon}>
+                            <Ionicons name="trash" size={40} color="#FF3B30" />
+                        </View>
+                        <Text style={styles.confirmationTitle}>Remove from Favorites</Text>
+                        <Text style={styles.confirmationMessage}>
+                            Are you sure you want to remove &#39;{session.title}&#39; from your favorites?
+                        </Text>
+                        <View style={styles.confirmationButtons}>
+                            <Pressable
+                                onPress={handleCancelDelete}
+                                style={[styles.confirmationButton, styles.cancelButton]}
+                            >
+                                <Text style={styles.cancelButtonText}>Cancel</Text>
+                            </Pressable>
+                            <Pressable
+                                onPress={handleConfirmDelete}
+                                style={[styles.confirmationButton, styles.deleteButton]}
+                            >
+                                <Text style={styles.deleteButtonText}>Remove</Text>
+                            </Pressable>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
+        </View>
+    );
+});
 
 function useHaptics() {
     return useCallback(async (type: "light" | "success") => {
@@ -27,10 +219,9 @@ function useHaptics() {
 
 // Helper function to get the icon and gradient based on session data
 const getSessionConfig = (session: any) => {
-    // Try to match with common sound types
     const title = session.title?.toLowerCase() || '';
     const moodId = session.moodId?.toLowerCase() || '';
-    
+
     if (title.includes('rain') || title.includes('rainy')) {
         return {
             gradient: ["#2B3442", "#121720"] as const,
@@ -111,7 +302,7 @@ const getSessionConfig = (session: any) => {
             iconBg: "rgba(255,255,255,0.16)"
         };
     }
-    
+
     // Fallback based on moodId
     switch (moodId) {
         case 'focus':
@@ -152,86 +343,6 @@ const getSessionConfig = (session: any) => {
     }
 };
 
-type RowProps = {
-    session: any;
-    onToggleFavorite: (session: any) => void;
-    onPlay: (session: any) => void;
-};
-
-const FavoriteRow = memo(function FavoriteRow({
-    session,
-    onToggleFavorite,
-    onPlay,
-}: RowProps) {
-    const [isPressed, setIsPressed] = useState(false);
-    
-    const config = getSessionConfig(session);
-    const IconComponent = (config.iconSet === 'Feather' ? Feather : Ionicons) as React.ComponentType<any>;
-
-    const onPressPlay = useCallback(() => {
-        onPlay(session);
-    }, [session, onPlay]);
-
-    const onPressHeart = useCallback(() => {
-        onToggleFavorite(session);
-    }, [session, onToggleFavorite]);
-
-    return (
-        <LinearGradient
-            colors={config.gradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.card}
-        >
-            <View style={styles.cardInner}>
-                <View style={styles.left}>
-                    <View style={[styles.iconWrap, { backgroundColor: config.iconBg }]}>
-                        <IconComponent name={config.iconName} size={18} color="#FFFFFF" />
-                    </View>
-                    <Text style={styles.cardTitle} numberOfLines={1}>
-                        {session.title}
-                    </Text>
-                </View>
-
-                <View style={styles.actions}>
-                    <View style={[
-                        styles.playContainer,
-                        isPressed && { transform: [{ scale: 0.9 }] }
-                    ]}>
-                        <Pressable
-                            testID={`favorites.play.${session.id}`}
-                            accessibilityRole="button"
-                            onPress={onPressPlay}
-                            onPressIn={() => setIsPressed(true)}
-                            onPressOut={() => setIsPressed(false)}
-                            style={styles.playButton}
-                        >
-                            <Text style={styles.playText}>Play</Text>
-                        </Pressable>
-                    </View>
-
-                    <Pressable
-                        testID={`favorites.heart.${session.id}`}
-                        accessibilityRole="button"
-                        onPress={onPressHeart}
-                        hitSlop={10}
-                        style={({ pressed }) => [
-                            styles.heartBtn,
-                            pressed ? { transform: [{ scale: 0.96 }], opacity: 0.85 } : null,
-                        ]}
-                    >
-                        <Ionicons
-                            name="heart"
-                            size={20}
-                            color="#FFFFFF"
-                        />
-                    </Pressable>
-                </View>
-            </View>
-        </LinearGradient>
-    );
-});
-
 export default function FavoritesScreen() {
     const { favorites, removeFavorite } = useFavoritesStore();
     const haptics = useHaptics();
@@ -247,7 +358,7 @@ export default function FavoritesScreen() {
     const onPlay = useCallback(
         async (session: any) => {
             await haptics("success");
-            
+
             const soundUrl = session.soundUrl || DEFAULT_SOUND_URL;
             const artworkUrl = session.artworkUrl || ART_URL;
 
@@ -265,7 +376,7 @@ export default function FavoritesScreen() {
     );
 
     return (
-        <View style={styles.screen}>
+        <GestureHandlerRootView style={styles.screen}>
             {/* Background - Same as Settings */}
             <LinearGradient
                 colors={["#0B0F2E", "#05060A"]}
@@ -294,11 +405,11 @@ export default function FavoritesScreen() {
                         data={favorites}
                         keyExtractor={(item) => item.id}
                         contentContainerStyle={styles.listContent}
-                        ItemSeparatorComponent={() => <View style={{ height: 14 }} />}
+                        ItemSeparatorComponent={() => <View style={{ height: 6 }} />}
                         showsVerticalScrollIndicator={false}
                         showsHorizontalScrollIndicator={false}
                         renderItem={({ item }) => (
-                            <FavoriteRow
+                            <SwipeableRow
                                 session={item}
                                 onToggleFavorite={onToggleFavorite}
                                 onPlay={onPlay}
@@ -307,7 +418,7 @@ export default function FavoritesScreen() {
                     />
                 )}
             </SafeAreaView>
-        </View>
+        </GestureHandlerRootView>
     );
 }
 
@@ -341,8 +452,8 @@ const styles = StyleSheet.create({
     },
     listContent: {
         paddingHorizontal: 20,
-        paddingBottom: 40,
-        paddingTop: 20,
+        paddingBottom: 20,
+        paddingTop: 10,
     },
     emptyContainer: {
         flex: 1,
@@ -363,6 +474,34 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         lineHeight: 20,
     },
+    swipeableContainer: {
+        position: 'relative',
+        overflow: 'hidden',
+        borderRadius: 16,
+    },
+    deleteBackground: {
+        position: 'absolute',
+        right: 0,
+        top: 0,
+        bottom: 0,
+        backgroundColor: '#FF3B30',
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderTopRightRadius: 16,
+        borderBottomRightRadius: 16,
+    },
+    deleteContent: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 4,
+        width: 80,
+    },
+    deleteText: {
+        color: '#FFFFFF',
+        fontSize: 12,
+        fontWeight: '600',
+    },
+    // Original card styles (unchanged)
     card: {
         borderRadius: 16,
         overflow: "hidden",
@@ -422,12 +561,74 @@ const styles = StyleSheet.create({
         letterSpacing: 0.2,
         textAlign: "center",
     },
-    heartBtn: {
-        width: 36,
-        height: 36,
-        borderRadius: 18,
-        alignItems: "center",
-        justifyContent: "center",
-        backgroundColor: "rgba(255, 255, 255, 0.1)",
+    // Delete Confirmation Modal
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 20,
+    },
+    confirmationBox: {
+        backgroundColor: '#1A1A1A',
+        borderRadius: 20,
+        padding: 24,
+        width: '100%',
+        maxWidth: 320,
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.1)',
+    },
+    confirmationIcon: {
+        width: 80,
+        height: 80,
+        borderRadius: 40,
+        backgroundColor: 'rgba(255, 59, 48, 0.1)',
+        alignItems: 'center',
+        justifyContent: 'center',
+        alignSelf: 'center',
+        marginBottom: 20,
+    },
+    confirmationTitle: {
+        color: '#FFFFFF',
+        fontSize: 20,
+        fontWeight: '700',
+        textAlign: 'center',
+        marginBottom: 8,
+    },
+    confirmationMessage: {
+        color: 'rgba(255,255,255,0.7)',
+        fontSize: 14,
+        textAlign: 'center',
+        lineHeight: 20,
+        marginBottom: 24,
+    },
+    confirmationButtons: {
+        flexDirection: 'row',
+        gap: 12,
+    },
+    confirmationButton: {
+        flex: 1,
+        paddingVertical: 14,
+        borderRadius: 12,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    cancelButton: {
+        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.2)',
+    },
+    deleteButton: {
+        backgroundColor: '#FF3B30',
+    },
+    cancelButtonText: {
+        color: '#FFFFFF',
+        fontSize: 16,
+        fontWeight: '600',
+    },
+    deleteButtonText: {
+        color: '#FFFFFF',
+        fontSize: 16,
+        fontWeight: '600',
     },
 });
