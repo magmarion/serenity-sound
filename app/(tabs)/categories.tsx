@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useState } from "react";
-import { Stack } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
 import {
@@ -35,7 +35,11 @@ type CategoryId =
     | "wind"
     | "night"
     | "water"
-    | "ocean";
+    | "ocean"
+    | "sleep"
+    | "focus"
+    | "calm"
+    | "recharge";
 
 type Category = {
     id: CategoryId;
@@ -56,72 +60,100 @@ type Category = {
 
 const CATEGORIES: Category[] = [
     {
+        id: "sleep",
+        title: "Sleep",
+        subtitle: "Sleep & Relaxation",
+        colors: ["#1D4ED8", "#0B1B3E"],
+        icon: "Moon",
+    },
+    {
+        id: "focus",
+        title: "Focus",
+        subtitle: "Focus & Concentrate",
+        colors: ["#F97316", "#7C2D12"],
+        icon: "Coffee",
+    },
+    {
+        id: "calm",
+        title: "Calm",
+        subtitle: "Calm & Nature",
+        colors: ["#0EA5A4", "#064E3B"],
+        icon: "Trees",
+    },
+    {
+        id: "recharge",
+        title: "Recharge",
+        subtitle: "Energy & Motivation",
+        colors: ["#15803D", "#064E3B"],
+        icon: "CloudLightning",
+    },
+    {
         id: "rain",
         title: "Rain",
-        subtitle: "56 sounds",
+        subtitle: "Rain & Storm",
         colors: ["#1D4ED8", "#0B1B3E"],
         icon: "CloudRain",
     },
     {
         id: "fireplace",
         title: "Fireplace",
-        subtitle: "12 sounds",
+        subtitle: "Fire & Crackling",
         colors: ["#F97316", "#7C2D12"],
         icon: "Flame",
     },
     {
         id: "thunder",
         title: "Thunder",
-        subtitle: "16 sounds",
+        subtitle: "Thunder & Lightning",
         colors: ["#FB923C", "#9A3412"],
         icon: "CloudLightning",
     },
     {
         id: "forest",
         title: "Forest",
-        subtitle: "24 sounds",
+        subtitle: "Forest & Nature",
         colors: ["#0EA5A4", "#064E3B"],
         icon: "Trees",
     },
     {
         id: "cafe",
         title: "Cafe",
-        subtitle: "19 sounds",
+        subtitle: "Coffee Shop",
         colors: ["#15803D", "#064E3B"],
         icon: "Coffee",
     },
     {
         id: "bricks",
         title: "Bricks",
-        subtitle: "21 sounds",
+        subtitle: "Ambient Sounds",
         colors: ["#F97316", "#9A3412"],
         icon: "Blocks",
     },
     {
         id: "wind",
         title: "Wind",
-        subtitle: "10 sounds",
+        subtitle: "Wind & Breeze",
         colors: ["#111827", "#0B1220"],
         icon: "Wind",
     },
     {
         id: "night",
         title: "Night",
-        subtitle: "21 sounds",
+        subtitle: "Night Sounds",
         colors: ["#111827", "#0B1220"],
         icon: "Moon",
     },
     {
         id: "water",
         title: "Water",
-        subtitle: "15 sounds",
+        subtitle: "Water Sounds",
         colors: ["#111827", "#0B1220"],
         icon: "Waves",
     },
     {
         id: "ocean",
         title: "Ocean",
-        subtitle: "18 sounds",
+        subtitle: "Ocean & Waves",
         colors: ["#111827", "#0B1220"],
         icon: "Waves",
     },
@@ -218,6 +250,7 @@ function CategoryCard({
 }
 
 export default function CategoriesScreen() {
+    const router = useRouter();
     const [query, setQuery] = useState<string>("");
 
     const filtered = useMemo(() => {
@@ -233,7 +266,12 @@ export default function CategoriesScreen() {
     const onPressCategory = useCallback((category: Category) => {
         console.log("[categories] press", category.id);
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => null);
-    }, []);
+
+        router.push({
+            pathname: '/category/[id]',
+            params: { id: category.id }
+        });
+    }, [router]);
 
     const renderItem: ListRenderItem<Category> = useCallback(
         ({ item }) => {
@@ -354,9 +392,9 @@ const styles = StyleSheet.create({
     card: {
         flex: 1,
         borderRadius: 16,
-        padding: 16, // More padding for cleaner look
+        padding: 16,
         overflow: "hidden",
-        alignItems: "flex-start", // Align content to top-left
+        alignItems: "flex-start",
         justifyContent: "flex-start",
     },
     cardPressed: {
@@ -364,7 +402,7 @@ const styles = StyleSheet.create({
         transform: [{ scale: 0.98 }],
     },
     cardIconContainer: {
-        marginBottom: 12, // Space between icon and text
+        marginBottom: 12,
     },
     cardTextWrap: {
         width: "100%",
