@@ -1,4 +1,4 @@
-// app/(tabs)/index.tsx
+// app/(tabs)/index.tsx - FULL FILE (with minimal changes)
 import Colors from "@/constants/colors";
 import { fetchSoundEffects } from "@/services/api";
 import { Ionicons } from '@expo/vector-icons';
@@ -15,6 +15,7 @@ import {
     View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useFavoritesStore } from "@/store/favoritesStore";
 
 type MoodCard = {
     id: string;
@@ -119,10 +120,12 @@ function HomeContent() {
         return m;
     }, []);
 
-    const [isFavorite, setFavorites] = useState<Record<string, boolean>>({});
     const [sessions, setSessions] = useState<Session[]>([]); // Start empty
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+
+    // Use Zustand store for favorites
+    const { isFavorite, toggleFavorite } = useFavoritesStore();
 
     useEffect(() => {
         loadSessions();
@@ -173,12 +176,9 @@ function HomeContent() {
             },
         });
     };
-    const toggleFavorite = async (sessionId: string) => {
+    const handleToggleFavorite = async (session: Session) => {
         await Haptics.selectionAsync(); // ← ADD HAPTIC FEEDBACK
-        setFavorites(prev => ({
-            ...prev,
-            [sessionId]: !prev[sessionId]
-        }));
+        toggleFavorite(session);
     };
 
     return (
@@ -276,7 +276,7 @@ function HomeContent() {
                     <View style={styles.sessionList}>
                         {sessions.map((session) => {
                             const mood = moodMap.get(session.moodId);
-                            const sessionIsFavorite = isFavorite[session.id] || false; // Check favorite status for THIS session
+                            const sessionIsFavorite = isFavorite(session.id);
 
                             return (
                                 <View key={session.id} style={styles.sessionRow}>
@@ -308,7 +308,7 @@ function HomeContent() {
 
                                     {/* Heart icon - pressable for favorites */}
                                     <Pressable
-                                        onPress={() => toggleFavorite(session.id)}
+                                        onPress={() => handleToggleFavorite(session)}
                                     >
                                         {({ pressed }) => (
                                             <View style={[
