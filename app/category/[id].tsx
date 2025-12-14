@@ -1,6 +1,7 @@
-// app/(tabs)/category/[id].tsx
-import { fetchSoundEffects } from "@/services/api";
+// app/(tabs)/category/[id].tsx - FULL FILE
 import Colors from "@/constants/colors";
+import { fetchSoundEffects } from "@/services/api";
+import { useFavoritesStore } from "@/store/favoritesStore";
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
@@ -65,8 +66,10 @@ export default function CategoryDetailScreen() {
     const [sessions, setSessions] = useState<Session[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [isFavorite, setFavorites] = useState<Record<string, boolean>>({});
     const [showInfoModal, setShowInfoModal] = useState(false);
+
+    // Use Zustand store
+    const { isFavorite, toggleFavorite } = useFavoritesStore();
 
     useEffect(() => {
         loadCategorySounds();
@@ -109,12 +112,9 @@ export default function CategoryDetailScreen() {
         });
     };
 
-    const toggleFavorite = async (sessionId: string) => {
+    const handleToggleFavorite = async (session: Session) => {
         await Haptics.selectionAsync();
-        setFavorites(prev => ({
-            ...prev,
-            [sessionId]: !prev[sessionId]
-        }));
+        toggleFavorite(session);
     };
 
     const handleBack = () => {
@@ -151,7 +151,6 @@ export default function CategoryDetailScreen() {
                 </View>
             </SafeAreaView>
 
-
             {/* Content */}
             <ScrollView
                 style={styles.scrollArea}
@@ -176,7 +175,7 @@ export default function CategoryDetailScreen() {
                 ) : (
                     <View style={styles.sessionList}>
                         {sessions.map((session) => {
-                            const sessionIsFavorite = isFavorite[session.id] || false;
+                            const sessionIsFavorite = isFavorite(session.id);
 
                             return (
                                 <View key={session.id} style={styles.sessionRow}>
@@ -203,7 +202,7 @@ export default function CategoryDetailScreen() {
                                         </Text>
                                     </View>
 
-                                    <Pressable onPress={() => toggleFavorite(session.id)}>
+                                    <Pressable onPress={() => handleToggleFavorite(session)}>
                                         {({ pressed }) => (
                                             <View style={[
                                                 styles.sessionHeartButton,
