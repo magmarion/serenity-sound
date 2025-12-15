@@ -218,6 +218,13 @@ export default function CategoryDetailScreen() {
 
                     <View style={styles.headerCenter}>
                         <Text style={styles.categoryTitle}>{categoryConfig.title}</Text>
+                        {/* ADDED: Sounds counter under title */}
+                        <Text style={styles.soundsCounter}>
+                            {loading ? 'Loading sounds...' : 
+                             error ? 'Error loading sounds' : 
+                             sessions.length === 0 ? 'No sounds available' : 
+                             `${sessions.length} sound${sessions.length !== 1 ? 's' : ''} available`}
+                        </Text>
                     </View>
 
                     <Pressable onPress={handleInfoPress} style={styles.infoButton}>
@@ -368,6 +375,13 @@ const styles = StyleSheet.create({
         color: Colors.light.text,
         fontSize: 18,
         fontWeight: "600",
+        textAlign: 'center',
+    },
+    // ADDED: Sounds counter style
+    soundsCounter: {
+        color: Colors.palette.muted,
+        fontSize: 13,
+        marginTop: 4,
         textAlign: 'center',
     },
     scrollArea: {
