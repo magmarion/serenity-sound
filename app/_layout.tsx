@@ -21,16 +21,14 @@ export default function RootLayout() {
             <SafeAreaProvider>
                 <GestureHandlerRootView style={{ flex: 1 }}>
                     <Stack screenOptions={{ headerShown: false }}>
-                        {/* Your main tab navigation */}
                         <Stack.Screen name="(tabs)" />
-
                         {/* Enable modal presentation for the modal folder */}
                         <Stack.Screen
                             name="(modal)"
                             options={{
-                                animation: "slide_from_bottom",    // bottom slide animation
+                                animation: "slide_from_bottom",
                             }}
-                        />¢
+                        />
                     </Stack>
                 </GestureHandlerRootView>
             </SafeAreaProvider>

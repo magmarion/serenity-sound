@@ -1,6 +1,6 @@
-// app/(tabs)/category/[id].tsx - FULL FILE
+// app/category/[id].tsx
 import Colors from "@/constants/colors";
-import { fetchSoundEffects } from "@/services/api";
+import { fetchSoundEffects, Session } from "@/services/api";
 import { useFavoritesStore } from "@/store/favoritesStore";
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from "expo-haptics";
@@ -19,19 +19,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 const ART_URL = "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80";
 const DEFAULT_SOUND_URL = "https://orangefreesounds.com/wp-content/uploads/2022/08/Rain-and-thunder-with-ocean-waves-sound-effect.mp3";
 
-type Session = {
-    id: string;
-    title: string;
-    durationLabel: string;
-    moodId: string;
-    category: string;
-    soundUrl?: string;
-    duration?: number;
-    artworkUrl?: string;
-};
-
-// Mood configuration matching your home screen
-const MOOD_CONFIG: Record<string, { title: string; gradient: [string, string]; accent: string; icon: keyof typeof Ionicons.glyphMap }> = {
+// Category configuration for all categories
+const CATEGORY_CONFIG: Record<string, { title: string; gradient: [string, string]; accent: string; icon: keyof typeof Ionicons.glyphMap }> = {
+    // Mood categories
     sleep: {
         title: "Sleep & Relaxation",
         gradient: ["#0E1C36", "#081125"],
@@ -55,13 +45,96 @@ const MOOD_CONFIG: Record<string, { title: string; gradient: [string, string]; a
         gradient: ["#0C1F1A", "#05100F"],
         accent: "#4DE2C3",
         icon: "battery-charging"
+    },
+    // Sound categories
+    rain: {
+        title: "Rain Sounds",
+        gradient: ["#1D4ED8", "#0B1B3E"],
+        accent: "#6DA7FF",
+        icon: "rainy"
+    },
+    fireplace: {
+        title: "Fireplace Sounds",
+        gradient: ["#F97316", "#7C2D12"],
+        accent: "#FF7C3A",
+        icon: "flame"
+    },
+    thunder: {
+        title: "Thunder & Storm",
+        gradient: ["#FB923C", "#9A3412"],
+        accent: "#FFA94D",
+        icon: "thunderstorm"
+    },
+    forest: {
+        title: "Forest Sounds",
+        gradient: ["#0EA5A4", "#064E3B"],
+        accent: "#2DD4BF",
+        icon: "leaf"
+    },
+    cafe: {
+        title: "Cafe Sounds",
+        gradient: ["#15803D", "#064E3B"],
+        accent: "#22C55E",
+        icon: "cafe"
+    },
+    bricks: {
+        title: "Ambient Sounds",
+        gradient: ["#F97316", "#9A3412"],
+        accent: "#FB923C",
+        icon: "musical-notes"
+    },
+    wind: {
+        title: "Wind Sounds",
+        gradient: ["#111827", "#0B1220"],
+        accent: "#A1A1AA",
+        icon: "cloudy"
+    },
+    night: {
+        title: "Night Sounds",
+        gradient: ["#111827", "#0B1220"],
+        accent: "#6366F1",
+        icon: "moon"
+    },
+    water: {
+        title: "Water Sounds",
+        gradient: ["#111827", "#0B1220"],
+        accent: "#0EA5E9",
+        icon: "water"
+    },
+    ocean: {
+        title: "Ocean Sounds",
+        gradient: ["#111827", "#0B1220"],
+        accent: "#0EA5E9",
+        icon: "water"
     }
 };
 
+// Helper function for category descriptions
+function getCategoryDescription(categoryId: string): string {
+    const descriptions: Record<string, string> = {
+        sleep: "Gentle sounds and calming frequencies designed to help you relax, unwind, and prepare for restful sleep.",
+        focus: "Concentration-enhancing audio to help you stay focused, productive, and in the zone during work or study sessions.",
+        calm: "Nature-inspired sounds and peaceful atmospheres to reduce stress and bring tranquility to your day.",
+        recharge: "Energetic sounds and uplifting frequencies to boost your motivation, energy, and mental clarity.",
+        rain: "Soothing rain sounds ranging from gentle drizzles to heavy downpours, perfect for relaxation and focus.",
+        fireplace: "Warm crackling fire sounds that create a cozy atmosphere, ideal for relaxation and meditation.",
+        thunder: "Powerful thunderstorm sounds with deep rumbles and distant lightning, great for sleep and ambiance.",
+        forest: "Natural forest ambience with birdsong, rustling leaves, and peaceful woodland sounds.",
+        cafe: "Coffee shop ambience with gentle chatter and background noise, perfect for focus and productivity.",
+        bricks: "Ambient soundscapes and atmospheric textures for creating a peaceful environment.",
+        wind: "Gentle to powerful wind sounds that create a sense of space and tranquility.",
+        night: "Peaceful nighttime sounds including crickets, distant owls, and quiet night ambience.",
+        water: "Flowing water sounds from streams, rivers, and waterfalls for natural relaxation.",
+        ocean: "Ocean waves and sea sounds that transport you to the beach for ultimate relaxation."
+    };
+
+    return descriptions[categoryId] || "Collection of curated sounds for relaxation, focus, and well-being.";
+}
+
 export default function CategoryDetailScreen() {
     const { id } = useLocalSearchParams<{ id: string }>();
-    const moodId = id || 'sleep';
-    const moodConfig = MOOD_CONFIG[moodId] || MOOD_CONFIG.sleep;
+    const categoryId = id || 'sleep';
+    const categoryConfig = CATEGORY_CONFIG[categoryId] || CATEGORY_CONFIG.sleep;
 
     const [sessions, setSessions] = useState<Session[]>([]);
     const [loading, setLoading] = useState(true);
@@ -73,24 +146,29 @@ export default function CategoryDetailScreen() {
 
     useEffect(() => {
         loadCategorySounds();
-    }, [moodId]);
+    }, [categoryId]);
 
     const loadCategorySounds = async () => {
         try {
             setLoading(true);
             setError(null);
+            console.log(`📡 Loading sounds for category: ${categoryId}`);
 
-            const categorySessions = await fetchSoundEffects(moodId);
+            // Use fetchSoundEffects with the category ID
+            const categorySessions = await fetchSoundEffects(categoryId);
+            console.log(`✅ Loaded ${categorySessions.length} sounds for ${categoryId}`);
+
 
             if (categorySessions.length > 0) {
                 setSessions(categorySessions);
             } else {
+                console.log(`⚠️ No sounds found for category: ${categoryId}`);
                 setError('No sounds found for this category');
                 setSessions([]);
             }
         } catch (err) {
-            console.error('Error:', err);
-            setError('Failed to load sounds');
+            console.error('Error loading category sounds:', err);
+            setError('Failed to load sounds. Please try again.');
             setSessions([]);
         } finally {
             setLoading(false);
@@ -130,7 +208,7 @@ export default function CategoryDetailScreen() {
         <View style={styles.container}>
             {/* Background Gradient */}
             <LinearGradient
-                colors={moodConfig.gradient}
+                colors={categoryConfig.gradient}
                 style={StyleSheet.absoluteFill}
             />
 
@@ -142,7 +220,7 @@ export default function CategoryDetailScreen() {
                     </Pressable>
 
                     <View style={styles.headerCenter}>
-                        <Text style={styles.categoryTitle}>{moodConfig.title}</Text>
+                        <Text style={styles.categoryTitle}>{categoryConfig.title}</Text>
                     </View>
 
                     <Pressable onPress={handleInfoPress} style={styles.infoButton}>
@@ -183,12 +261,12 @@ export default function CategoryDetailScreen() {
                                         {({ pressed }) => (
                                             <View style={[
                                                 styles.sessionIconWrap,
-                                                { backgroundColor: moodConfig.gradient[0] },
+                                                { backgroundColor: categoryConfig.gradient[0] },
                                                 pressed && { opacity: 0.8 }
                                             ]}>
                                                 <Ionicons
                                                     name="play"
-                                                    color={moodConfig.accent}
+                                                    color={categoryConfig.accent}
                                                     size={18}
                                                 />
                                             </View>
@@ -230,12 +308,12 @@ export default function CategoryDetailScreen() {
                     style={styles.modalOverlay}
                     onPress={() => setShowInfoModal(false)}
                 >
-                    <View style={[styles.modalContent, { backgroundColor: moodConfig.gradient[0] }]}>
+                    <View style={[styles.modalContent, { backgroundColor: categoryConfig.gradient[0] }]}>
                         <View style={styles.modalHeader}>
-                            <View style={[styles.modalIconWrap, { backgroundColor: moodConfig.accent + '20' }]}>
-                                <Ionicons name={moodConfig.icon} color={moodConfig.accent} size={24} />
+                            <View style={[styles.modalIconWrap, { backgroundColor: categoryConfig.accent + '20' }]}>
+                                <Ionicons name={categoryConfig.icon} color={categoryConfig.accent} size={24} />
                             </View>
-                            <Text style={styles.modalTitle}>{moodConfig.title}</Text>
+                            <Text style={styles.modalTitle}>{categoryConfig.title}</Text>
                             <Pressable
                                 onPress={() => setShowInfoModal(false)}
                                 style={styles.modalCloseButton}
@@ -245,10 +323,7 @@ export default function CategoryDetailScreen() {
                         </View>
 
                         <Text style={styles.modalDescription}>
-                            {moodId === 'sleep' && "Gentle sounds and calming frequencies designed to help you relax, unwind, and prepare for restful sleep."}
-                            {moodId === 'focus' && "Concentration-enhancing audio to help you stay focused, productive, and in the zone during work or study sessions."}
-                            {moodId === 'calm' && "Nature-inspired sounds and peaceful atmospheres to reduce stress and bring tranquility to your day."}
-                            {moodId === 'recharge' && "Energetic sounds and uplifting frequencies to boost your motivation, energy, and mental clarity."}
+                            {getCategoryDescription(categoryId)}
                         </Text>
                     </View>
                 </Pressable>
