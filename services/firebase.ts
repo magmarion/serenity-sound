@@ -1,8 +1,7 @@
-// /services/firebase.ts
-import { initializeApp } from 'firebase/app';
-import { initializeAuth, browserLocalPersistence, setPersistence } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
-import { getStorage } from 'firebase/storage';
+import { initializeApp } from 'firebase/app'
+import { getAuth } from 'firebase/auth'
+import { getFirestore } from 'firebase/firestore'
+import { getStorage } from 'firebase/storage'
 
 const firebaseConfig = {
     apiKey: "AIzaSyAmBM_aX2k5ygcFWbhQIH1TA4QYhnNEVSw",
@@ -12,25 +11,10 @@ const firebaseConfig = {
     messagingSenderId: "1082699719904",
     appId: "1:1082699719904:web:2a906c0ebf60ff155cdc85"
 };
+const app = initializeApp(firebaseConfig)
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
+const auth = getAuth(app)
+const db = getFirestore(app)
+const storage = getStorage(app)
 
-// Initialize Auth with persistence - SIMPLIFIED VERSION
-// For v12.6.0, we can use this simpler approach:
-const auth = initializeAuth(app);
-
-// Set persistence to use AsyncStorage
-setPersistence(auth, browserLocalPersistence)
-    .then(() => {
-        console.log('Firebase auth persistence set successfully');
-    })
-    .catch((error) => {
-        console.error('Error setting persistence:', error);
-    });
-
-// Initialize Firestore and Storage
-const db = getFirestore(app);
-const storage = getStorage(app);
-
-export { app, auth, db, storage };
+export { app, auth, db, storage }

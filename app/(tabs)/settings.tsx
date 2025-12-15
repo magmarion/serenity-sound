@@ -47,7 +47,7 @@ function SettingsScreen() {
             iconName: "person",
             iconBg: "rgba(255,140,84,0.18)",
             iconSet: "Ionicons",
-            onPress: () => router.push('/(modal)/profile'),
+            onPress: () => { router.push('/(modal)/profile'); },
           },
           {
             id: "subscription",
@@ -238,7 +238,7 @@ function SettingsScreen() {
                       row={row}
                       index={index}
                       totalRows={section.rows.length}
-                      onPress={() => handleRowPress(row.id)}
+                      onPress={row.onPress}
                     />
                   ))}
                 </View>

@@ -1,6 +1,6 @@
 // app/(modal)/profile.tsx
 import { LinearGradient } from "expo-linear-gradient";
-import React, { memo, useMemo, useState } from "react";
+import React, { memo, useMemo, useState, useEffect } from "react";
 import {
     Pressable,
     ScrollView,
@@ -8,6 +8,7 @@ import {
     Text,
     TextInput,
     View,
+    ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
@@ -19,9 +20,15 @@ import {
     Phone,
     User,
 } from "lucide-react-native";
-import { Ionicons } from '@expo/vector-icons'; // Added for auth buttons
-import { useRouter } from 'expo-router'; // Added for navigation
-import { useAuthStore } from '@/store/auth-store'; // Added for auth state
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import { useAuthStore } from '@/store/auth-store';
+import * as Google from 'expo-auth-session/providers/google';
+import * as WebBrowser from 'expo-web-browser';
+import { makeRedirectUri } from 'expo-auth-session';
+
+// Initialize WebBrowser for OAuth flows
+WebBrowser.maybeCompleteAuthSession();
 
 type FieldKey = "fullName" | "email" | "phone" | "username";
 
@@ -54,10 +61,85 @@ const COLORS = {
 
 function ProfileScreen() {
     const [focused, setFocused] = useState<FieldKey | null>(null);
+    const [googleSignInLoading, setGoogleSignInLoading] = useState(false);
     const router = useRouter();
 
-    // Get auth state and actions from store
-    const { user, profile, isAuthenticated, signInWithGoogle, signOut, updateProfile } = useAuthStore();
+    const { user, profile, isAuthenticated, signInWithGoogleToken, signOut, updateProfile } = useAuthStore();
+
+    const redirectUri = makeRedirectUri({
+        // Use 'exp' for Expo Go, or your custom scheme for standalone
+        scheme: 'exp',
+        path: 'oauth2redirect'
+    });
+
+    const [request, response, promptAsync] = Google.useAuthRequest({
+        // For development in Expo Go, use clientId (from your Expo project)
+        clientId: '8abb5262-7273-4a0b-ad08-c7895d13d566', // Get from Expo dashboard
+        webClientId: '1082699719904-k320pufdgua2dqd9dvn7qb8p8d5m1lnl.apps.googleusercontent.com', // From Google Cloud Console
+        // Scopes define what user data we request
+        scopes: ['profile', 'email'],
+
+        // Use the generated redirect URI
+        redirectUri: redirectUri,
+    });
+
+    // Log the redirect URI for debugging
+    useEffect(() => {
+        console.log('Google OAuth Redirect URI:', redirectUri);
+        console.log('Google OAuth Request ready:', !!request);
+    }, [redirectUri, request]);
+
+    // Handle the Google OAuth response
+    useEffect(() => {
+        const handleGoogleResponse = async () => {
+            if (response?.type === 'success') {
+                const { id_token } = response.params;
+                console.log('Google OAuth response received, has id_token:', !!id_token);
+
+                if (id_token) {
+                    setGoogleSignInLoading(true);
+                    try {
+                        await signInWithGoogleToken(id_token);
+                        console.log('Google sign-in successful via token');
+                    } catch (error) {
+                        console.error('Google sign-in failed:', error);
+                        // Optionally show an error to the user
+                    } finally {
+                        setGoogleSignInLoading(false);
+                    }
+                }
+            } else if (response) {
+                console.log('Google OAuth response type:', response.type);
+                if (response.type === 'error') {
+                    console.error('Google OAuth error:', response.error);
+                }
+            }
+        };
+
+        handleGoogleResponse();
+    }, [response, signInWithGoogleToken]);
+
+    const handleGoogleButtonPress = async () => {
+        if (!request) {
+            console.log('Google auth request is not ready yet');
+            return;
+        }
+
+        setGoogleSignInLoading(true);
+        try {
+            console.log('Opening Google sign-in prompt...');
+            const result = await promptAsync();
+            console.log('Google prompt result type:', result.type);
+
+            if (result.type !== 'success') {
+                console.log('User cancelled Google sign-in or error occurred');
+            }
+        } catch (error) {
+            console.error('Failed to open Google sign-in:', error);
+        } finally {
+            // Loading state will be reset by the useEffect after response is handled
+        }
+    };
 
     const fields = useMemo<Field[]>(
         () => [
@@ -77,34 +159,31 @@ function ProfileScreen() {
             {
                 key: "phone",
                 label: "Phone",
-                value: "+460709121212", // You can connect this to profile data later
+                value: "+460709121212",
                 icon: Phone,
                 keyboardType: "phone-pad",
             },
             {
                 key: "username",
                 label: "Username",
-                value: "@crazyfrog-1", // You can connect this to profile data later
+                value: "@crazyfrog-1",
                 icon: User,
             },
         ],
-        [profile, user] // Re-render when profile or user changes
+        [profile, user]
     );
 
     const handleSaveChanges = async () => {
         if (!isAuthenticated) return;
 
         try {
-            // Get the current value from the fullName field
             const nameField = fields.find(f => f.key === 'fullName');
             if (nameField) {
                 await updateProfile({ name: nameField.value });
                 console.log('Profile updated successfully');
-                // You could add a toast message here
             }
         } catch (error) {
             console.error('Error updating profile:', error);
-            // You could show an error message here
         }
     };
 
@@ -160,12 +239,20 @@ function ProfileScreen() {
                         style={({ pressed }) => [
                             styles.googleButton,
                             pressed && styles.btnPressed,
+                            googleSignInLoading && styles.buttonDisabled,
                         ]}
-                        onPress={signInWithGoogle}
+                        onPress={handleGoogleButtonPress}
+                        disabled={googleSignInLoading || !request}
                         testID="profile/google-signin"
                     >
-                        <Ionicons name="logo-google" size={20} color="#FFFFFF" />
-                        <Text style={styles.googleButtonText}>Sign in with Google</Text>
+                        {googleSignInLoading ? (
+                            <ActivityIndicator size="small" color="#FFFFFF" />
+                        ) : (
+                            <Ionicons name="logo-google" size={20} color="#FFFFFF" />
+                        )}
+                        <Text style={styles.googleButtonText}>
+                            {googleSignInLoading ? 'Signing in...' : 'Sign in with Google'}
+                        </Text>
                     </Pressable>
 
                     {/* Apple Sign In Button (Optional - for later) */}
@@ -175,11 +262,22 @@ function ProfileScreen() {
                             pressed && styles.btnPressed,
                         ]}
                         onPress={() => { console.log("Apple sign-in not yet implemented"); }}
+                        disabled
                         testID="profile/apple-signin"
                     >
                         <Ionicons name="logo-apple" size={20} color="#FFFFFF" />
                         <Text style={styles.appleButtonText}>Sign in with Apple</Text>
                     </Pressable>
+
+                    {/* Debug Info - Remove in production */}
+                    <View style={styles.debugInfo}>
+                        <Text style={styles.debugText}>
+                            OAuth Ready: {request ? 'Yes' : 'No'}
+                        </Text>
+                        <Text style={styles.debugText}>
+                            Redirect URI: {redirectUri.substring(0, 30)}...
+                        </Text>
+                    </View>
                 </View>
             </View>
         );
@@ -227,7 +325,7 @@ function ProfileScreen() {
                     <View style={styles.avatarCircle} testID="profile/avatar">
                         <View style={styles.avatarInner}>
                             {profile?.photoURL ? (
-                                // You would use an Image component here for the actual photo
+                                // For actual image: <Image source={{ uri: profile.photoURL }} style={styles.avatarImage} />
                                 <ImageIcon color="#1C1208" size={32} />
                             ) : (
                                 <Ionicons name="person" size={32} color="#1C1208" />
@@ -301,7 +399,6 @@ function ProfileScreen() {
                                         placeholderTextColor={COLORS.placeholder}
                                         keyboardType={f.keyboardType ?? "default"}
                                         onChangeText={(text) => {
-                                            // For a real implementation, you'd update state here
                                             console.log(`Changed ${f.key} to: ${text}`);
                                         }}
                                         onFocus={() => {
@@ -448,12 +545,12 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         width: "100%",
         marginBottom: 16,
+        gap: 12,
     },
     googleButtonText: {
         color: "#FFFFFF",
         fontSize: 16,
         fontWeight: "600",
-        marginLeft: 12,
     },
     appleButton: {
         flexDirection: "row",
@@ -464,12 +561,29 @@ const styles = StyleSheet.create({
         paddingHorizontal: 24,
         borderRadius: 12,
         width: "100%",
+        gap: 12,
+        opacity: 0.6,
     },
     appleButtonText: {
         color: "#FFFFFF",
         fontSize: 16,
         fontWeight: "600",
-        marginLeft: 12,
+    },
+    buttonDisabled: {
+        opacity: 0.7,
+    },
+    debugInfo: {
+        marginTop: 20,
+        padding: 10,
+        backgroundColor: 'rgba(0,0,0,0.2)',
+        borderRadius: 8,
+        width: '100%',
+    },
+    debugText: {
+        color: 'rgba(255,255,255,0.6)',
+        fontSize: 10,
+        fontFamily: 'monospace',
+        marginBottom: 2,
     },
     scroll: {
         flex: 1,
