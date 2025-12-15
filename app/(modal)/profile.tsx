@@ -9,6 +9,7 @@ import {
     TextInput,
     View,
     ActivityIndicator,
+    Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
@@ -62,34 +63,33 @@ const COLORS = {
 function ProfileScreen() {
     const [focused, setFocused] = useState<FieldKey | null>(null);
     const [googleSignInLoading, setGoogleSignInLoading] = useState(false);
+    const [headerButtonPressed, setHeaderButtonPressed] = useState(false);
+    const [googleButtonPressed, setGoogleButtonPressed] = useState(false);
+    const [facebookButtonPressed, setfacebookButtonPressed] = useState(false);
+    const [primaryButtonPressed, setPrimaryButtonPressed] = useState(false);
+    const [secondaryButtonPressed, setSecondaryButtonPressed] = useState(false);
+    const [securityRowPressed, setSecurityRowPressed] = useState(false);
     const router = useRouter();
 
     const { user, profile, isAuthenticated, signInWithGoogleToken, signOut, updateProfile } = useAuthStore();
 
     const redirectUri = makeRedirectUri({
-        // Use 'exp' for Expo Go, or your custom scheme for standalone
         scheme: 'exp',
         path: 'oauth2redirect'
     });
 
     const [request, response, promptAsync] = Google.useAuthRequest({
-        // For development in Expo Go, use clientId (from your Expo project)
-        clientId: '8abb5262-7273-4a0b-ad08-c7895d13d566', // Get from Expo dashboard
-        webClientId: '1082699719904-k320pufdgua2dqd9dvn7qb8p8d5m1lnl.apps.googleusercontent.com', // From Google Cloud Console
-        // Scopes define what user data we request
+        clientId: '8abb5262-7273-4a0b-ad08-c7895d13d566',
+        webClientId: '1082699719904-k320pufdgua2dqd9dvn7qb8p8d5m1lnl.apps.googleusercontent.com', 
         scopes: ['profile', 'email'],
-
-        // Use the generated redirect URI
         redirectUri: redirectUri,
     });
 
-    // Log the redirect URI for debugging
     useEffect(() => {
         console.log('Google OAuth Redirect URI:', redirectUri);
         console.log('Google OAuth Request ready:', !!request);
     }, [redirectUri, request]);
 
-    // Handle the Google OAuth response
     useEffect(() => {
         const handleGoogleResponse = async () => {
             if (response?.type === 'success') {
@@ -103,7 +103,6 @@ function ProfileScreen() {
                         console.log('Google sign-in successful via token');
                     } catch (error) {
                         console.error('Google sign-in failed:', error);
-                        // Optionally show an error to the user
                     } finally {
                         setGoogleSignInLoading(false);
                     }
@@ -199,16 +198,20 @@ function ProfileScreen() {
                 <SafeAreaView style={styles.safe} edges={["top"]}>
                     <View style={styles.header} testID="profile/header">
                         <Pressable
-                            style={({ pressed }) => [
-                                styles.headerIconButton,
-                                pressed && styles.headerIconButtonPressed,
-                            ]}
+                            onPressIn={() => setHeaderButtonPressed(true)}
+                            onPressOut={() => setHeaderButtonPressed(false)}
                             onPress={() => router.back()}
                             testID="profile/back"
                             accessibilityRole="button"
                             accessibilityLabel="Back"
+                            style={styles.headerIconButtonContainer}
                         >
-                            <ArrowLeft color={COLORS.text} size={20} />
+                            <View style={[
+                                styles.headerIconButton,
+                                headerButtonPressed && styles.headerIconButtonPressed
+                            ]}>
+                                <ArrowLeft color={COLORS.text} size={20} />
+                            </View>
                         </Pressable>
 
                         <Text style={styles.headerTitle} testID="profile/title">
@@ -219,7 +222,10 @@ function ProfileScreen() {
                     </View>
                 </SafeAreaView>
 
-                <View style={styles.authContainer}>
+                <ScrollView 
+                    contentContainerStyle={styles.authContainer}
+                    showsVerticalScrollIndicator={false}
+                >
                     <View style={styles.avatarBlock} testID="profile/avatarBlock">
                         <View style={styles.avatarOuterGlow} />
                         <View style={styles.avatarCircle} testID="profile/avatar">
@@ -229,56 +235,54 @@ function ProfileScreen() {
                         </View>
                     </View>
 
-                    <Text style={styles.authTitle}>Sign In to Your Account</Text>
+                    <Text style={styles.authTitle}>Sign in</Text>
                     <Text style={styles.authSubtitle}>
-                        Sign in to save your preferences and access all features.
+                        Sign in to save your preferences and access more features.
                     </Text>
 
                     {/* Google Sign In Button */}
                     <Pressable
-                        style={({ pressed }) => [
-                            styles.googleButton,
-                            pressed && styles.btnPressed,
-                            googleSignInLoading && styles.buttonDisabled,
-                        ]}
+                        onPressIn={() => setGoogleButtonPressed(true)}
+                        onPressOut={() => setGoogleButtonPressed(false)}
                         onPress={handleGoogleButtonPress}
                         disabled={googleSignInLoading || !request}
                         testID="profile/google-signin"
+                        style={styles.googleButtonContainer}
                     >
-                        {googleSignInLoading ? (
-                            <ActivityIndicator size="small" color="#FFFFFF" />
-                        ) : (
-                            <Ionicons name="logo-google" size={20} color="#FFFFFF" />
-                        )}
-                        <Text style={styles.googleButtonText}>
-                            {googleSignInLoading ? 'Signing in...' : 'Sign in with Google'}
-                        </Text>
+                        <View style={[
+                            styles.googleButton,
+                            googleButtonPressed && styles.btnPressed,
+                            googleSignInLoading && styles.buttonDisabled,
+                        ]}>
+                            {googleSignInLoading ? (
+                                <ActivityIndicator size="small" color="#FFFFFF" />
+                            ) : (
+                                <Ionicons name="logo-google" size={20} color="#FFFFFF" />
+                            )}
+                            <Text style={styles.googleButtonText}>
+                                {googleSignInLoading ? 'Signing in...' : 'Sign in with Google'}
+                            </Text>
+                        </View>
                     </Pressable>
 
-                    {/* Apple Sign In Button (Optional - for later) */}
+                    {/* facebook Sign In Button */}
                     <Pressable
-                        style={({ pressed }) => [
-                            styles.appleButton,
-                            pressed && styles.btnPressed,
-                        ]}
-                        onPress={() => { console.log("Apple sign-in not yet implemented"); }}
+                        onPressIn={() => setfacebookButtonPressed(true)}
+                        onPressOut={() => setfacebookButtonPressed(false)}
+                        onPress={() => { console.log("Facebook sign-in not yet implemented"); }}
                         disabled
-                        testID="profile/apple-signin"
+                        testID="profile/facebook-signin"
+                        style={styles.facebookButtonContainer}
                     >
-                        <Ionicons name="logo-apple" size={20} color="#FFFFFF" />
-                        <Text style={styles.appleButtonText}>Sign in with Apple</Text>
+                        <View style={[
+                            styles.facebookButton,
+                            facebookButtonPressed && styles.btnPressed,
+                        ]}>
+                            <Ionicons name="logo-facebook" size={20} color="#FFFFFF" />
+                            <Text style={styles.facebookButtonText}>Sign in with facebook</Text>
+                        </View>
                     </Pressable>
-
-                    {/* Debug Info - Remove in production */}
-                    <View style={styles.debugInfo}>
-                        <Text style={styles.debugText}>
-                            OAuth Ready: {request ? 'Yes' : 'No'}
-                        </Text>
-                        <Text style={styles.debugText}>
-                            Redirect URI: {redirectUri.substring(0, 30)}...
-                        </Text>
-                    </View>
-                </View>
+                </ScrollView>
             </View>
         );
     }
@@ -294,16 +298,20 @@ function ProfileScreen() {
             <SafeAreaView style={styles.safe} edges={["top"]}>
                 <View style={styles.header} testID="profile/header">
                     <Pressable
-                        style={({ pressed }) => [
-                            styles.headerIconButton,
-                            pressed && styles.headerIconButtonPressed,
-                        ]}
+                        onPressIn={() => setHeaderButtonPressed(true)}
+                        onPressOut={() => setHeaderButtonPressed(false)}
                         onPress={() => router.back()}
                         testID="profile/back"
                         accessibilityRole="button"
                         accessibilityLabel="Back"
+                        style={styles.headerIconButtonContainer}
                     >
-                        <ArrowLeft color={COLORS.text} size={20} />
+                        <View style={[
+                            styles.headerIconButton,
+                            headerButtonPressed && styles.headerIconButtonPressed
+                        ]}>
+                            <ArrowLeft color={COLORS.text} size={20} />
+                        </View>
                     </Pressable>
 
                     <Text style={styles.headerTitle} testID="profile/title">
@@ -325,7 +333,6 @@ function ProfileScreen() {
                     <View style={styles.avatarCircle} testID="profile/avatar">
                         <View style={styles.avatarInner}>
                             {profile?.photoURL ? (
-                                // For actual image: <Image source={{ uri: profile.photoURL }} style={styles.avatarImage} />
                                 <ImageIcon color="#1C1208" size={32} />
                             ) : (
                                 <Ionicons name="person" size={32} color="#1C1208" />
@@ -434,36 +441,58 @@ function ProfileScreen() {
                     colors={[COLORS.cardTop, COLORS.cardBottom]}
                     style={[styles.card, styles.securityCard]}
                 >
-                    <View style={styles.securityRow} testID="profile/changePassword">
-                        <View style={styles.securityLeft}>
-                            <View style={styles.securityIconWrap}>
-                                <User color={COLORS.accent} size={16} />
+                    <Pressable
+                        onPressIn={() => setSecurityRowPressed(true)}
+                        onPressOut={() => setSecurityRowPressed(false)}
+                        onPress={() => console.log("Change password pressed")}
+                        style={styles.securityRowContainer}
+                        testID="profile/changePassword"
+                    >
+                        <View style={[
+                            styles.securityRow,
+                            securityRowPressed && styles.btnPressed
+                        ]}>
+                            <View style={styles.securityLeft}>
+                                <View style={styles.securityIconWrap}>
+                                    <User color={COLORS.accent} size={16} />
+                                </View>
+                                <Text style={styles.securityText}>Change Password</Text>
                             </View>
-                            <Text style={styles.securityText}>Change Password</Text>
+                            <ChevronRight color="rgba(255,255,255,0.45)" size={18} />
                         </View>
-                        <ChevronRight color="rgba(255,255,255,0.45)" size={18} />
-                    </View>
+                    </Pressable>
                 </LinearGradient>
 
                 <Pressable
-                    style={({ pressed }) => [styles.primaryButton, pressed && styles.btnPressed]}
+                    onPressIn={() => setPrimaryButtonPressed(true)}
+                    onPressOut={() => setPrimaryButtonPressed(false)}
                     onPress={handleSaveChanges}
+                    style={styles.primaryButtonContainer}
                     testID="profile/save"
                     accessibilityRole="button"
                 >
-                    <Text style={styles.primaryButtonText}>Save Changes</Text>
+                    <View style={[
+                        styles.primaryButton,
+                        primaryButtonPressed && styles.btnPressed
+                    ]}>
+                        <Text style={styles.primaryButtonText}>Save Changes</Text>
+                    </View>
                 </Pressable>
 
                 <Pressable
-                    style={({ pressed }) => [
-                        styles.secondaryButton,
-                        pressed && styles.btnPressed,
-                    ]}
+                    onPressIn={() => setSecondaryButtonPressed(true)}
+                    onPressOut={() => setSecondaryButtonPressed(false)}
                     onPress={signOut}
+                    style={styles.secondaryButtonContainer}
                     testID="profile/signout"
                     accessibilityRole="button"
                 >
-                    <Text style={styles.secondaryButtonText}>Sign Out</Text>
+                    <View style={[
+                        styles.secondaryButton,
+                        secondaryButtonPressed && styles.btnPressed
+                    ]}>
+                        <Text style={styles.secondaryButtonText}>Sign Out</Text>
+                    </View>
                 </Pressable>
 
                 <View style={styles.bottomSpacer} />
@@ -488,6 +517,9 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "space-between",
+    },
+    headerIconButtonContainer: {
+        // Container for proper touch handling
     },
     headerIconButton: {
         width: 40,
@@ -514,8 +546,9 @@ const styles = StyleSheet.create({
         height: 40,
     },
     authContainer: {
-        flex: 1,
+        flexGrow: 1,
         paddingHorizontal: 24,
+        paddingBottom: 40,
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -535,6 +568,10 @@ const styles = StyleSheet.create({
         lineHeight: 22,
         paddingHorizontal: 20,
     },
+    googleButtonContainer: {
+        width: '100%',
+        marginBottom: 16,
+    },
     googleButton: {
         flexDirection: "row",
         alignItems: "center",
@@ -544,7 +581,6 @@ const styles = StyleSheet.create({
         paddingHorizontal: 24,
         borderRadius: 12,
         width: "100%",
-        marginBottom: 16,
         gap: 12,
     },
     googleButtonText: {
@@ -552,19 +588,22 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: "600",
     },
-    appleButton: {
+    facebookButtonContainer: {
+        width: '100%',
+    },
+    facebookButton: {
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: "#000000",
+        backgroundColor: "#00A9E0",
         paddingVertical: 16,
         paddingHorizontal: 24,
         borderRadius: 12,
         width: "100%",
         gap: 12,
-        opacity: 0.6,
+        opacity: 0.7,
     },
-    appleButtonText: {
+    facebookButtonText: {
         color: "#FFFFFF",
         fontSize: 16,
         fontWeight: "600",
@@ -572,30 +611,19 @@ const styles = StyleSheet.create({
     buttonDisabled: {
         opacity: 0.7,
     },
-    debugInfo: {
-        marginTop: 20,
-        padding: 10,
-        backgroundColor: 'rgba(0,0,0,0.2)',
-        borderRadius: 8,
-        width: '100%',
-    },
-    debugText: {
-        color: 'rgba(255,255,255,0.6)',
-        fontSize: 10,
-        fontFamily: 'monospace',
-        marginBottom: 2,
-    },
     scroll: {
         flex: 1,
     },
     scrollContent: {
         paddingHorizontal: 16,
         paddingTop: 10,
+        paddingBottom: Platform.OS === 'ios' ? 40 : 20,
     },
     avatarBlock: {
         alignItems: "center",
         paddingTop: 8,
         paddingBottom: 18,
+        marginBottom: 10,
     },
     avatarOuterGlow: {
         position: "absolute",
@@ -645,11 +673,13 @@ const styles = StyleSheet.create({
         color: COLORS.text,
         fontSize: 18,
         fontWeight: "700",
+        textAlign: 'center',
     },
     email: {
         marginTop: 3,
         color: COLORS.subText,
         fontSize: 12,
+        textAlign: 'center',
     },
     sectionTitle: {
         marginTop: 10,
@@ -664,6 +694,7 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: COLORS.cardBorder,
         overflow: "hidden",
+        marginBottom: 10,
     },
     cardTopHighlight: {
         position: "absolute",
@@ -676,11 +707,13 @@ const styles = StyleSheet.create({
     },
     fieldBlock: {
         width: "100%",
+        marginBottom: 10,
     },
     fieldLabel: {
         color: "rgba(255,255,255,0.55)",
         fontSize: 11,
         marginBottom: 6,
+        marginLeft: 4,
     },
     inputRow: {
         height: 44,
@@ -696,6 +729,7 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.18,
         shadowRadius: 14,
         shadowOffset: { width: 0, height: 6 },
+        elevation: 4,
     },
     inputRowError: {
         backgroundColor: COLORS.dangerSoft,
@@ -715,14 +749,17 @@ const styles = StyleSheet.create({
     input: {
         flex: 1,
         color: COLORS.text,
-        fontSize: 13,
+        fontSize: 14,
         paddingVertical: 10,
+        paddingHorizontal: 0,
+        minHeight: 44,
     },
     errorRow: {
         flexDirection: "row",
         alignItems: "center",
         gap: 6,
         marginTop: 6,
+        marginLeft: 4,
     },
     errorDot: {
         width: 4,
@@ -739,6 +776,10 @@ const styles = StyleSheet.create({
     },
     securityCard: {
         paddingVertical: 8,
+        paddingHorizontal: 12,
+    },
+    securityRowContainer: {
+        width: '100%',
     },
     securityRow: {
         height: 44,
@@ -766,11 +807,14 @@ const styles = StyleSheet.create({
     },
     securityText: {
         color: COLORS.text,
-        fontSize: 13,
+        fontSize: 14,
         fontWeight: "600",
     },
-    primaryButton: {
+    primaryButtonContainer: {
+        width: '100%',
         marginTop: 14,
+    },
+    primaryButton: {
         height: 48,
         borderRadius: 14,
         backgroundColor: COLORS.accent,
@@ -780,15 +824,19 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.30,
         shadowRadius: 16,
         shadowOffset: { width: 0, height: 10 },
+        elevation: 8,
     },
     primaryButtonText: {
         color: "#141414",
-        fontSize: 13,
+        fontSize: 15,
         fontWeight: "800",
         letterSpacing: 0.2,
     },
-    secondaryButton: {
+    secondaryButtonContainer: {
+        width: '100%',
         marginTop: 10,
+    },
+    secondaryButton: {
         height: 48,
         borderRadius: 14,
         backgroundColor: "rgba(0,0,0,0.00)",
@@ -799,15 +847,15 @@ const styles = StyleSheet.create({
     },
     secondaryButtonText: {
         color: COLORS.accent,
-        fontSize: 13,
+        fontSize: 15,
         fontWeight: "700",
         letterSpacing: 0.2,
     },
     btnPressed: {
-        transform: [{ scale: 0.99 }],
+        transform: [{ scale: 0.98 }],
         opacity: 0.90,
     },
     bottomSpacer: {
-        height: 28,
+        height: Platform.OS === 'ios' ? 40 : 20,
     },
 });
