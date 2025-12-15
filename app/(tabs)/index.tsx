@@ -1,4 +1,4 @@
-// app/(tabs)/index.tsx - FULL FILE (with minimal changes)
+// app/(tabs)/index.tsx
 import Colors from "@/constants/colors";
 import { fetchSoundEffects } from "@/services/api";
 import { Ionicons } from '@expo/vector-icons';
