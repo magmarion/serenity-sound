@@ -1,6 +1,6 @@
 // app/category/[id].tsx
 import Colors from "@/constants/colors";
-import { fetchSoundEffects } from "@/services/api";
+import { fetchSoundEffects, Session } from "@/services/api";
 import { useFavoritesStore } from "@/store/favoritesStore";
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from "expo-haptics";
@@ -19,17 +19,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 const ART_URL = "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80";
 const DEFAULT_SOUND_URL = "https://orangefreesounds.com/wp-content/uploads/2022/08/Rain-and-thunder-with-ocean-waves-sound-effect.mp3";
 
-type Session = {
-    id: string;
-    title: string;
-    durationLabel: string;
-    moodId: string;
-    category: string;
-    soundUrl?: string;
-    duration?: number;
-    artworkUrl?: string;
-};
-
+// Category configuration for all categories
 const CATEGORY_CONFIG: Record<string, { title: string; gradient: [string, string]; accent: string; icon: keyof typeof Ionicons.glyphMap }> = {
     // Mood categories
     sleep: {
@@ -119,6 +109,27 @@ const CATEGORY_CONFIG: Record<string, { title: string; gradient: [string, string
     }
 };
 
+// Helper function for category descriptions
+function getCategoryDescription(categoryId: string): string {
+    const descriptions: Record<string, string> = {
+        sleep: "Gentle sounds and calming frequencies designed to help you relax, unwind, and prepare for restful sleep.",
+        focus: "Concentration-enhancing audio to help you stay focused, productive, and in the zone during work or study sessions.",
+        calm: "Nature-inspired sounds and peaceful atmospheres to reduce stress and bring tranquility to your day.",
+        recharge: "Energetic sounds and uplifting frequencies to boost your motivation, energy, and mental clarity.",
+        rain: "Soothing rain sounds ranging from gentle drizzles to heavy downpours, perfect for relaxation and focus.",
+        fireplace: "Warm crackling fire sounds that create a cozy atmosphere, ideal for relaxation and meditation.",
+        thunder: "Powerful thunderstorm sounds with deep rumbles and distant lightning, great for sleep and ambiance.",
+        forest: "Natural forest ambience with birdsong, rustling leaves, and peaceful woodland sounds.",
+        cafe: "Coffee shop ambience with gentle chatter and background noise, perfect for focus and productivity.",
+        bricks: "Ambient soundscapes and atmospheric textures for creating a peaceful environment.",
+        wind: "Gentle to powerful wind sounds that create a sense of space and tranquility.",
+        night: "Peaceful nighttime sounds including crickets, distant owls, and quiet night ambience.",
+        water: "Flowing water sounds from streams, rivers, and waterfalls for natural relaxation.",
+        ocean: "Ocean waves and sea sounds that transport you to the beach for ultimate relaxation."
+    };
+
+    return descriptions[categoryId] || "Collection of curated sounds for relaxation, focus, and well-being.";
+}
 
 export default function CategoryDetailScreen() {
     const { id } = useLocalSearchParams<{ id: string }>();
@@ -141,13 +152,17 @@ export default function CategoryDetailScreen() {
         try {
             setLoading(true);
             setError(null);
+            console.log(`📡 Loading sounds for category: ${categoryId}`);
 
             // Use fetchSoundEffects with the category ID
             const categorySessions = await fetchSoundEffects(categoryId);
+            console.log(`✅ Loaded ${categorySessions.length} sounds for ${categoryId}`);
+
 
             if (categorySessions.length > 0) {
                 setSessions(categorySessions);
             } else {
+                console.log(`⚠️ No sounds found for category: ${categoryId}`);
                 setError('No sounds found for this category');
                 setSessions([]);
             }
@@ -315,28 +330,6 @@ export default function CategoryDetailScreen() {
             )}
         </View>
     );
-}
-
-// Helper function for category descriptions
-function getCategoryDescription(categoryId: string): string {
-    const descriptions: Record<string, string> = {
-        sleep: "Gentle sounds and calming frequencies designed to help you relax, unwind, and prepare for restful sleep.",
-        focus: "Concentration-enhancing audio to help you stay focused, productive, and in the zone during work or study sessions.",
-        calm: "Nature-inspired sounds and peaceful atmospheres to reduce stress and bring tranquility to your day.",
-        recharge: "Energetic sounds and uplifting frequencies to boost your motivation, energy, and mental clarity.",
-        rain: "Soothing rain sounds ranging from gentle drizzles to heavy downpours, perfect for relaxation and focus.",
-        fireplace: "Warm crackling fire sounds that create a cozy atmosphere, ideal for relaxation and meditation.",
-        thunder: "Powerful thunderstorm sounds with deep rumbles and distant lightning, great for sleep and ambiance.",
-        forest: "Natural forest ambience with birdsong, rustling leaves, and peaceful woodland sounds.",
-        cafe: "Coffee shop ambience with gentle chatter and background noise, perfect for focus and productivity.",
-        bricks: "Ambient soundscapes and atmospheric textures for creating a peaceful environment.",
-        wind: "Gentle to powerful wind sounds that create a sense of space and tranquility.",
-        night: "Peaceful nighttime sounds including crickets, distant owls, and quiet night ambience.",
-        water: "Flowing water sounds from streams, rivers, and waterfalls for natural relaxation.",
-        ocean: "Ocean waves and sea sounds that transport you to the beach for ultimate relaxation."
-    };
-
-    return descriptions[categoryId] || "Collection of curated sounds for relaxation, focus, and well-being.";
 }
 
 const styles = StyleSheet.create({

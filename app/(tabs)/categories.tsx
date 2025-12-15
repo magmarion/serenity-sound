@@ -1,3 +1,4 @@
+// app/(tabs)/categories.tsx
 import React, { useCallback, useMemo, useState } from "react";
 import { Stack, useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
@@ -306,7 +307,7 @@ export default function CategoriesScreen() {
                         <TextInput
                             value={query}
                             onChangeText={setQuery}
-                            placeholder="Browse sounds"
+                            placeholder="Search Categories"
                             placeholderTextColor="rgba(234,242,255,0.44)"
                             style={styles.searchInput}
                             autoCapitalize="none"
