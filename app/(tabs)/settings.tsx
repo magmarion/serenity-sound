@@ -1,7 +1,8 @@
-import { Ionicons, FontAwesome6 } from "@expo/vector-icons";
+// app/(tabs)/settings.tsx
+import { FontAwesome6, Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
-import { Stack } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 import React, { memo, useCallback, useMemo, useState } from "react";
 import {
   Pressable,
@@ -29,6 +30,7 @@ type SettingsSection = {
 };
 
 function SettingsScreen() {
+  const router = useRouter();
   const onRowPress = useCallback((id: string) => {
     console.log("[Settings] pressed row", { id });
   }, []);
@@ -45,7 +47,7 @@ function SettingsScreen() {
             iconName: "person",
             iconBg: "rgba(255,140,84,0.18)",
             iconSet: "Ionicons",
-            onPress: () => onRowPress("profile"),
+            onPress: () => { router.push('/(modal)/profile'); },
           },
           {
             id: "subscription",
@@ -148,7 +150,7 @@ function SettingsScreen() {
         ],
       },
     ];
-  }, [onRowPress]);
+  }, [onRowPress, router]);
 
   const handleRowPress = useCallback(async (rowId: string) => {
     await Haptics.selectionAsync();
@@ -236,7 +238,7 @@ function SettingsScreen() {
                       row={row}
                       index={index}
                       totalRows={section.rows.length}
-                      onPress={() => handleRowPress(row.id)}
+                      onPress={row.onPress}
                     />
                   ))}
                 </View>

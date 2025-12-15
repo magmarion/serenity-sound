@@ -153,11 +153,8 @@ export default function CategoryDetailScreen() {
             setLoading(true);
             setError(null);
             console.log(`📡 Loading sounds for category: ${categoryId}`);
-
-            // Use fetchSoundEffects with the category ID
             const categorySessions = await fetchSoundEffects(categoryId);
             console.log(`✅ Loaded ${categorySessions.length} sounds for ${categoryId}`);
-
 
             if (categorySessions.length > 0) {
                 setSessions(categorySessions);
