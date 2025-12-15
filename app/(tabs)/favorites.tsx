@@ -1,4 +1,4 @@
-// app/(tabs)/favorites.tsx - Simplified with best practice
+// app/(tabs)/favorites.tsx
 import { useFavoritesStore } from '@/store/favoritesStore';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import * as Haptics from "expo-haptics";
@@ -376,103 +376,148 @@ export default function FavoritesScreen() {
     );
 
     return (
-        <GestureHandlerRootView style={styles.screen}>
-            {/* Background - Same as Settings */}
+        <GestureHandlerRootView style={styles.container}>
+            {/* Background */}
             <LinearGradient
                 colors={["#0B0F2E", "#05060A"]}
                 style={StyleSheet.absoluteFill}
             />
 
-            <SafeAreaView style={styles.safeArea} edges={["top"]}>
-                <View style={styles.header}>
-                    <Text style={styles.headerTitle}>Favorites</Text>
-                    <Text style={styles.headerSubtitle}>
-                        Your most loved sounds in one place
-                    </Text>
-                </View>
+            {/* EXTRA GRADIENT ABOVE HEADER - matching home screen */}
+            <LinearGradient
+                colors={["#591A1B", "#591A1B"]}
+                style={styles.topGradientExtension}
+            />
 
-                {favorites.length === 0 ? (
-                    <View style={styles.emptyContainer}>
-                        <Ionicons name="heart-outline" size={64} color="rgba(255,255,255,0.3)" />
-                        <Text style={styles.emptyTitle}>No favorites yet</Text>
-                        <Text style={styles.emptyText}>
-                            Tap the heart icon on any sound to add it here
-                        </Text>
+            <SafeAreaView style={styles.safeArea} edges={["top"]}>
+                {/* HEADER - matching home screen style */}
+                <LinearGradient
+                    colors={["#591A1B", "#0F172B", "#0B0E14"]}
+                    locations={[0, 0.4, 1]}
+                    style={styles.topBar}
+                >
+                    <View style={styles.headerRow}>
+                        <View style={styles.headerContent}>
+                            <Text style={styles.headerTitle}>Favorites</Text>
+                            <Text style={styles.headerSubtitle}>
+                                Your most loved sounds in one place
+                            </Text>
+                        </View>
                     </View>
-                ) : (
-                    <FlatList
-                        testID="favorites.list"
-                        data={favorites}
-                        keyExtractor={(item) => item.id}
-                        contentContainerStyle={styles.listContent}
-                        ItemSeparatorComponent={() => <View style={{ height: 6 }} />}
-                        showsVerticalScrollIndicator={false}
-                        showsHorizontalScrollIndicator={false}
-                        renderItem={({ item }) => (
-                            <SwipeableRow
-                                session={item}
-                                onToggleFavorite={onToggleFavorite}
-                                onPlay={onPlay}
-                            />
-                        )}
-                    />
-                )}
+                </LinearGradient>
+
+                {/* SCROLL AREA */}
+                <View style={styles.scrollArea}>
+                    {favorites.length === 0 ? (
+                        <View style={styles.emptyContainer}>
+                            <Ionicons name="heart-outline" size={64} color="rgba(255,255,255,0.3)" />
+                            <Text style={styles.emptyTitle}>No favorites yet</Text>
+                            <Text style={styles.emptyText}>
+                                Tap the heart icon on any sound to add it here
+                            </Text>
+                        </View>
+                    ) : (
+                        <FlatList
+                            testID="favorites.list"
+                            data={favorites}
+                            keyExtractor={(item) => item.id}
+                            contentContainerStyle={styles.listContent}
+                            ItemSeparatorComponent={() => <View style={{ height: 6 }} />}
+                            showsVerticalScrollIndicator={false}
+                            showsHorizontalScrollIndicator={false}
+                            renderItem={({ item }) => (
+                                <SwipeableRow
+                                    session={item}
+                                    onToggleFavorite={onToggleFavorite}
+                                    onPlay={onPlay}
+                                />
+                            )}
+                        />
+                    )}
+                </View>
             </SafeAreaView>
         </GestureHandlerRootView>
     );
 }
 
 const styles = StyleSheet.create({
-    screen: {
+    container: {
         flex: 1,
+    },
+    topGradientExtension: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: 100,
+        zIndex: 1,
     },
     safeArea: {
         flex: 1,
+        zIndex: 2,
     },
-    // Simple fixed header - similar to Settings but with subtitle
-    header: {
-        paddingTop: 20,
+    topBar: {
+        paddingTop: 10,
         paddingHorizontal: 20,
-        paddingBottom: 20,
+        paddingBottom: 24,
+        borderBottomLeftRadius: 32,
+        borderBottomRightRadius: 32,
+        gap: 16,
+        shadowColor: "#000",
+        shadowOpacity: 0.25,
+        shadowRadius: 24,
+        shadowOffset: { width: 0, height: 18 },
+        elevation: 24,
+    },
+    headerRow: {
+        flexDirection: "row",
+        justifyContent: "space-between",
         alignItems: "center",
+    },
+    headerContent: {
+        flex: 1,
     },
     headerTitle: {
         color: "#FFFFFF",
-        fontSize: 24,
-        fontWeight: "700",
+        fontSize: 28,
+        fontWeight: "800",
+        lineHeight: 34,
         marginBottom: 6,
-        textAlign: "center",
     },
     headerSubtitle: {
         color: "rgba(255,255,255,0.75)",
-        fontSize: 13,
+        fontSize: 14,
         fontWeight: "500",
-        textAlign: "left",
         letterSpacing: 0.3,
+    },
+    scrollArea: {
+        flex: 1,
+        marginTop: 0,
     },
     listContent: {
         paddingHorizontal: 20,
-        paddingBottom: 20,
-        paddingTop: 10,
+        paddingBottom: 120,
+        paddingTop: 20,
     },
     emptyContainer: {
         flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
         paddingHorizontal: 40,
+        paddingTop: 60,
     },
     emptyTitle: {
         color: "#FFFFFF",
         fontSize: 20,
         fontWeight: "600",
-        marginTop: 16,
+        marginTop: 20,
         marginBottom: 8,
     },
     emptyText: {
         color: "rgba(255,255,255,0.6)",
-        fontSize: 14,
+        fontSize: 15,
         textAlign: 'center',
-        lineHeight: 20,
+        lineHeight: 22,
     },
     swipeableContainer: {
         position: 'relative',
@@ -501,7 +546,6 @@ const styles = StyleSheet.create({
         fontSize: 12,
         fontWeight: '600',
     },
-    // Original card styles (unchanged)
     card: {
         borderRadius: 16,
         overflow: "hidden",

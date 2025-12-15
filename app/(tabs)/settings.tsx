@@ -211,17 +211,39 @@ function SettingsScreen() {
       <Stack.Screen options={{ headerShown: false }} />
       <StatusBar barStyle="light-content" backgroundColor="#0B0F2E" />
 
-      <View style={styles.screen}>
+      <View style={styles.container}>
         {/* Background */}
         <LinearGradient
           colors={["#0B0F2E", "#05060A"]}
           style={StyleSheet.absoluteFill}
         />
 
-        <SafeAreaView style={styles.safeArea} edges={["top"]}>
-          <View style={styles.header} />
+        {/* EXTRA GRADIENT ABOVE HEADER - matching home screen */}
+        <LinearGradient
+          colors={["#591A1B", "#591A1B"]}
+          style={styles.topGradientExtension}
+        />
 
+        <SafeAreaView style={styles.safeArea} edges={["top"]}>
+          {/* HEADER - matching home screen style */}
+          <LinearGradient
+            colors={["#591A1B", "#0F172B", "#0B0E14"]}
+            locations={[0, 0.4, 1]}
+            style={styles.topBar}
+          >
+            <View style={styles.headerRow}>
+              <View style={styles.headerContent}>
+                <Text style={styles.headerTitle}>Settings</Text>
+                <Text style={styles.headerSubtitle}>
+                  Customize your experience
+                </Text>
+              </View>
+            </View>
+          </LinearGradient>
+
+          {/* SCROLL AREA */}
           <ScrollView
+            style={styles.scrollArea}
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
           >
@@ -256,25 +278,64 @@ function SettingsScreen() {
 export default memo(SettingsScreen);
 
 const styles = StyleSheet.create({
-  screen: {
+  container: {
     flex: 1,
+  },
+  topGradientExtension: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 100,
+    zIndex: 1,
   },
   safeArea: {
     flex: 1,
+    zIndex: 2,
   },
-  // Empty header with same dimensions as Favorites
-  header: {
-    paddingTop: 20,
+  topBar: {
+    paddingTop: 10,
     paddingHorizontal: 20,
-    paddingBottom: 20,
-    // No alignItems, no text
+    paddingBottom: 24,
+    borderBottomLeftRadius: 32,
+    borderBottomRightRadius: 32,
+    gap: 16,
+    shadowColor: "#000",
+    shadowOpacity: 0.25,
+    shadowRadius: 24,
+    shadowOffset: { width: 0, height: 18 },
+    elevation: 24,
+  },
+  headerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  headerContent: {
+    flex: 1,
+  },
+  headerTitle: {
+    color: "#FFFFFF",
+    fontSize: 28,
+    fontWeight: "800",
+    lineHeight: 34,
+    marginBottom: 6,
+  },
+  headerSubtitle: {
+    color: "rgba(255,255,255,0.75)",
+    fontSize: 14,
+    fontWeight: "500",
+    letterSpacing: 0.3,
+  },
+  scrollArea: {
+    flex: 1,
+    marginTop: 0,
   },
   scrollContent: {
-    paddingTop: 20,
     paddingHorizontal: 20,
-    paddingBottom: 40,
+    paddingBottom: 120,
+    paddingTop: 20,
   },
-
   section: {
     marginBottom: 24,
   },

@@ -25,6 +25,7 @@ import {
     Wind,
     Blocks,
 } from "lucide-react-native";
+import { Ionicons } from '@expo/vector-icons';
 
 type CategoryId =
     | "rain"
@@ -46,7 +47,8 @@ type Category = {
     id: CategoryId;
     title: string;
     subtitle: string;
-    colors: readonly [string, string];
+    gradient: readonly [string, string];
+    accent: string;
     icon:
     | "CloudRain"
     | "Flame"
@@ -57,132 +59,151 @@ type Category = {
     | "Wind"
     | "Moon"
     | "Waves";
+    moodIcon?: keyof typeof Ionicons.glyphMap; // Added for home screen icon consistency
 };
 
+// Updated colors to match home screen mood tiles gradient style
 const CATEGORIES: Category[] = [
     {
         id: "sleep",
         title: "Sleep",
-        subtitle: "Sleep & Relaxation",
-        colors: ["#1D4ED8", "#0B1B3E"],
+        subtitle: "Drift off easily",
+        gradient: ["#0E1C36", "#081125"] as const,
+        accent: "#6DA7FF",
         icon: "Moon",
+        moodIcon: "moon",
     },
     {
         id: "focus",
         title: "Focus",
-        subtitle: "Focus & Concentrate",
-        colors: ["#F97316", "#7C2D12"],
+        subtitle: "Sharpen your mind",
+        gradient: ["#3A1C09", "#1B1C37"] as const,
+        accent: "#F78A2C",
         icon: "Coffee",
+        moodIcon: "flash",
     },
     {
         id: "calm",
         title: "Calm",
-        subtitle: "Calm & Nature",
-        colors: ["#0EA5A4", "#064E3B"],
+        subtitle: "Reduce stress",
+        gradient: ["#1E1B4A", "#1A1034"] as const,
+        accent: "#8F7CFF",
         icon: "Trees",
+        moodIcon: "water",
     },
     {
         id: "recharge",
         title: "Recharge",
-        subtitle: "Energy & Motivation",
-        colors: ["#15803D", "#064E3B"],
+        subtitle: "Boost energy",
+        gradient: ["#0C1F1A", "#05100F"] as const,
+        accent: "#4DE2C3",
         icon: "CloudLightning",
+        moodIcon: "battery-charging",
     },
     {
         id: "rain",
         title: "Rain",
         subtitle: "Rain & Storm",
-        colors: ["#1D4ED8", "#0B1B3E"],
+        gradient: ["#1E1B4A", "#0A0F16"] as const,
+        accent: "#8F7CFF",
         icon: "CloudRain",
     },
     {
         id: "fireplace",
         title: "Fireplace",
         subtitle: "Fire & Crackling",
-        colors: ["#F97316", "#7C2D12"],
+        gradient: ["#3A1C09", "#1A0B06"] as const,
+        accent: "#F78A2C",
         icon: "Flame",
     },
     {
         id: "thunder",
         title: "Thunder",
         subtitle: "Thunder & Lightning",
-        colors: ["#FB923C", "#9A3412"],
+        gradient: ["#0E1C36", "#0A0F16"] as const,
+        accent: "#6DA7FF",
         icon: "CloudLightning",
     },
     {
         id: "forest",
         title: "Forest",
         subtitle: "Forest & Nature",
-        colors: ["#0EA5A4", "#064E3B"],
+        gradient: ["#0C1F1A", "#05100F"] as const,
+        accent: "#4DE2C3",
         icon: "Trees",
     },
     {
         id: "cafe",
         title: "Cafe",
         subtitle: "Coffee Shop",
-        colors: ["#15803D", "#064E3B"],
+        gradient: ["#3A1C09", "#1B1C37"] as const,
+        accent: "#F78A2C",
         icon: "Coffee",
     },
     {
         id: "bricks",
         title: "Bricks",
         subtitle: "Ambient Sounds",
-        colors: ["#F97316", "#9A3412"],
+        gradient: ["#1E1B4A", "#1A1034"] as const,
+        accent: "#8F7CFF",
         icon: "Blocks",
     },
     {
         id: "wind",
         title: "Wind",
         subtitle: "Wind & Breeze",
-        colors: ["#111827", "#0B1220"],
+        gradient: ["#0E1C36", "#081125"] as const,
+        accent: "#6DA7FF",
         icon: "Wind",
     },
     {
         id: "night",
         title: "Night",
         subtitle: "Night Sounds",
-        colors: ["#111827", "#0B1220"],
+        gradient: ["#0C1F1A", "#05100F"] as const,
+        accent: "#4DE2C3",
         icon: "Moon",
     },
     {
         id: "water",
         title: "Water",
         subtitle: "Water Sounds",
-        colors: ["#111827", "#0B1220"],
+        gradient: ["#1E1B4A", "#0A0F16"] as const,
+        accent: "#8F7CFF",
         icon: "Waves",
     },
     {
         id: "ocean",
         title: "Ocean",
         subtitle: "Ocean & Waves",
-        colors: ["#111827", "#0B1220"],
+        gradient: ["#0E1C36", "#081125"] as const,
+        accent: "#6DA7FF",
         icon: "Waves",
     },
 ];
 
-function CategoryIcon({ name }: { name: Category["icon"] }) {
-    const iconColor = "rgba(255,255,255,0.92)";
+function CategoryIcon({ name, accent }: { name: Category["icon"]; accent: string }) {
     const iconSize = 20;
 
     switch (name) {
         case "CloudRain":
-            return <CloudRain color={iconColor} size={iconSize} />;
+            return <CloudRain color={accent} size={iconSize} />;
         case "Flame":
-            return <Flame color={iconColor} size={iconSize} />;
+            return <Flame color={accent} size={iconSize} />;
         case "CloudLightning":
-            return <CloudLightning color={iconColor} size={iconSize} />;
+            return <CloudLightning color={accent} size={iconSize} />;
         case "Trees":
-            return <Trees color={iconColor} size={iconSize} />;
+            return <Trees color={accent} size={iconSize} />;
         case "Coffee":
-            return <Coffee color={iconColor} size={iconSize} />;
+            return <Coffee color={accent} size={iconSize} />;
         case "Blocks":
-            return <Blocks color={iconColor} size={iconSize} />;
+            return <Blocks color={accent} size={iconSize} />;
         case "Wind":
-            return <Wind color={iconColor} size={iconSize} />;
+            return <Wind color={accent} size={iconSize} />;
         case "Moon":
-            return <Moon color={iconColor} size={iconSize} />;
+            return <Moon color={accent} size={iconSize} />;
         case "Waves":
-            return <Waves color={iconColor} size={iconSize} />;
+            return <Waves color={accent} size={iconSize} />;
         default:
             return null;
     }
@@ -222,29 +243,25 @@ function CategoryCard({
             testID={`category-card-${item.id}`}
         >
             <LinearGradient
-                colors={item.colors}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
+                colors={item.gradient}
                 style={[
-                    styles.card,
-                    isPressed && styles.cardPressed
+                    styles.moodGradient,
+                    isPressed && { opacity: 0.9 }
                 ]}
             >
-                {/* Clean icon - no background pill */}
-                <View style={styles.cardIconContainer}>
-                    <CategoryIcon name={item.icon} />
+                {/* Icon with circular background pill - matching home screen */}
+                <View style={styles.moodIconWrap}>
+                    {item.moodIcon ? (
+                        <Ionicons name={item.moodIcon} color={item.accent} size={20} />
+                    ) : (
+                        <CategoryIcon name={item.icon} accent={item.accent} />
+                    )}
                 </View>
-
-                <View style={styles.cardTextWrap}>
-                    <Text style={styles.cardTitle} numberOfLines={1}>
-                        {item.title}
-                    </Text>
-                    <Text style={styles.cardSubtitle} numberOfLines={1}>
-                        {item.subtitle}
-                    </Text>
-                </View>
-
-                {/* No gloss effect - plain gradient */}
+                
+                <Text style={styles.moodTitle}>{item.title}</Text>
+                <Text style={styles.moodDescription}>
+                    {item.subtitle}
+                </Text>
             </LinearGradient>
         </Pressable>
     );
@@ -287,77 +304,118 @@ export default function CategoriesScreen() {
     );
 
     return (
-        <View style={styles.screen} testID="categories-screen">
-            {/* Background gradient */}
+        <View style={styles.container} testID="categories-screen">
+            {/* Background - matching home screen */}
             <LinearGradient
                 colors={["#0B0F2E", "#05060A"]}
                 style={StyleSheet.absoluteFill}
             />
+
+            {/* EXTRA GRADIENT ABOVE HEADER - matching home screen */}
+            <LinearGradient
+                colors={["#591A1B", "#591A1B"]}
+                style={styles.topGradientExtension}
+            />
+
             <Stack.Screen options={{ title: "Categories" }} />
+            
             <SafeAreaView style={styles.safeArea} edges={["top"]}>
-
-                <View style={styles.header}>
-                    <Text style={styles.headerTitle}>Categories</Text>
-                </View>
-
-                {/* Search bar */}
-                <View style={styles.searchWrap}>
-                    <View style={styles.searchInner}>
-                        <Search color="rgba(234,242,255,0.70)" size={16} />
-                        <TextInput
-                            value={query}
-                            onChangeText={setQuery}
-                            placeholder="Search Categories"
-                            placeholderTextColor="rgba(234,242,255,0.44)"
-                            style={styles.searchInput}
-                            autoCapitalize="none"
-                            autoCorrect={false}
-                            testID="categories-search"
-                        />
+                {/* HEADER - matching home screen style */}
+                <LinearGradient
+                    colors={["#591A1B", "#0F172B", "#0B0E14"]}
+                    locations={[0, 0.4, 1]}
+                    style={styles.topBar}
+                >
+                    <View style={styles.header}>
+                        <Text style={styles.headerTitle}>Categories</Text>
                     </View>
-                </View>
+                </LinearGradient>
 
-                {/* Categories list */}
-                <FlatList
-                    data={filtered}
-                    keyExtractor={(item) => item.id}
-                    renderItem={renderItem}
-                    numColumns={2}
-                    contentContainerStyle={styles.listContent}
-                    columnWrapperStyle={styles.rowWrapper}
-                    showsVerticalScrollIndicator={false}
-                    showsHorizontalScrollIndicator={false}
-                    keyboardShouldPersistTaps="handled"
-                    testID="categories-list"
-                />
+                {/* SCROLL AREA */}
+                <View style={styles.scrollArea}>
+                    {/* Search bar */}
+                    <View style={styles.searchWrap}>
+                        <View style={styles.searchInner}>
+                            <Search color="rgba(234,242,255,0.70)" size={16} />
+                            <TextInput
+                                value={query}
+                                onChangeText={setQuery}
+                                placeholder="Search Categories"
+                                placeholderTextColor="rgba(234,242,255,0.44)"
+                                style={styles.searchInput}
+                                autoCapitalize="none"
+                                autoCorrect={false}
+                                testID="categories-search"
+                            />
+                        </View>
+                    </View>
+
+                    {/* Categories list */}
+                    <FlatList
+                        data={filtered}
+                        keyExtractor={(item) => item.id}
+                        renderItem={renderItem}
+                        numColumns={2}
+                        contentContainerStyle={styles.scrollContent}
+                        columnWrapperStyle={styles.moodGrid}
+                        showsVerticalScrollIndicator={false}
+                        showsHorizontalScrollIndicator={false}
+                        keyboardShouldPersistTaps="handled"
+                        testID="categories-list"
+                    />
+                </View>
             </SafeAreaView>
         </View>
     );
 }
 
 const styles = StyleSheet.create({
-    screen: {
+    container: {
         flex: 1,
+    },
+    topGradientExtension: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: 100,
+        zIndex: 1,
     },
     safeArea: {
         flex: 1,
+        zIndex: 2,
+    },
+    topBar: {
+        paddingTop: 10,
+        paddingHorizontal: 20,
+        paddingBottom: 24,
+        borderBottomLeftRadius: 32,
+        borderBottomRightRadius: 32,
+        gap: 16,
+        shadowColor: "#000",
+        shadowOpacity: 0.25,
+        shadowRadius: 24,
+        shadowOffset: { width: 0, height: 18 },
+        elevation: 24,
     },
     header: {
-        paddingTop: 20,
-        paddingHorizontal: 20,
-        paddingBottom: 20,
-        alignItems: "center",
+        paddingTop: 10,
+        paddingBottom: 10,
     },
     headerTitle: {
         color: "#FFFFFF",
-        fontSize: 24,
-        fontWeight: "700",
-        textAlign: "center",
+        fontSize: 28,
+        fontWeight: "800",
+        textAlign: "left",
+        maxWidth: 280,
     },
-
+    scrollArea: {
+        flex: 1,
+        marginTop: 0,
+    },
     searchWrap: {
         paddingHorizontal: 20,
-        paddingTop: 0,
+        paddingTop: 20,
         paddingBottom: 20,
     },
     searchInner: {
@@ -377,46 +435,40 @@ const styles = StyleSheet.create({
         fontSize: 14,
         paddingVertical: 0,
     },
-    listContent: {
-        paddingTop: 8,
-        paddingBottom: 18,
-    },
-    rowWrapper: {
+    scrollContent: {
         paddingHorizontal: 20,
-        marginBottom: 12,
+        paddingBottom: 120,
+        gap: 20,
+    },
+    moodGrid: {
         justifyContent: "space-between",
+        rowGap: 16,
     },
     cardWrap: {
         width: "48%",
-        aspectRatio: 1.6,
-    },
-    card: {
-        flex: 1,
-        borderRadius: 16,
-        padding: 16,
+        borderRadius: 24,
         overflow: "hidden",
-        alignItems: "flex-start",
-        justifyContent: "flex-start",
     },
-    cardPressed: {
-        opacity: 0.85,
-        transform: [{ scale: 0.98 }],
+    moodGradient: {
+        borderRadius: 24,
+        padding: 16,
+        gap: 8,
     },
-    cardIconContainer: {
-        marginBottom: 12,
+    moodIconWrap: {
+        width: 34,
+        height: 34,
+        borderRadius: 17,
+        backgroundColor: "rgba(255,255,255,0.12)",
+        alignItems: "center",
+        justifyContent: "center",
     },
-    cardTextWrap: {
-        width: "100%",
-    },
-    cardTitle: {
-        color: "rgba(255,255,255,0.96)",
+    moodTitle: {
+        color: "#FFFFFF",
         fontSize: 16,
         fontWeight: "700",
-        marginBottom: 4,
     },
-    cardSubtitle: {
+    moodDescription: {
         color: "rgba(255,255,255,0.74)",
         fontSize: 13,
-        fontWeight: "500",
     },
 });
