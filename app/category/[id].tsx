@@ -220,10 +220,10 @@ export default function CategoryDetailScreen() {
                         <Text style={styles.categoryTitle}>{categoryConfig.title}</Text>
                         {/* ADDED: Sounds counter under title */}
                         <Text style={styles.soundsCounter}>
-                            {loading ? 'Loading sounds...' : 
-                             error ? 'Error loading sounds' : 
-                             sessions.length === 0 ? 'No sounds available' : 
-                             `${sessions.length} sound${sessions.length !== 1 ? 's' : ''} available`}
+                            {loading ? 'Loading sounds...' :
+                                error ? 'Error loading sounds' :
+                                    sessions.length === 0 ? 'No sounds available' :
+                                        `${sessions.length} sound${sessions.length !== 1 ? 's' : ''} available`}
                         </Text>
                     </View>
 

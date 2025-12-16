@@ -26,7 +26,8 @@ import { useRouter } from 'expo-router';
 import { useAuthStore } from '@/store/auth-store';
 import * as Google from 'expo-auth-session/providers/google';
 import * as WebBrowser from 'expo-web-browser';
-import { makeRedirectUri } from 'expo-auth-session';
+import * as AuthSession from 'expo-auth-session';
+
 
 // Initialize WebBrowser for OAuth flows
 WebBrowser.maybeCompleteAuthSession();
@@ -71,24 +72,23 @@ function ProfileScreen() {
     const [securityRowPressed, setSecurityRowPressed] = useState(false);
     const router = useRouter();
 
+    const redirectUri = AuthSession.makeRedirectUri({
+        useProxy: true,
+    } as any);
+
+
     const { user, profile, isAuthenticated, signInWithGoogleToken, signOut, updateProfile } = useAuthStore();
 
-    const redirectUri = makeRedirectUri({
-        scheme: 'exp',
-        path: 'oauth2redirect'
-    });
-
     const [request, response, promptAsync] = Google.useAuthRequest({
-        clientId: '8abb5262-7273-4a0b-ad08-c7895d13d566',
-        webClientId: '1082699719904-k320pufdgua2dqd9dvn7qb8p8d5m1lnl.apps.googleusercontent.com', 
+        iosClientId: '1082699719904-4vte5n3u63tdau891vbjej9trcrv8fb9.apps.googleusercontent.com',
+        webClientId: '1082699719904-k320pufdgua2dqd9dvn7qb8p8d5m1lnl.apps.googleusercontent.com',
+        redirectUri,
         scopes: ['profile', 'email'],
-        redirectUri: redirectUri,
     });
 
     useEffect(() => {
-        console.log('Google OAuth Redirect URI:', redirectUri);
         console.log('Google OAuth Request ready:', !!request);
-    }, [redirectUri, request]);
+    }, [request]);
 
     useEffect(() => {
         const handleGoogleResponse = async () => {
@@ -126,19 +126,13 @@ function ProfileScreen() {
 
         setGoogleSignInLoading(true);
         try {
-            console.log('Opening Google sign-in prompt...');
             const result = await promptAsync();
             console.log('Google prompt result type:', result.type);
-
-            if (result.type !== 'success') {
-                console.log('User cancelled Google sign-in or error occurred');
-            }
         } catch (error) {
             console.error('Failed to open Google sign-in:', error);
-        } finally {
-            // Loading state will be reset by the useEffect after response is handled
         }
     };
+
 
     const fields = useMemo<Field[]>(
         () => [
@@ -222,7 +216,7 @@ function ProfileScreen() {
                     </View>
                 </SafeAreaView>
 
-                <ScrollView 
+                <ScrollView
                     contentContainerStyle={styles.authContainer}
                     showsVerticalScrollIndicator={false}
                 >
