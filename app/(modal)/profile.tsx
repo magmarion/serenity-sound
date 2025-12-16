@@ -1,6 +1,5 @@
-// app/(modal)/profile.tsx
 import { LinearGradient } from "expo-linear-gradient";
-import React, { memo, useMemo, useState, useEffect } from "react";
+import React, { memo, useMemo, useState } from "react";
 import {
     Pressable,
     ScrollView,
@@ -12,25 +11,11 @@ import {
     Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import {
-    ArrowLeft,
-    Camera,
-    ChevronRight,
-    Image as ImageIcon,
-    Mail,
-    Phone,
-    User,
-} from "lucide-react-native";
-import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import { useAuthStore } from '@/store/auth-store';
-import * as Google from 'expo-auth-session/providers/google';
-import * as WebBrowser from 'expo-web-browser';
-import * as AuthSession from 'expo-auth-session';
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import { useAuthStore } from "@/store/auth-store";
 
-
-// Initialize WebBrowser for OAuth flows
-WebBrowser.maybeCompleteAuthSession();
+type Mode = "signin" | "signup";
 
 type FieldKey = "fullName" | "email" | "phone" | "username";
 
@@ -38,10 +23,8 @@ type Field = {
     key: FieldKey;
     label: string;
     value: string;
-    icon: React.ComponentType<{ color?: string; size?: number }>;
+    icon: keyof typeof Ionicons.glyphMap;
     keyboardType?: "default" | "email-address" | "phone-pad";
-    errorText?: string;
-    isError?: boolean;
 };
 
 const COLORS = {
@@ -62,440 +45,243 @@ const COLORS = {
 } as const;
 
 function ProfileScreen() {
-    const [focused, setFocused] = useState<FieldKey | null>(null);
-    const [googleSignInLoading, setGoogleSignInLoading] = useState(false);
-    const [headerButtonPressed, setHeaderButtonPressed] = useState(false);
-    const [googleButtonPressed, setGoogleButtonPressed] = useState(false);
-    const [facebookButtonPressed, setfacebookButtonPressed] = useState(false);
-    const [primaryButtonPressed, setPrimaryButtonPressed] = useState(false);
-    const [secondaryButtonPressed, setSecondaryButtonPressed] = useState(false);
-    const [securityRowPressed, setSecurityRowPressed] = useState(false);
     const router = useRouter();
+    const {
+        user,
+        profile,
+        isAuthenticated,
+        signInWithEmail,
+        signUpWithEmail,
+        signOut,
+        updateProfile,
+    } = useAuthStore();
 
-    const redirectUri = AuthSession.makeRedirectUri({
-        useProxy: true,
-    } as any);
+    const [mode, setMode] = useState<Mode>("signin");
+    const [focused, setFocused] = useState<FieldKey | null>(null);
 
-
-    const { user, profile, isAuthenticated, signInWithGoogleToken, signOut, updateProfile } = useAuthStore();
-
-    const [request, response, promptAsync] = Google.useAuthRequest({
-        iosClientId: '1082699719904-4vte5n3u63tdau891vbjej9trcrv8fb9.apps.googleusercontent.com',
-        webClientId: '1082699719904-k320pufdgua2dqd9dvn7qb8p8d5m1lnl.apps.googleusercontent.com',
-        redirectUri,
-        scopes: ['profile', 'email'],
-    });
-
-    useEffect(() => {
-        console.log('Google OAuth Request ready:', !!request);
-    }, [request]);
-
-    useEffect(() => {
-        const handleGoogleResponse = async () => {
-            if (response?.type === 'success') {
-                const { id_token } = response.params;
-                console.log('Google OAuth response received, has id_token:', !!id_token);
-
-                if (id_token) {
-                    setGoogleSignInLoading(true);
-                    try {
-                        await signInWithGoogleToken(id_token);
-                        console.log('Google sign-in successful via token');
-                    } catch (error) {
-                        console.error('Google sign-in failed:', error);
-                    } finally {
-                        setGoogleSignInLoading(false);
-                    }
-                }
-            } else if (response) {
-                console.log('Google OAuth response type:', response.type);
-                if (response.type === 'error') {
-                    console.error('Google OAuth error:', response.error);
-                }
-            }
-        };
-
-        handleGoogleResponse();
-    }, [response, signInWithGoogleToken]);
-
-    const handleGoogleButtonPress = async () => {
-        if (!request) {
-            console.log('Google auth request is not ready yet');
-            return;
-        }
-
-        setGoogleSignInLoading(true);
-        try {
-            const result = await promptAsync();
-            console.log('Google prompt result type:', result.type);
-        } catch (error) {
-            console.error('Failed to open Google sign-in:', error);
-        }
-    };
-
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
+    const [name, setName] = useState("");
+    const [loading, setLoading] = useState(false);
 
     const fields = useMemo<Field[]>(
         () => [
             {
                 key: "fullName",
                 label: "Full Name",
-                value: profile?.name || "Not set",
-                icon: User,
+                value: profile?.name || "",
+                icon: "person",
             },
             {
                 key: "email",
-                label: "Email*",
-                value: profile?.email || user?.email || "Not signed in",
-                icon: Mail,
+                label: "Email",
+                value: profile?.email || user?.email || "",
+                icon: "mail",
                 keyboardType: "email-address",
             },
             {
                 key: "phone",
                 label: "Phone",
                 value: "+460709121212",
-                icon: Phone,
+                icon: "call",
                 keyboardType: "phone-pad",
             },
             {
                 key: "username",
                 label: "Username",
                 value: "@crazyfrog-1",
-                icon: User,
+                icon: "person",
             },
         ],
         [profile, user]
     );
 
     const handleSaveChanges = async () => {
-        if (!isAuthenticated) return;
-
-        try {
-            const nameField = fields.find(f => f.key === 'fullName');
-            if (nameField) {
-                await updateProfile({ name: nameField.value });
-                console.log('Profile updated successfully');
-            }
-        } catch (error) {
-            console.error('Error updating profile:', error);
+        const nameField = fields.find(f => f.key === "fullName");
+        if (nameField) {
+            await updateProfile({ name: nameField.value });
         }
     };
 
-    // If user is NOT authenticated, show sign-in UI
+    const handleSignIn = async () => {
+        if (!email || !password) return;
+        setLoading(true);
+        try {
+            await signInWithEmail(email.trim(), password);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleSignUp = async () => {
+        if (!email || !password || password !== confirmPassword) return;
+        setLoading(true);
+        try {
+            await signUpWithEmail(email.trim(), password);
+            if (name) await updateProfile({ name });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    /* -------------------------
+       NOT AUTHENTICATED
+    -------------------------- */
+
     if (!isAuthenticated) {
         return (
-            <View style={styles.root} testID="profile/root">
+            <View style={styles.root}>
                 <LinearGradient
                     colors={[COLORS.bgTop, COLORS.bgBottom]}
                     style={StyleSheet.absoluteFill}
                 />
 
-                <SafeAreaView style={styles.safe} edges={["top"]}>
-                    <View style={styles.header} testID="profile/header">
-                        <Pressable
-                            onPressIn={() => setHeaderButtonPressed(true)}
-                            onPressOut={() => setHeaderButtonPressed(false)}
-                            onPress={() => router.back()}
-                            testID="profile/back"
-                            accessibilityRole="button"
-                            accessibilityLabel="Back"
-                            style={styles.headerIconButtonContainer}
-                        >
-                            <View style={[
-                                styles.headerIconButton,
-                                headerButtonPressed && styles.headerIconButtonPressed
-                            ]}>
-                                <ArrowLeft color={COLORS.text} size={20} />
+                <SafeAreaView style={styles.safe}>
+                    <View style={styles.header}>
+                        <Pressable onPress={() => router.back()}>
+                            <View style={styles.headerIconButton}>
+                                <Ionicons name="arrow-back" size={20} color={COLORS.text} />
                             </View>
                         </Pressable>
-
-                        <Text style={styles.headerTitle} testID="profile/title">
-                            Profile
+                        <Text style={styles.headerTitle}>
+                            {mode === "signin" ? "Sign in" : "Create account"}
                         </Text>
-
                         <View style={styles.headerRightSpacer} />
                     </View>
                 </SafeAreaView>
 
-                <ScrollView
-                    contentContainerStyle={styles.authContainer}
-                    showsVerticalScrollIndicator={false}
-                >
-                    <View style={styles.avatarBlock} testID="profile/avatarBlock">
-                        <View style={styles.avatarOuterGlow} />
-                        <View style={styles.avatarCircle} testID="profile/avatar">
-                            <View style={styles.avatarInner}>
-                                <Ionicons name="person" size={32} color="#1C1208" />
-                            </View>
+                <ScrollView contentContainerStyle={styles.authContainer}>
+                    {mode === "signup" && (
+                        <View style={styles.inputRow}>
+                            <Ionicons name="person" size={16} color={COLORS.text} />
+                            <TextInput
+                                style={styles.input}
+                                placeholder="Name"
+                                placeholderTextColor={COLORS.placeholder}
+                                value={name}
+                                onChangeText={setName}
+                            />
                         </View>
+                    )}
+
+                    <View style={[styles.inputRow, { marginTop: 12 }]}>
+                        <Ionicons name="mail" size={16} color={COLORS.text} />
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Email"
+                            placeholderTextColor={COLORS.placeholder}
+                            value={email}
+                            onChangeText={setEmail}
+                            autoCapitalize="none"
+                        />
                     </View>
 
-                    <Text style={styles.authTitle}>Sign in</Text>
-                    <Text style={styles.authSubtitle}>
-                        Sign in to save your preferences and access more features.
-                    </Text>
+                    <View style={[styles.inputRow, { marginTop: 12 }]}>
+                        <Ionicons name="lock-closed" size={16} color={COLORS.text} />
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Password"
+                            placeholderTextColor={COLORS.placeholder}
+                            secureTextEntry
+                            value={password}
+                            onChangeText={setPassword}
+                        />
+                    </View>
 
-                    {/* Google Sign In Button */}
-                    <Pressable
-                        onPressIn={() => setGoogleButtonPressed(true)}
-                        onPressOut={() => setGoogleButtonPressed(false)}
-                        onPress={handleGoogleButtonPress}
-                        disabled={googleSignInLoading || !request}
-                        testID="profile/google-signin"
-                        style={styles.googleButtonContainer}
-                    >
-                        <View style={[
-                            styles.googleButton,
-                            googleButtonPressed && styles.btnPressed,
-                            googleSignInLoading && styles.buttonDisabled,
-                        ]}>
-                            {googleSignInLoading ? (
-                                <ActivityIndicator size="small" color="#FFFFFF" />
-                            ) : (
-                                <Ionicons name="logo-google" size={20} color="#FFFFFF" />
-                            )}
-                            <Text style={styles.googleButtonText}>
-                                {googleSignInLoading ? 'Signing in...' : 'Sign in with Google'}
-                            </Text>
+                    {mode === "signup" && (
+                        <View style={[styles.inputRow, { marginTop: 12 }]}>
+                            <Ionicons name="lock-closed" size={16} color={COLORS.text} />
+                            <TextInput
+                                style={styles.input}
+                                placeholder="Confirm password"
+                                placeholderTextColor={COLORS.placeholder}
+                                secureTextEntry
+                                value={confirmPassword}
+                                onChangeText={setConfirmPassword}
+                            />
                         </View>
+                    )}
+
+                    <Pressable
+                        style={styles.primaryButton}
+                        onPress={mode === "signin" ? handleSignIn : handleSignUp}
+                        disabled={loading}
+                    >
+                        {loading ? (
+                            <ActivityIndicator color="#141414" />
+                        ) : (
+                            <Text style={styles.primaryButtonText}>
+                                {mode === "signin" ? "Sign in" : "Create account"}
+                            </Text>
+                        )}
                     </Pressable>
 
-                    {/* facebook Sign In Button */}
-                    <Pressable
-                        onPressIn={() => setfacebookButtonPressed(true)}
-                        onPressOut={() => setfacebookButtonPressed(false)}
-                        onPress={() => { console.log("Facebook sign-in not yet implemented"); }}
-                        disabled
-                        testID="profile/facebook-signin"
-                        style={styles.facebookButtonContainer}
-                    >
-                        <View style={[
-                            styles.facebookButton,
-                            facebookButtonPressed && styles.btnPressed,
-                        ]}>
-                            <Ionicons name="logo-facebook" size={20} color="#FFFFFF" />
-                            <Text style={styles.facebookButtonText}>Sign in with facebook</Text>
-                        </View>
+                    <Pressable onPress={() => setMode(mode === "signin" ? "signup" : "signin")}>
+                        <Text style={styles.secondaryButtonText}>
+                            {mode === "signin"
+                                ? "Create an account"
+                                : "Already have an account? Sign in"}
+                        </Text>
                     </Pressable>
                 </ScrollView>
             </View>
         );
     }
 
-    // If user IS authenticated, show the regular profile form
+    /* -------------------------
+       AUTHENTICATED PROFILE UI
+    -------------------------- */
+
     return (
-        <View style={styles.root} testID="profile/root">
+        <View style={styles.root}>
             <LinearGradient
                 colors={[COLORS.bgTop, COLORS.bgBottom]}
                 style={StyleSheet.absoluteFill}
             />
 
-            <SafeAreaView style={styles.safe} edges={["top"]}>
-                <View style={styles.header} testID="profile/header">
-                    <Pressable
-                        onPressIn={() => setHeaderButtonPressed(true)}
-                        onPressOut={() => setHeaderButtonPressed(false)}
-                        onPress={() => router.back()}
-                        testID="profile/back"
-                        accessibilityRole="button"
-                        accessibilityLabel="Back"
-                        style={styles.headerIconButtonContainer}
-                    >
-                        <View style={[
-                            styles.headerIconButton,
-                            headerButtonPressed && styles.headerIconButtonPressed
-                        ]}>
-                            <ArrowLeft color={COLORS.text} size={20} />
+            <SafeAreaView style={styles.safe}>
+                <View style={styles.header}>
+                    <Pressable onPress={() => router.back()}>
+                        <View style={styles.headerIconButton}>
+                            <Ionicons name="arrow-back" size={20} color={COLORS.text} />
                         </View>
                     </Pressable>
-
-                    <Text style={styles.headerTitle} testID="profile/title">
-                        Profile
-                    </Text>
-
+                    <Text style={styles.headerTitle}>Profile</Text>
                     <View style={styles.headerRightSpacer} />
                 </View>
             </SafeAreaView>
 
-            <ScrollView
-                style={styles.scroll}
-                contentContainerStyle={styles.scrollContent}
-                showsVerticalScrollIndicator={false}
-                testID="profile/scroll"
-            >
-                <View style={styles.avatarBlock} testID="profile/avatarBlock">
-                    <View style={styles.avatarOuterGlow} />
-                    <View style={styles.avatarCircle} testID="profile/avatar">
-                        <View style={styles.avatarInner}>
-                            {profile?.photoURL ? (
-                                <ImageIcon color="#1C1208" size={32} />
-                            ) : (
-                                <Ionicons name="person" size={32} color="#1C1208" />
-                            )}
-                        </View>
-                        <View style={styles.avatarBadge} testID="profile/avatarBadge">
-                            <Camera color="#1C1208" size={14} />
+            <ScrollView contentContainerStyle={styles.scrollContent}>
+                {fields.map(f => (
+                    <View key={f.key} style={styles.fieldBlock}>
+                        <Text style={styles.fieldLabel}>{f.label}</Text>
+                        <View style={styles.inputRow}>
+                            <Ionicons name={f.icon} size={16} color={COLORS.text} />
+                            <TextInput
+                                style={styles.input}
+                                value={f.value}
+                                keyboardType={f.keyboardType}
+                            />
                         </View>
                     </View>
+                ))}
 
-                    <Text style={styles.name} testID="profile/name">
-                        {profile?.name || user?.displayName || "User"}
-                    </Text>
-                    <Text style={styles.email} testID="profile/email">
-                        {profile?.email || user?.email || ""}
-                    </Text>
-                </View>
-
-                <Text style={styles.sectionTitle} testID="profile/personalInfoTitle">
-                    Personal Information
-                </Text>
-
-                <LinearGradient
-                    colors={[COLORS.cardTop, COLORS.cardBottom]}
-                    style={styles.card}
-                >
-                    <View style={styles.cardTopHighlight} />
-
-                    {fields.map((f, idx) => {
-                        const Icon = f.icon;
-                        const isFocused = focused === f.key;
-                        const showError = Boolean(f.isError);
-                        const borderColor = showError
-                            ? COLORS.danger
-                            : isFocused
-                                ? COLORS.accent
-                                : COLORS.inputBorder;
-
-                        return (
-                            <View key={f.key} style={styles.fieldBlock}>
-                                <Text style={styles.fieldLabel} testID={`profile/fieldLabel/${f.key}`}>
-                                    {f.label}
-                                </Text>
-
-                                <View
-                                    style={[
-                                        styles.inputRow,
-                                        { borderColor },
-                                        showError && styles.inputRowError,
-                                        isFocused && styles.inputRowFocused,
-                                    ]}
-                                    testID={`profile/inputRow/${f.key}`}
-                                >
-                                    <View
-                                        style={[
-                                            styles.inputIconWrap,
-                                            showError && styles.inputIconWrapError,
-                                        ]}
-                                        testID={`profile/inputIcon/${f.key}`}
-                                    >
-                                        <Icon
-                                            color={showError ? COLORS.danger : "rgba(255,255,255,0.80)"}
-                                            size={16}
-                                        />
-                                    </View>
-
-                                    <TextInput
-                                        style={styles.input}
-                                        value={f.value}
-                                        placeholder={f.label}
-                                        placeholderTextColor={COLORS.placeholder}
-                                        keyboardType={f.keyboardType ?? "default"}
-                                        onChangeText={(text) => {
-                                            console.log(`Changed ${f.key} to: ${text}`);
-                                        }}
-                                        onFocus={() => {
-                                            console.log("Profile: focus", f.key);
-                                            setFocused(f.key);
-                                        }}
-                                        onBlur={() => {
-                                            console.log("Profile: blur", f.key);
-                                            setFocused((prev) => (prev === f.key ? null : prev));
-                                        }}
-                                        testID={`profile/input/${f.key}`}
-                                    />
-                                </View>
-
-                                {showError ? (
-                                    <View style={styles.errorRow} testID={`profile/error/${f.key}`}>
-                                        <View style={styles.errorDot} />
-                                        <Text style={styles.errorText}>{f.errorText ?? ""}</Text>
-                                    </View>
-                                ) : null}
-
-                                {idx < fields.length - 1 ? <View style={styles.fieldGap} /> : null}
-                            </View>
-                        );
-                    })}
-                </LinearGradient>
-
-                <Text style={styles.sectionTitle} testID="profile/securityTitle">
-                    Security
-                </Text>
-
-                <LinearGradient
-                    colors={[COLORS.cardTop, COLORS.cardBottom]}
-                    style={[styles.card, styles.securityCard]}
-                >
-                    <Pressable
-                        onPressIn={() => setSecurityRowPressed(true)}
-                        onPressOut={() => setSecurityRowPressed(false)}
-                        onPress={() => console.log("Change password pressed")}
-                        style={styles.securityRowContainer}
-                        testID="profile/changePassword"
-                    >
-                        <View style={[
-                            styles.securityRow,
-                            securityRowPressed && styles.btnPressed
-                        ]}>
-                            <View style={styles.securityLeft}>
-                                <View style={styles.securityIconWrap}>
-                                    <User color={COLORS.accent} size={16} />
-                                </View>
-                                <Text style={styles.securityText}>Change Password</Text>
-                            </View>
-                            <ChevronRight color="rgba(255,255,255,0.45)" size={18} />
-                        </View>
-                    </Pressable>
-                </LinearGradient>
-
-                <Pressable
-                    onPressIn={() => setPrimaryButtonPressed(true)}
-                    onPressOut={() => setPrimaryButtonPressed(false)}
-                    onPress={handleSaveChanges}
-                    style={styles.primaryButtonContainer}
-                    testID="profile/save"
-                    accessibilityRole="button"
-                >
-                    <View style={[
-                        styles.primaryButton,
-                        primaryButtonPressed && styles.btnPressed
-                    ]}>
-                        <Text style={styles.primaryButtonText}>Save Changes</Text>
-                    </View>
+                <Pressable style={styles.primaryButton} onPress={handleSaveChanges}>
+                    <Text style={styles.primaryButtonText}>Save Changes</Text>
                 </Pressable>
 
-                <Pressable
-                    onPressIn={() => setSecondaryButtonPressed(true)}
-                    onPressOut={() => setSecondaryButtonPressed(false)}
-                    onPress={signOut}
-                    style={styles.secondaryButtonContainer}
-                    testID="profile/signout"
-                    accessibilityRole="button"
-                >
-                    <View style={[
-                        styles.secondaryButton,
-                        secondaryButtonPressed && styles.btnPressed
-                    ]}>
-                        <Text style={styles.secondaryButtonText}>Sign Out</Text>
-                    </View>
+                <Pressable style={styles.secondaryButton} onPress={signOut}>
+                    <Text style={styles.secondaryButtonText}>Sign Out</Text>
                 </Pressable>
-
-                <View style={styles.bottomSpacer} />
             </ScrollView>
         </View>
     );
 }
 
 export default memo(ProfileScreen);
+
+
 
 const styles = StyleSheet.create({
     root: {
@@ -562,11 +348,7 @@ const styles = StyleSheet.create({
         lineHeight: 22,
         paddingHorizontal: 20,
     },
-    googleButtonContainer: {
-        width: '100%',
-        marginBottom: 16,
-    },
-    googleButton: {
+    siginButton: {
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "center",
@@ -577,15 +359,15 @@ const styles = StyleSheet.create({
         width: "100%",
         gap: 12,
     },
-    googleButtonText: {
+    signinButtonText: {
         color: "#FFFFFF",
         fontSize: 16,
         fontWeight: "600",
     },
-    facebookButtonContainer: {
+    createAccountButtonContainer: {
         width: '100%',
     },
-    facebookButton: {
+    createAccountButton: {
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "center",
@@ -597,7 +379,7 @@ const styles = StyleSheet.create({
         gap: 12,
         opacity: 0.7,
     },
-    facebookButtonText: {
+    createAccountButtonText: {
         color: "#FFFFFF",
         fontSize: 16,
         fontWeight: "600",
@@ -713,7 +495,7 @@ const styles = StyleSheet.create({
         height: 44,
         borderRadius: 12,
         borderWidth: 1,
-        backgroundColor: COLORS.inputBg,
+        borderColor: COLORS.inputBorder,
         flexDirection: "row",
         alignItems: "center",
         paddingHorizontal: 10,
@@ -844,6 +626,14 @@ const styles = StyleSheet.create({
         fontSize: 15,
         fontWeight: "700",
         letterSpacing: 0.2,
+    },
+    switchText: {
+        color: COLORS.accent,
+        fontSize: 14,
+        textDecorationLine: "underline",
+    },
+    pressable: {
+        borderRadius: 12,
     },
     btnPressed: {
         transform: [{ scale: 0.98 }],
