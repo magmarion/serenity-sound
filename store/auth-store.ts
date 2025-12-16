@@ -1,23 +1,20 @@
 // store/auth-store.ts
 import { create } from "zustand";
 import { auth, db } from "@/services/firebase";
-import {
-    User,
-    signOut,
-    onAuthStateChanged,
-    signInWithEmailAndPassword,
-    createUserWithEmailAndPassword,
-} from "firebase/auth";
+import { User, signOut, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, } from "firebase/auth";
 import { doc, setDoc, getDoc, updateDoc } from "firebase/firestore";
 
-interface UserProfile {
+export interface UserProfile {
     uid: string;
     email: string;
     name: string;
+    username?: string;
+    phone?: string;
     photoURL?: string;
     createdAt: Date;
     updatedAt?: Date;
 }
+
 
 interface AuthStore {
     user: User | null;
@@ -55,6 +52,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         });
         return unsub;
     },
+
 
     signInWithEmail: async (email, password) => {
         const result = await signInWithEmailAndPassword(auth, email, password);
