@@ -208,9 +208,9 @@ function ProfileScreen() {
         });
     };
 
-/*
-   NOT AUTHENTICATED
- */
+    /*
+       NOT AUTHENTICATED
+     */
 
     if (!isAuthenticated) {
         return (
@@ -243,41 +243,139 @@ function ProfileScreen() {
                     </View>
                 </SafeAreaView>
 
-                <ScrollView
-                    contentContainerStyle={styles.authContainer}
-                    showsVerticalScrollIndicator={false}
+                <KeyboardAvoidingView
+                    style={styles.keyboardAvoidingView}
+                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                    keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
                 >
-                    <View style={styles.avatarBlock} testID="profile/avatarBlock">
-                        <View style={styles.avatarCircle} testID="profile/avatar">
-                            <View style={styles.avatarInner}>
-                                <Ionicons name="person" size={32} color="#1C1208" />
+                    <ScrollView
+                        contentContainerStyle={styles.authContainer}
+                        showsVerticalScrollIndicator={false}
+                    >
+                        <View style={styles.avatarBlock} testID="profile/avatarBlock">
+                            <View style={styles.avatarCircle} testID="profile/avatar">
+                                <View style={styles.avatarInner}>
+                                    <Ionicons name="person" size={32} color="#1C1208" />
+                                </View>
                             </View>
                         </View>
-                    </View>
 
-                    <Text style={styles.authTitle}>
-                        {mode === "signin" ? "Sign in" : "Create Account"}
-                    </Text>
-                    <Text style={styles.authSubtitle}>
-                        {mode === "signin"
-                            ? "Sign in to save your preferences and access more features."
-                            : "Create an account to get started"}
-                    </Text>
+                        <Text style={styles.authTitle}>
+                            {mode === "signin" ? "Sign in" : "Create Account"}
+                        </Text>
+                        <Text style={styles.authSubtitle}>
+                            {mode === "signin"
+                                ? "Sign in to save your preferences and access more features."
+                                : "Create an account to get started"}
+                        </Text>
 
-                    <View style={styles.formContainer}>
-                        {mode === "signup" && (
+                        <View style={styles.formContainer}>
+                            {mode === "signup" && (
+                                <View style={styles.inputContainer}>
+                                    <View style={styles.inputLabelRow}>
+                                        <Text style={styles.inputLabel}>Name*</Text>
+                                    </View>
+                                    <View
+                                        style={[
+                                            styles.inputFieldContainer,
+                                            { borderColor: focusedAuth === "name" ? COLORS.accent : COLORS.inputBorder },
+                                        ]}
+                                    >
+                                        <Ionicons
+                                            name="person"
+                                            size={16}
+                                            color={COLORS.subText}
+                                            style={styles.inputFieldIcon}
+                                        />
+
+                                        <TextInput
+                                            editable={true}
+                                            style={styles.inputField}
+                                            value={name}
+                                            onChangeText={setName}
+                                            autoCapitalize="words"
+                                            onFocus={() => setFocusedAuth("name")}
+                                            onBlur={() => setFocusedAuth(null)}
+                                        />
+                                    </View>
+                                </View>
+                            )}
+
+                            {mode === "signup" && (
+                                <View style={styles.inputContainer}>
+                                    <View style={styles.inputLabelRow}>
+                                        <Text style={styles.inputLabel}>Username</Text>
+                                    </View>
+                                    <View
+                                        style={[
+                                            styles.inputFieldContainer,
+                                            { borderColor: focusedAuth === "username" ? COLORS.accent : COLORS.inputBorder },
+                                        ]}
+                                    >
+                                        <Ionicons
+                                            name="at"
+                                            size={16}
+                                            color={COLORS.subText}
+                                            style={styles.inputFieldIcon}
+                                        />
+
+                                        <TextInput
+                                            editable={true}
+                                            style={styles.inputField}
+                                            value={signupUsername}
+                                            onChangeText={setSignupUsername}
+                                            autoCapitalize="none"
+                                            onFocus={() => setFocusedAuth("username")}
+                                            onBlur={() => setFocusedAuth(null)}
+                                        />
+                                    </View>
+                                </View>
+                            )}
+
+                            {mode === "signup" && (
+                                <View style={styles.inputContainer}>
+                                    <View style={styles.inputLabelRow}>
+                                        <Text style={styles.inputLabel}>Phone</Text>
+                                    </View>
+                                    <View
+                                        style={[
+                                            styles.inputFieldContainer,
+                                            { borderColor: focusedAuth === "phone" ? COLORS.accent : COLORS.inputBorder },
+                                        ]}
+                                    >
+                                        <Ionicons
+                                            name="call"
+                                            size={16}
+                                            color={COLORS.subText}
+                                            style={styles.inputFieldIcon}
+                                        />
+
+                                        <TextInput
+                                            editable={true}
+                                            style={styles.inputField}
+                                            value={signupPhone}
+                                            onChangeText={setSignupPhone}
+                                            keyboardType="phone-pad"
+                                            onFocus={() => setFocusedAuth("phone")}
+                                            onBlur={() => setFocusedAuth(null)}
+                                        />
+                                    </View>
+                                </View>
+                            )}
+
                             <View style={styles.inputContainer}>
                                 <View style={styles.inputLabelRow}>
-                                    <Text style={styles.inputLabel}>Name*</Text>
+                                    <Text style={styles.inputLabel}>Email*</Text>
                                 </View>
+
                                 <View
                                     style={[
                                         styles.inputFieldContainer,
-                                        { borderColor: focusedAuth === "name" ? COLORS.accent : COLORS.inputBorder },
+                                        { borderColor: focusedAuth === "email" ? COLORS.accent : COLORS.inputBorder },
                                     ]}
                                 >
                                     <Ionicons
-                                        name="person"
+                                        name="mail"
                                         size={16}
                                         color={COLORS.subText}
                                         style={styles.inputFieldIcon}
@@ -286,149 +384,25 @@ function ProfileScreen() {
                                     <TextInput
                                         editable={true}
                                         style={styles.inputField}
-                                        value={name}
-                                        onChangeText={setName}
-                                        autoCapitalize="words"
-                                        onFocus={() => setFocusedAuth("name")}
-                                        onBlur={() => setFocusedAuth(null)}
-                                    />
-                                </View>
-                            </View>
-                        )}
-
-                        {mode === "signup" && (
-                            <View style={styles.inputContainer}>
-                                <View style={styles.inputLabelRow}>
-                                    <Text style={styles.inputLabel}>Username</Text>
-                                </View>
-                                <View
-                                    style={[
-                                        styles.inputFieldContainer,
-                                        { borderColor: focusedAuth === "username" ? COLORS.accent : COLORS.inputBorder },
-                                    ]}
-                                >
-                                    <Ionicons
-                                        name="at"
-                                        size={16}
-                                        color={COLORS.subText}
-                                        style={styles.inputFieldIcon}
-                                    />
-
-                                    <TextInput
-                                        editable={true}
-                                        style={styles.inputField}
-                                        value={signupUsername}
-                                        onChangeText={setSignupUsername}
+                                        value={email}
+                                        onChangeText={setEmail}
                                         autoCapitalize="none"
-                                        onFocus={() => setFocusedAuth("username")}
+                                        keyboardType="email-address"
+                                        onFocus={() => setFocusedAuth("email")}
                                         onBlur={() => setFocusedAuth(null)}
                                     />
                                 </View>
                             </View>
-                        )}
 
-                        {mode === "signup" && (
                             <View style={styles.inputContainer}>
                                 <View style={styles.inputLabelRow}>
-                                    <Text style={styles.inputLabel}>Phone</Text>
-                                </View>
-                                <View
-                                    style={[
-                                        styles.inputFieldContainer,
-                                        { borderColor: focusedAuth === "phone" ? COLORS.accent : COLORS.inputBorder },
-                                    ]}
-                                >
-                                    <Ionicons
-                                        name="call"
-                                        size={16}
-                                        color={COLORS.subText}
-                                        style={styles.inputFieldIcon}
-                                    />
-
-                                    <TextInput
-                                        editable={true}
-                                        style={styles.inputField}
-                                        value={signupPhone}
-                                        onChangeText={setSignupPhone}
-                                        keyboardType="phone-pad"
-                                        onFocus={() => setFocusedAuth("phone")}
-                                        onBlur={() => setFocusedAuth(null)}
-                                    />
-                                </View>
-                            </View>
-                        )}
-
-                        <View style={styles.inputContainer}>
-                            <View style={styles.inputLabelRow}>
-                                <Text style={styles.inputLabel}>Email*</Text>
-                            </View>
-
-                            <View
-                                style={[
-                                    styles.inputFieldContainer,
-                                    { borderColor: focusedAuth === "email" ? COLORS.accent : COLORS.inputBorder },
-                                ]}
-                            >
-                                <Ionicons
-                                    name="mail"
-                                    size={16}
-                                    color={COLORS.subText}
-                                    style={styles.inputFieldIcon}
-                                />
-
-                                <TextInput
-                                    editable={true}
-                                    style={styles.inputField}
-                                    value={email}
-                                    onChangeText={setEmail}
-                                    autoCapitalize="none"
-                                    keyboardType="email-address"
-                                    onFocus={() => setFocusedAuth("email")}
-                                    onBlur={() => setFocusedAuth(null)}
-                                />
-                            </View>
-                        </View>
-
-                        <View style={styles.inputContainer}>
-                            <View style={styles.inputLabelRow}>
-                                <Text style={styles.inputLabel}>Password*</Text>
-                            </View>
-
-                            <View
-                                style={[
-                                    styles.inputFieldContainer,
-                                    { borderColor: focusedAuth === "password" ? COLORS.accent : COLORS.inputBorder },
-                                ]}
-                            >
-                                <Ionicons
-                                    name="lock-closed"
-                                    size={16}
-                                    color={COLORS.subText}
-                                    style={styles.inputFieldIcon}
-                                />
-
-                                <TextInput
-                                    editable={true}
-                                    style={styles.inputField}
-                                    secureTextEntry
-                                    value={password}
-                                    onChangeText={setPassword}
-                                    onFocus={() => setFocusedAuth("password")}
-                                    onBlur={() => setFocusedAuth(null)}
-                                />
-                            </View>
-                        </View>
-
-                        {mode === "signup" && (
-                            <View style={styles.inputContainer}>
-                                <View style={styles.inputLabelRow}>
-                                    <Text style={styles.inputLabel}>Confirm Password*</Text>
+                                    <Text style={styles.inputLabel}>Password*</Text>
                                 </View>
 
                                 <View
                                     style={[
                                         styles.inputFieldContainer,
-                                        { borderColor: focusedAuth === "confirmPassword" ? COLORS.accent : COLORS.inputBorder },
+                                        { borderColor: focusedAuth === "password" ? COLORS.accent : COLORS.inputBorder },
                                     ]}
                                 >
                                     <Ionicons
@@ -442,59 +416,91 @@ function ProfileScreen() {
                                         editable={true}
                                         style={styles.inputField}
                                         secureTextEntry
-                                        value={confirmPassword}
-                                        onChangeText={setConfirmPassword}
-                                        onFocus={() => setFocusedAuth("confirmPassword")}
+                                        value={password}
+                                        onChangeText={setPassword}
+                                        onFocus={() => setFocusedAuth("password")}
                                         onBlur={() => setFocusedAuth(null)}
                                     />
                                 </View>
                             </View>
-                        )}
 
-                        <Pressable
-                            onPressIn={() => setPrimaryButtonPressed(true)}
-                            onPressOut={() => setPrimaryButtonPressed(false)}
-                            onPress={mode === "signin" ? handleSignIn : handleSignUp}
-                            disabled={loading}
-                            style={styles.primaryButtonContainer}
-                        >
-                            <View style={[
-                                styles.primaryButton,
-                                primaryButtonPressed && styles.btnPressed,
-                                loading && styles.buttonDisabled
-                            ]}>
-                                {loading ? (
-                                    <ActivityIndicator color="#141414" size="small" />
-                                ) : (
-                                    <Text style={styles.primaryButtonText}>
-                                        {mode === "signin" ? "Sign in" : "Create Account"}
-                                    </Text>
-                                )}
-                            </View>
-                        </Pressable>
+                            {mode === "signup" && (
+                                <View style={styles.inputContainer}>
+                                    <View style={styles.inputLabelRow}>
+                                        <Text style={styles.inputLabel}>Confirm Password*</Text>
+                                    </View>
 
-                        <View style={styles.modeSwitchContainer}>
-                            <Text style={styles.modeSwitchText}>
-                                {mode === "signin"
-                                    ? "Don't have an account?"
-                                    : "Already have an account?"}
-                            </Text>
+                                    <View
+                                        style={[
+                                            styles.inputFieldContainer,
+                                            { borderColor: focusedAuth === "confirmPassword" ? COLORS.accent : COLORS.inputBorder },
+                                        ]}
+                                    >
+                                        <Ionicons
+                                            name="lock-closed"
+                                            size={16}
+                                            color={COLORS.subText}
+                                            style={styles.inputFieldIcon}
+                                        />
+
+                                        <TextInput
+                                            editable={true}
+                                            style={styles.inputField}
+                                            secureTextEntry
+                                            value={confirmPassword}
+                                            onChangeText={setConfirmPassword}
+                                            onFocus={() => setFocusedAuth("confirmPassword")}
+                                            onBlur={() => setFocusedAuth(null)}
+                                        />
+                                    </View>
+                                </View>
+                            )}
+
                             <Pressable
-                                onPress={() => setMode(mode === "signin" ? "signup" : "signin")}
+                                onPressIn={() => setPrimaryButtonPressed(true)}
+                                onPressOut={() => setPrimaryButtonPressed(false)}
+                                onPress={mode === "signin" ? handleSignIn : handleSignUp}
+                                disabled={loading}
+                                style={styles.primaryButtonContainer}
                             >
-                                <Text style={styles.modeSwitchLink}>
-                                    {mode === "signin" ? "Sign up" : "Sign in"}
-                                </Text>
+                                <View style={[
+                                    styles.primaryButton,
+                                    primaryButtonPressed && styles.btnPressed,
+                                    loading && styles.buttonDisabled
+                                ]}>
+                                    {loading ? (
+                                        <ActivityIndicator color="#141414" size="small" />
+                                    ) : (
+                                        <Text style={styles.primaryButtonText}>
+                                            {mode === "signin" ? "Sign in" : "Create Account"}
+                                        </Text>
+                                    )}
+                                </View>
                             </Pressable>
+
+                            <View style={styles.modeSwitchContainer}>
+                                <Text style={styles.modeSwitchText}>
+                                    {mode === "signin"
+                                        ? "Don't have an account?"
+                                        : "Already have an account?"}
+                                </Text>
+                                <Pressable
+                                    onPress={() => setMode(mode === "signin" ? "signup" : "signin")}
+                                >
+                                    <Text style={styles.modeSwitchLink}>
+                                        {mode === "signin" ? "Sign up" : "Sign in"}
+                                    </Text>
+                                </Pressable>
+                            </View>
                         </View>
-                    </View>
-                </ScrollView>
+                    </ScrollView>
+                </KeyboardAvoidingView>
             </View>
         );
     }
- /*
-   AUTHENTICATED PROFILE UI
- */
+    /*
+      AUTHENTICATED PROFILE UI
+    */
     return (
         <View style={styles.root} testID="profile/root">
             {/* Background */}
@@ -512,13 +518,15 @@ function ProfileScreen() {
                         testID="profile/back"
                         accessibilityRole="button"
                         accessibilityLabel="Back"
-                        style={styles.headerIconButtonContainer}
                     >
-                        <View style={[
-                            styles.headerIconButton,
-                            headerButtonPressed && styles.headerIconButtonPressed
-                        ]}>
+                        <View
+                            style={[
+                                styles.headerBackButton,
+                                headerButtonPressed && styles.headerIconButtonPressed
+                            ]}
+                        >
                             <Ionicons name="arrow-back" size={20} color={COLORS.text} />
+                            <Text style={styles.backText}>Back</Text>
                         </View>
                     </Pressable>
                 </View>
@@ -811,12 +819,13 @@ const styles = StyleSheet.create({
         position: "relative",
     },
     avatarInner: {
-        width: 56,
-        height: 56,
-        borderRadius: 28,
+        width: 84,
+        height: 84,
+        borderRadius: 42,
         backgroundColor: "#F7B26B",
         alignItems: "center",
         justifyContent: "center",
+        overflow: "hidden",
     },
     avatarBadge: {
         position: "absolute",
