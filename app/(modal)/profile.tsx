@@ -34,7 +34,7 @@ function ProfileScreen() {
     const {
         user,
         profile,
-        isAuthenticated,
+        isLoading,
         signInWithEmail,
         signUpWithEmail,
         signOut,
@@ -68,16 +68,6 @@ function ProfileScreen() {
         phone: "",
         username: "",
     });
-
-    React.useEffect(() => {
-        if (!isAuthenticated) {
-            setEmail("");
-            setPassword("");
-            setConfirmPassword("");
-            setName("");
-            setMode("signin");
-        }
-    }, [isAuthenticated]);
 
     React.useEffect(() => {
         if (profile) {
@@ -208,11 +198,20 @@ function ProfileScreen() {
         });
     };
 
+    if (isLoading) {
+        return (
+            <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+                <ActivityIndicator />
+            </View>
+        );
+    }
+
+
     /*
        NOT AUTHENTICATED
      */
 
-    if (!isAuthenticated) {
+    if (!user) {
         return (
             <View style={styles.root} testID="profile/root">
                 {/* Background */}
@@ -252,13 +251,6 @@ function ProfileScreen() {
                         contentContainerStyle={styles.authContainer}
                         showsVerticalScrollIndicator={false}
                     >
-                        <View style={styles.avatarBlock} testID="profile/avatarBlock">
-                            <View style={styles.avatarCircle} testID="profile/avatar">
-                                <View style={styles.avatarInner}>
-                                    <Ionicons name="person" size={32} color="#1C1208" />
-                                </View>
-                            </View>
-                        </View>
 
                         <Text style={styles.authTitle}>
                             {mode === "signin" ? "Sign in" : "Create Account"}

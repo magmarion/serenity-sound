@@ -4,6 +4,7 @@ import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { View, ActivityIndicator } from "react-native";
 import { useAuthStore } from "@/store/auth-store";
 
 SplashScreen.preventAutoHideAsync();
@@ -26,6 +27,14 @@ export default function RootLayout() {
             SplashScreen.hideAsync();
         }
     }, [isLoading]);
+
+    if (isLoading) {
+        return (
+            <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+                <ActivityIndicator size="large" />
+            </View>
+        );
+    }
 
     return (
         <QueryClientProvider client={queryClient}>

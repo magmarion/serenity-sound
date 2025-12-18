@@ -38,6 +38,9 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
     initializeAuth: () => {
         const unsub = onAuthStateChanged(auth, async user => {
+            console.log("AUTH STATE CHANGED USER:", user);
+            console.log("AUTH STATE UID:", user?.uid);
+
             if (user) {
                 set({ user, isAuthenticated: true, isLoading: false });
                 await get().loadProfile(user.uid);
@@ -52,6 +55,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         });
         return unsub;
     },
+
 
 
     signInWithEmail: async (email, password) => {
