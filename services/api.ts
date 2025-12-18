@@ -1,4 +1,5 @@
-const FREESOUND_API_KEY = 'EJPFkrS7ZjLIwX14CQyVPZw3gDmqNqEd17nUz4TY';
+const API_KEY = process.env.EXPO_PUBLIC_FREESOUND_API_KEY || '';
+const BASE_URL = process.env.EXPO_PUBLIC_FREESOUND_BASE_URL!;
 
 export interface Session {
     id: string;
@@ -59,7 +60,6 @@ async function fetchHomeScreenSounds(): Promise<Session[]> {
         'beach OR shore OR seaside'
     ];
 
-    // We'll make multiple requests with smaller page sizes to get variety
     const pageSize = 30; // Get 30 sounds per query
     const targetCount = 100; // Target 100+ sounds
 
@@ -71,10 +71,10 @@ async function fetchHomeScreenSounds(): Promise<Session[]> {
         try {
             console.log(`📡 Home Query: "${query}"`);
 
-            const apiUrl = `https://freesound.org/apiv2/search/text/?query=${encodeURIComponent(query)}&fields=id,name,previews,duration,tags,username,images&page_size=${pageSize}&sort=downloads_desc`;
+            const apiUrl = `${BASE_URL}?query=${encodeURIComponent(query)}&fields=id,name,previews,duration,tags,username,images&page_size=${pageSize}&sort=downloads_desc`;
 
             const response = await fetch(apiUrl, {
-                headers: { 'Authorization': `Token ${FREESOUND_API_KEY}` }
+                headers: { 'Authorization': `Token ${API_KEY}` }
             });
 
             if (!response.ok) {
@@ -134,10 +134,10 @@ async function fetchCategorySounds(moodFilter: string): Promise<Session[]> {
     for (const query of queryConfig.queries) {
         console.log(`🔍 Category query: "${query}"`);
 
-        const apiUrl = `https://freesound.org/apiv2/search/text/?query=${encodeURIComponent(query)}&fields=id,name,previews,duration,tags,username,images&page_size=${pageSize}&sort=downloads_desc`;
+        const apiUrl = `${BASE_URL}?query=${encodeURIComponent(query)}&fields=id,name,previews,duration,tags,username,images&page_size=${pageSize}&sort=downloads_desc`;
 
         const response = await fetch(apiUrl, {
-            headers: { 'Authorization': `Token ${FREESOUND_API_KEY}` }
+            headers: { 'Authorization': `Token ${API_KEY}` }
         });
 
         if (!response.ok) {
@@ -381,7 +381,7 @@ function createSessionFromSound(sound: any): Session | null {
 
 function determineMoodFromTags(tags: string[], duration: number): string {
     const tagString = tags.join(' ').toLowerCase();
-    
+
     // Check for specific sound categories first
     if (tagString.includes('rain') || tagString.includes('rainfall') || tagString.includes('downpour')) {
         return 'rain';
@@ -410,9 +410,9 @@ function determineMoodFromTags(tags: string[], duration: number): string {
     if (tagString.includes('ocean') || tagString.includes('waves') || tagString.includes('sea')) {
         return 'ocean';
     }
-    
+
     // Then check mood categories
-    if (tagString.includes('sleep') || tagString.includes('meditation') || 
+    if (tagString.includes('sleep') || tagString.includes('meditation') ||
         tagString.includes('relaxing') || tagString.includes('white noise')) {
         return duration > 300 ? 'sleep' : 'calm';
     }
@@ -431,7 +431,7 @@ function determineMoodFromTags(tags: string[], duration: number): string {
         tagString.includes('positive') || tagString.includes('uplifting')) {
         return 'recharge';
     }
-    
+
     // Default
     return 'bricks'; // Use bricks as default for ambient sounds
 }
