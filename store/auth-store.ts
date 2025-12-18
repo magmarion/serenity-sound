@@ -1,8 +1,8 @@
-// store/auth-store.ts
 import { create } from "zustand";
 import { auth, db } from "@/services/firebase";
 import { User, signOut, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, } from "firebase/auth";
 import { doc, setDoc, getDoc, updateDoc } from "firebase/firestore";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export interface UserProfile {
     uid: string;
@@ -14,7 +14,6 @@ export interface UserProfile {
     createdAt: Date;
     updatedAt?: Date;
 }
-
 
 interface AuthStore {
     user: User | null;
@@ -37,36 +36,64 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     isAuthenticated: false,
 
     initializeAuth: () => {
-        const unsub = onAuthStateChanged(auth, async user => {
-            console.log("AUTH STATE CHANGED USER:", user);
-            console.log("AUTH STATE UID:", user?.uid);
-
-            if (user) {
-                set({ user, isAuthenticated: true, isLoading: false });
-                await get().loadProfile(user.uid);
+        // First, try to restore the user from AsyncStorage
+        AsyncStorage.getItem('user').then(async (persistedUser) => {
+            if (persistedUser) {
+                try {
+                    const user = JSON.parse(persistedUser);
+                    console.log("Restored user from AsyncStorage:", user);
+                    set({ user, isAuthenticated: true });
+                    await get().loadProfile(user.uid);
+                } catch (error) {
+                    console.error("Failed to parse user from AsyncStorage:", error);
+                    set({ isLoading: false });
+                }
             } else {
+                set({ isLoading: false });
+            }
+        }).catch(error => {
+            console.error("Failed to read from AsyncStorage:", error);
+            set({ isLoading: false });
+        });
+
+        // Set up the Firebase Auth state listener
+        const unsub = onAuthStateChanged(auth, async (user) => {
+            console.log("AUTH STATE CHANGED - Current user:", user);
+            if (user) {
+                console.log("User is authenticated, loading profile...");
+                set({
+                    user,
+                    isAuthenticated: true,
+                    isLoading: false
+                });
+                await get().loadProfile(user.uid);
+                await AsyncStorage.setItem('user', JSON.stringify(user));
+            } else {
+                console.log("User is not authenticated");
                 set({
                     user: null,
                     profile: null,
                     isAuthenticated: false,
                     isLoading: false,
                 });
+                await AsyncStorage.removeItem('user');
             }
         });
+
         return unsub;
     },
-
-
 
     signInWithEmail: async (email, password) => {
         const result = await signInWithEmailAndPassword(auth, email, password);
         const user = result.user;
-
-        set({ user, isAuthenticated: true });
+        set({
+            user,
+            isAuthenticated: true
+        });
+        await AsyncStorage.setItem('user', JSON.stringify(user));
 
         const ref = doc(db, "users", user.uid);
         const snap = await getDoc(ref);
-
         if (snap.exists()) {
             set({ profile: snap.data() as UserProfile });
         }
@@ -84,12 +111,22 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         };
 
         await setDoc(doc(db, "users", user.uid), profile);
-        set({ user, profile, isAuthenticated: true });
+        set({
+            user,
+            profile,
+            isAuthenticated: true
+        });
+        await AsyncStorage.setItem('user', JSON.stringify(user));
     },
 
     signOut: async () => {
         await signOut(auth);
-        set({ user: null, profile: null, isAuthenticated: false });
+        set({
+            user: null,
+            profile: null,
+            isAuthenticated: false
+        });
+        await AsyncStorage.removeItem('user');
     },
 
     updateProfile: async data => {

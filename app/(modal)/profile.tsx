@@ -41,6 +41,11 @@ function ProfileScreen() {
         updateProfile,
     } = useAuthStore();
 
+    // Add these debug logs
+    console.log("ProfileScreen render - user:", user);
+    console.log("ProfileScreen render - isAuthenticated:", user);
+    console.log("ProfileScreen render - isLoading:", isLoading);
+
     const [mode, setMode] = useState<Mode>("signin");
     const [focused, setFocused] = useState<FieldKey | null>(null);
     const [focusedAuth, setFocusedAuth] = useState<string | null>(null);
