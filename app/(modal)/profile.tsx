@@ -1,7 +1,8 @@
+// app/(modal)/profile.tsx
 import type { UserProfile } from "@/store/auth-store";
 import { useAuthStore } from "@/store/auth-store";
+import { Avatar } from "@/components/Avatar";
 import { Ionicons } from "@expo/vector-icons";
-import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
@@ -35,17 +36,21 @@ function ProfileScreen() {
         user,
         profile,
         isAuthenticated,
+        isLoading,
         signInWithEmail,
         signUpWithEmail,
         signOut,
         updateProfile,
     } = useAuthStore();
 
+    console.log("ProfileScreen render - user:", user);
+    console.log("ProfileScreen render - isAuthenticated:", isAuthenticated);
+    console.log("ProfileScreen render - isLoading:", isLoading);
+
     const [mode, setMode] = useState<Mode>("signin");
     const [focused, setFocused] = useState<FieldKey | null>(null);
     const [focusedAuth, setFocusedAuth] = useState<string | null>(null);
 
-    // State for pressable buttons
     const [headerButtonPressed, setHeaderButtonPressed] = useState(false);
     const [primaryButtonPressed, setPrimaryButtonPressed] = useState(false);
     const [secondaryButtonPressed, setSecondaryButtonPressed] = useState(false);
@@ -61,23 +66,12 @@ function ProfileScreen() {
     const [signupUsername, setSignupUsername] = useState("");
     const [signupPhone, setSignupPhone] = useState("");
 
-    // Local state for field values (separate from draftProfile to prevent focus loss)
     const [localFields, setLocalFields] = useState({
         name: "",
         email: "",
         phone: "",
         username: "",
     });
-
-    React.useEffect(() => {
-        if (!isAuthenticated) {
-            setEmail("");
-            setPassword("");
-            setConfirmPassword("");
-            setName("");
-            setMode("signin");
-        }
-    }, [isAuthenticated]);
 
     React.useEffect(() => {
         if (profile) {
@@ -91,7 +85,6 @@ function ProfileScreen() {
         }
     }, [profile]);
 
-    // Field configurations (static, doesn't depend on values)
     const fieldConfigs = React.useMemo(() => [
         { key: "name" as FieldKey, label: "Name", icon: "person" as const, keyboardType: "default" as const },
         { key: "email" as FieldKey, label: "Email*", icon: "mail" as const, keyboardType: "email-address" as const },
@@ -103,7 +96,6 @@ function ProfileScreen() {
         setFocused(key);
     }, []);
 
-    // Update draftProfile when a field loses focus
     const handleFieldBlurWithSave = React.useCallback((key: FieldKey) => {
         setFocused(null);
         if (draftProfile) {
@@ -208,11 +200,18 @@ function ProfileScreen() {
         });
     };
 
+    if (isLoading) {
+        return (
+            <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+                <ActivityIndicator />
+            </View>
+        );
+    }
+
     /*
        NOT AUTHENTICATED
      */
-
-    if (!isAuthenticated) {
+    if (!user) {
         return (
             <View style={styles.root} testID="profile/root">
                 {/* Background */}
@@ -252,13 +251,6 @@ function ProfileScreen() {
                         contentContainerStyle={styles.authContainer}
                         showsVerticalScrollIndicator={false}
                     >
-                        <View style={styles.avatarBlock} testID="profile/avatarBlock">
-                            <View style={styles.avatarCircle} testID="profile/avatar">
-                                <View style={styles.avatarInner}>
-                                    <Ionicons name="person" size={32} color="#1C1208" />
-                                </View>
-                            </View>
-                        </View>
 
                         <Text style={styles.authTitle}>
                             {mode === "signin" ? "Sign in" : "Create Account"}
@@ -498,6 +490,7 @@ function ProfileScreen() {
             </View>
         );
     }
+
     /*
       AUTHENTICATED PROFILE UI
     */
@@ -547,23 +540,16 @@ function ProfileScreen() {
                 >
                     <View style={styles.avatarBlock}>
                         <Pressable onPress={handleChangeAvatar}>
-                            <View style={styles.avatarCircle}>
-                                <View style={styles.avatarInner}>
-                                    {profile?.photoURL ? (
-                                        <Image
-                                            source={{ uri: profile.photoURL }}
-                                            style={{ width: "100%", height: "100%", borderRadius: 28 }}
-                                            contentFit="cover"
-                                        />
-                                    ) : (
-                                        <Ionicons name="person" size={32} color="#1C1208" />
-                                    )}
-                                </View>
-
-                                <View style={styles.avatarBadge}>
-                                    <Ionicons name="camera" size={14} color="#1C1208" />
-                                </View>
-                            </View>
+                            <Avatar 
+                                size={88}
+                                showBadge={true}
+                                badgeIcon="camera"
+                                badgeColor="#1C1208"
+                                borderWidth={2}
+                                borderColor={COLORS.cardBorder}
+                                fallbackType="gradient"
+                                testID="profile-avatar"
+                            />
                         </Pressable>
 
                         <Text style={styles.name}>
@@ -633,7 +619,6 @@ function ProfileScreen() {
                                                 handleFieldBlurWithSave(config.key);
                                             }}
                                             testID={`profile/input/${config.key}`}
-                                            // Important: Add these props for better focus handling
                                             autoCorrect={false}
                                             autoCapitalize="none"
                                             autoComplete="off"

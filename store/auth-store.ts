@@ -1,7 +1,13 @@
 // store/auth-store.ts
 import { create } from "zustand";
 import { auth, db } from "@/services/firebase";
-import { User, signOut, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, } from "firebase/auth";
+import {
+    User,
+    signOut,
+    onAuthStateChanged,
+    signInWithEmailAndPassword,
+    createUserWithEmailAndPassword,
+} from "firebase/auth";
 import { doc, setDoc, getDoc, updateDoc } from "firebase/firestore";
 
 export interface UserProfile {
@@ -14,7 +20,6 @@ export interface UserProfile {
     createdAt: Date;
     updatedAt?: Date;
 }
-
 
 interface AuthStore {
     user: User | null;
@@ -37,9 +42,14 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     isAuthenticated: false,
 
     initializeAuth: () => {
-        const unsub = onAuthStateChanged(auth, async user => {
+        const unsub = onAuthStateChanged(auth, async (user) => {
             if (user) {
-                set({ user, isAuthenticated: true, isLoading: false });
+                set({
+                    user,
+                    isAuthenticated: true,
+                    isLoading: false,
+                });
+
                 await get().loadProfile(user.uid);
             } else {
                 set({
@@ -50,15 +60,18 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
                 });
             }
         });
+
         return unsub;
     },
-
 
     signInWithEmail: async (email, password) => {
         const result = await signInWithEmailAndPassword(auth, email, password);
         const user = result.user;
 
-        set({ user, isAuthenticated: true });
+        set({
+            user,
+            isAuthenticated: true,
+        });
 
         const ref = doc(db, "users", user.uid);
         const snap = await getDoc(ref);
@@ -80,15 +93,25 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         };
 
         await setDoc(doc(db, "users", user.uid), profile);
-        set({ user, profile, isAuthenticated: true });
+
+        set({
+            user,
+            profile,
+            isAuthenticated: true,
+        });
     },
 
     signOut: async () => {
         await signOut(auth);
-        set({ user: null, profile: null, isAuthenticated: false });
+
+        set({
+            user: null,
+            profile: null,
+            isAuthenticated: false,
+        });
     },
 
-    updateProfile: async data => {
+    updateProfile: async (data) => {
         const user = get().user;
         if (!user) return;
 
@@ -97,12 +120,12 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
             updatedAt: new Date(),
         });
 
-        set(state => ({
+        set((state) => ({
             profile: state.profile ? { ...state.profile, ...data } : null,
         }));
     },
 
-    loadProfile: async uid => {
+    loadProfile: async (uid) => {
         const snap = await getDoc(doc(db, "users", uid));
         if (snap.exists()) {
             set({ profile: snap.data() as UserProfile });
