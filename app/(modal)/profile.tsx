@@ -34,6 +34,7 @@ function ProfileScreen() {
     const {
         user,
         profile,
+        isAuthenticated,
         isLoading,
         signInWithEmail,
         signUpWithEmail,
@@ -41,9 +42,9 @@ function ProfileScreen() {
         updateProfile,
     } = useAuthStore();
 
-    // Add these debug logs
+    // Corrected debug logs
     console.log("ProfileScreen render - user:", user);
-    console.log("ProfileScreen render - isAuthenticated:", user);
+    console.log("ProfileScreen render - isAuthenticated:", isAuthenticated);
     console.log("ProfileScreen render - isLoading:", isLoading);
 
     const [mode, setMode] = useState<Mode>("signin");
@@ -210,7 +211,6 @@ function ProfileScreen() {
             </View>
         );
     }
-
 
     /*
        NOT AUTHENTICATED
