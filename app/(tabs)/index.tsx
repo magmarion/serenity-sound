@@ -1,13 +1,15 @@
 // app/(tabs)/index.tsx
+import { Avatar } from "@/components/Avatar"; // Add this import
 import Colors from "@/constants/colors";
 import { fetchSoundEffects } from "@/services/api";
+import { useAuthStore } from "@/store/auth-store"; // Add this import
+import { useFavoritesStore } from "@/store/favoritesStore";
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
 import {
-    Image,
     Pressable,
     ScrollView,
     StyleSheet,
@@ -15,7 +17,6 @@ import {
     View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useFavoritesStore } from "@/store/favoritesStore";
 
 type MoodCard = {
     id: string;
@@ -37,12 +38,8 @@ type Session = {
     artworkUrl?: string;
 };
 
-const avatarUri =
-    "https://img.freepik.com/free-vector/smiling-young-man-illustration_1308-174669.jpg?semt=ais_hybrid&w=740&q=80";
-
 const ART_URL = "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80";
 const DEFAULT_SOUND_URL = "https://orangefreesounds.com/wp-content/uploads/2022/08/Rain-and-thunder-with-ocean-waves-sound-effect.mp3";
-
 
 const MOODS: MoodCard[] = [
     {
@@ -120,33 +117,29 @@ function HomeContent() {
         return m;
     }, []);
 
-    const [sessions, setSessions] = useState<Session[]>([]); // Start empty
+    const [sessions, setSessions] = useState<Session[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    // Use Zustand store for favorites
     const { isFavorite, toggleFavorite } = useFavoritesStore();
+    const { user, profile, isAuthenticated } = useAuthStore();
 
     useEffect(() => {
         loadSessions();
     }, []);
 
-    // Fetch sounds for a specific mood
     const loadSessions = async () => {
         try {
             setLoading(true);
             setError(null);
 
-            // Fetch ALL sounds (no mood filter)
             const fetchedSessions = await fetchSoundEffects();
-
-            // API returns [] on error, so we just set whatever we get
             setSessions(fetchedSessions);
 
         } catch (err) {
             console.error('Error loading sounds:', err);
             setError('Failed to load sounds');
-            setSessions([]); // Set empty array on error
+            setSessions([]);
         } finally {
             setLoading(false);
         }
@@ -155,14 +148,13 @@ function HomeContent() {
     const handleMoodPress = (moodId: string) => {
         console.log(`Opening category: ${moodId}`);
 
-        // Navigate to category detail page OUTSIDE tabs
         router.push({
             pathname: '/category/[id]',
             params: { id: moodId }
         });
     };
+
     const openPlayerForSession = (session: Session) => {
-        // Use default URLs if session doesn't have them
         const soundUrl = session.soundUrl || DEFAULT_SOUND_URL;
         const artworkUrl = session.artworkUrl || ART_URL;
 
@@ -176,9 +168,24 @@ function HomeContent() {
             },
         });
     };
+
     const handleToggleFavorite = async (session: Session) => {
-        await Haptics.selectionAsync(); // ← ADD HAPTIC FEEDBACK
+        await Haptics.selectionAsync();
         toggleFavorite(session);
+    };
+
+    const getGreeting = () => {
+        const hour = new Date().getHours();
+        if (hour < 12) return "Good morning";
+        if (hour < 18) return "Good afternoon";
+        return "Good evening";
+    };
+
+    const getUserName = () => {
+        if (profile?.name) return profile.name;
+        if (user?.displayName) return user.displayName;
+        if (user?.email) return user.email.split('@')[0];
+        return "User";
     };
 
     return (
@@ -189,13 +196,13 @@ function HomeContent() {
                 style={StyleSheet.absoluteFill}
             />
 
-            {/* EXTRA GRADIENT ABOVE HEADER - This extends to top */}
+            {/* EXTRA GRADIENT ABOVE HEADER */}
             <LinearGradient
                 colors={["#591A1B", "#591A1B"]}
                 style={styles.topGradientExtension}
             />
 
-            {/* HEADER - Keep it as is */}
+            {/* HEADER */}
             <SafeAreaView style={styles.safeArea} edges={["top"]}>
                 <LinearGradient
                     colors={["#591A1B", "#0F172B", "#0B0E14"]}
@@ -204,13 +211,27 @@ function HomeContent() {
                     testID="home-top-bar"
                 >
                     <View style={styles.headerRow}>
-                        <View style={styles.profileRow}>
-                            <Image source={{ uri: avatarUri }} style={styles.avatar} />
+                        <Pressable
+                            onPress={() => router.push('/(modal)/profile')}
+                            style={styles.profileRow}
+                        >
+                            <Avatar
+                                size={52}
+                                onPress={() => router.push('/(modal)/profile')}
+                                borderWidth={1}
+                                borderColor="rgba(255,255,255,0.15)"
+                                fallbackType="gradient"
+                                testID="home-avatar"
+                            />
                             <View>
-                                <Text style={styles.greetingLabel}>Good evening,</Text>
-                                <Text style={styles.greetingName}>John</Text>
+                                <Text style={styles.greetingLabel}>
+                                    {getGreeting()},
+                                </Text>
+                                <Text style={styles.greetingName}>
+                                    {getUserName()}
+                                </Text>
                             </View>
-                        </View>
+                        </Pressable>
                     </View>
 
                     <Text style={styles.topPrompt}>
@@ -219,7 +240,7 @@ function HomeContent() {
                 </LinearGradient>
             </SafeAreaView>
 
-            {/* SCROLL AREA - Content starts below header */}
+            {/* SCROLL AREA */}
             <ScrollView
                 style={styles.scrollArea}
                 contentContainerStyle={styles.scrollContent}
@@ -280,7 +301,6 @@ function HomeContent() {
 
                             return (
                                 <View key={session.id} style={styles.sessionRow}>
-                                    {/* Make ONLY the icon pressable */}
                                     <Pressable
                                         onPress={() => openPlayerForSession(session)}
                                     >
@@ -306,7 +326,6 @@ function HomeContent() {
                                         </Text>
                                     </View>
 
-                                    {/* Heart icon - pressable for favorites */}
                                     <Pressable
                                         onPress={() => handleToggleFavorite(session)}
                                     >
@@ -314,7 +333,6 @@ function HomeContent() {
                                             <View style={[
                                                 styles.sessionHeartButton,
                                                 sessionIsFavorite && styles.sessionHeartButtonFavorited,
-                                                // Add pressed state styling directly
                                                 pressed && { transform: [{ scale: 0.9 }], opacity: 0.8 }
                                             ]}>
                                                 <Ionicons
@@ -370,7 +388,7 @@ const styles = StyleSheet.create({
 
     scrollArea: {
         flex: 1,
-        marginTop: 0, // No margin - scroll starts below header
+        marginTop: 0,
     },
 
     headerRow: {
@@ -382,11 +400,6 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         gap: 12,
-    },
-    avatar: {
-        width: 52,
-        height: 52,
-        borderRadius: 24,
     },
     greetingLabel: {
         color: Colors.palette.text,
@@ -412,7 +425,7 @@ const styles = StyleSheet.create({
     scrollContent: {
         paddingHorizontal: 20,
         paddingBottom: 120,
-        paddingTop: 20, // padding from header
+        paddingTop: 20,
         gap: 20,
     },
 

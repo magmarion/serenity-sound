@@ -1,3 +1,4 @@
+// store/auth-store.ts
 import { create } from "zustand";
 import { auth, db } from "@/services/firebase";
 import {
