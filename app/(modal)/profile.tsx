@@ -540,16 +540,17 @@ function ProfileScreen() {
                 >
                     <View style={styles.avatarBlock}>
                         <Pressable onPress={handleChangeAvatar}>
-                            <Avatar 
-                                size={88}
-                                showBadge={true}
-                                badgeIcon="camera"
-                                badgeColor="#1C1208"
-                                borderWidth={2}
-                                borderColor={COLORS.cardBorder}
-                                fallbackType="gradient"
-                                testID="profile-avatar"
-                            />
+                            <View style={styles.avatarCircle}>
+                                <View style={styles.avatarInner}></View>
+                                <Avatar
+                                    size={56} // Matches your avatarInner dimensions
+                                    fallbackType="gradient"
+                                    borderRadius="circle"
+                                    showContainer={false} // IMPORTANT: No container styling
+                                    borderWidth={0} // No border
+                                    testID="profile-avatar-inner"
+                                />
+                            </View>
                         </Pressable>
 
                         <Text style={styles.name}>
