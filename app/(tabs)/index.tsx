@@ -161,6 +161,10 @@ function HomeContent() {
         router.push({
             pathname: '/(modal)/player',
             params: {
+                // ADD THESE:
+                id: session.id,
+                moodId: session.moodId,
+                category: session.category,
                 soundUrl: soundUrl,
                 title: session.title || 'Sound',
                 subtitle: session.durationLabel || '3 min • Ambient',
