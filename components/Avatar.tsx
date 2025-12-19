@@ -16,10 +16,13 @@ export interface AvatarProps {
     fallbackType?: 'initials' | 'icon' | 'gradient';
     userOverride?: Pick<UserProfile, 'name' | 'email' | 'photoURL'> | null;
     testID?: string;
+    borderRadius?: number | 'circle' | 'rounded';
+    showContainer?: boolean; // NEW: Add container styling option
+    containerColors?: [string, string]; // NEW: Gradient colors for container
 }
 
-export const Avatar: React.FC<AvatarProps> = ({
-    size = 52,
+export const Avatar: React.FC<AvatarProps> = ({ 
+    size = 52, 
     onPress,
     showBadge = false,
     badgeIcon = 'camera',
@@ -29,33 +32,58 @@ export const Avatar: React.FC<AvatarProps> = ({
     fallbackType = 'initials',
     userOverride = null,
     testID = 'avatar',
+    borderRadius = 'circle',
+    showContainer = false, // Default to no container
+    containerColors = ['rgba(255,255,255,0.1)', 'rgba(255,255,255,0.05)'], // Default gradient
 }) => {
     const { profile, user } = useAuthStore();
-
+    
+    // Calculate border radius
+    let borderRadiusValue: number;
+    if (borderRadius === 'circle') {
+        borderRadiusValue = size / 2;
+    } else if (borderRadius === 'rounded') {
+        borderRadiusValue = size / 4;
+    } else {
+        borderRadiusValue = borderRadius;
+    }
+    
     // Use override if provided, otherwise use store data
     const displayUser = userOverride || profile;
     const displayEmail = user?.email;
-
-    // Calculate styles based on size
+    
+    // Calculate inner avatar size (smaller when in container)
+    const innerSize = showContainer ? size * 0.85 : size;
+    const innerBorderRadius = showContainer ? innerSize / 2 : borderRadiusValue;
+    
+    // Calculate styles
     const avatarStyle = {
+        width: innerSize,
+        height: innerSize,
+        borderRadius: innerBorderRadius,
+    };
+    
+    // Container styles
+    const containerStyle = {
         width: size,
         height: size,
-        borderRadius: size / 4, // Slightly rounded square (adjust divisor for more/less rounding)
+        borderRadius: borderRadiusValue,
     };
-
-    const badgeSize = size * 0.3;
+    
+    // Badge size and position
+    const badgeSize = size * 0.25;
+    const badgeBorderRadius = badgeSize / 2;
     const badgeStyle = {
         width: badgeSize,
         height: badgeSize,
-        borderRadius: badgeSize / 2,
-        right: -badgeSize * 0.2,
-        bottom: -badgeSize * 0.2,
+        borderRadius: badgeBorderRadius,
+        right: -badgeSize * 0.15,
+        bottom: -badgeSize * 0.15,
     };
-
+    
     const badgeIconSize = badgeSize * 0.6;
-
-    const initialsFontSize = size * 0.4;
-
+    const initialsFontSize = innerSize * 0.4;
+    
     // Get user initials for fallback
     const getUserInitials = () => {
         if (displayUser?.name) {
@@ -70,8 +98,8 @@ export const Avatar: React.FC<AvatarProps> = ({
         }
         return 'U';
     };
-
-    // Get gradient colors based on user initials for consistent coloring
+    
+    // Get gradient colors based on user initials
     const getGradientColors = () => {
         const initial = getUserInitials().charAt(0);
         const colorsMap: Record<string, [string, string]> = {
@@ -102,10 +130,10 @@ export const Avatar: React.FC<AvatarProps> = ({
             'Y': ['#A5B4FC', '#818CF8'], // Indigo
             'Z': ['#F9A8D4', '#F472B6'], // Pink
         };
-
-        return colorsMap[initial] || ['#3A1C09', '#1B1C37']; // Default fallback
+        
+        return colorsMap[initial] || ['#3A1C09', '#1B1C37'];
     };
-
+    
     const renderAvatarContent = () => {
         // If user has a photo URL, show the image
         if (displayUser?.photoURL) {
@@ -117,32 +145,34 @@ export const Avatar: React.FC<AvatarProps> = ({
                 />
             );
         }
-
+        
         // Fallback content based on type
         switch (fallbackType) {
             case 'icon':
                 return (
                     <View style={[styles.fallbackContainer, avatarStyle]}>
-                        <Ionicons
-                            name="person"
-                            size={size * 0.5}
-                            color="#1C1208"
+                        <Ionicons 
+                            name="person" 
+                            size={innerSize * 0.5} 
+                            color="#1C1208" 
                         />
                     </View>
                 );
-
+                
             case 'gradient':
                 return (
                     <LinearGradient
                         colors={getGradientColors()}
                         style={[styles.fallbackContainer, avatarStyle]}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
                     >
                         <Text style={[styles.initialsText, { fontSize: initialsFontSize }]}>
                             {getUserInitials()}
                         </Text>
                     </LinearGradient>
                 );
-
+                
             case 'initials':
             default:
                 return (
@@ -154,38 +184,79 @@ export const Avatar: React.FC<AvatarProps> = ({
                 );
         }
     };
-
-    const avatarContent = (
-        <View style={[styles.container, { width: size, height: size }]}>
-            <View
-                style={[
-                    styles.avatarBase,
-                    avatarStyle,
-                    {
-                        borderWidth,
-                        borderColor,
-                        overflow: 'hidden',
-                    }
-                ]}
-            >
-                {renderAvatarContent()}
-            </View>
-
-            {showBadge && (
-                <View style={[styles.badge, badgeStyle]}>
-                    <Ionicons
-                        name={badgeIcon}
-                        size={badgeIconSize}
-                        color={badgeColor}
-                    />
+    
+    // Render with or without container
+    const renderAvatar = () => {
+        if (showContainer) {
+            return (
+                <LinearGradient
+                    colors={containerColors}
+                    style={[styles.container, containerStyle]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                >
+                    <View 
+                        style={[
+                            styles.avatarBase,
+                            avatarStyle,
+                            {
+                                borderWidth,
+                                borderColor,
+                                overflow: 'hidden',
+                            }
+                        ]}
+                    >
+                        {renderAvatarContent()}
+                    </View>
+                    
+                    {showBadge && (
+                        <View style={[styles.badge, badgeStyle]}>
+                            <Ionicons 
+                                name={badgeIcon} 
+                                size={badgeIconSize} 
+                                color={badgeColor} 
+                            />
+                        </View>
+                    )}
+                </LinearGradient>
+            );
+        }
+        
+        // Without container (simple avatar)
+        return (
+            <View style={[styles.container, containerStyle]}>
+                <View 
+                    style={[
+                        styles.avatarBase,
+                        avatarStyle,
+                        {
+                            borderWidth,
+                            borderColor,
+                            overflow: 'hidden',
+                        }
+                    ]}
+                >
+                    {renderAvatarContent()}
                 </View>
-            )}
-        </View>
-    );
-
+                
+                {showBadge && (
+                    <View style={[styles.badge, badgeStyle]}>
+                        <Ionicons 
+                            name={badgeIcon} 
+                            size={badgeIconSize} 
+                            color={badgeColor} 
+                        />
+                    </View>
+                )}
+            </View>
+        );
+    };
+    
+    const avatarContent = renderAvatar();
+    
     if (onPress) {
         return (
-            <Pressable
+            <Pressable 
                 onPress={onPress}
                 style={({ pressed }) => [
                     styles.pressable,
@@ -197,13 +268,15 @@ export const Avatar: React.FC<AvatarProps> = ({
             </Pressable>
         );
     }
-
+    
     return avatarContent;
 };
 
 const styles = StyleSheet.create({
     container: {
         position: 'relative',
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     avatarBase: {
         backgroundColor: 'rgba(255,255,255,0.1)',

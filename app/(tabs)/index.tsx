@@ -161,7 +161,6 @@ function HomeContent() {
         router.push({
             pathname: '/(modal)/player',
             params: {
-                // ADD THESE:
                 id: session.id,
                 moodId: session.moodId,
                 category: session.category,
@@ -225,6 +224,8 @@ function HomeContent() {
                                 borderWidth={1}
                                 borderColor="rgba(255,255,255,0.15)"
                                 fallbackType="gradient"
+                                borderRadius="circle"
+                                showContainer={false} // No container for home screen
                                 testID="home-avatar"
                             />
                             <View>

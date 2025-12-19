@@ -540,7 +540,7 @@ function ProfileScreen() {
                 >
                     <View style={styles.avatarBlock}>
                         <Pressable onPress={handleChangeAvatar}>
-                            <Avatar 
+                            <Avatar
                                 size={88}
                                 showBadge={true}
                                 badgeIcon="camera"
