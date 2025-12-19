@@ -1,3 +1,5 @@
+// app/(modal)/player.tsx
+import { useFavoritesStore } from '@/store/favoritesStore';
 import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
@@ -16,12 +18,47 @@ const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 export default function PlayerSheet() {
   const params = useLocalSearchParams();
+
+  // Extract all session data from params
+  const sessionId = (params.id as string) || Date.now().toString();
   const soundUrl = (params.soundUrl as string) || DEFAULT_SOUND_URL;
-  const title = (params.title as string) || "Ohsjccean Waves";
+  const title = (params.title as string) || "Ocean Waves";
   const subtitle = (params.subtitle as string) || "3 min • Waves";
+  const artworkUrl = (params.artworkUrl as string) || ART_URL;
+  const moodId = (params.moodId as string) || "calm";
+  const category = (params.category as string) || "Calm & Nature";
+
+  // Use the favorites store
+  const { isFavorite, toggleFavorite } = useFavoritesStore();
+
+  // Create a session object from the params
+  const session = useMemo(() => {
+    // Parse duration from subtitle
+    let duration = 180; // default 3 minutes
+    const match = subtitle.match(/(\d+)\s*min/);
+    if (match) {
+      const minutes = parseInt(match[1]);
+      const secondsMatch = subtitle.match(/(\d+)\s*sec/);
+      const seconds = secondsMatch ? parseInt(secondsMatch[1]) : 0;
+      duration = minutes * 60 + seconds;
+    }
+
+    return {
+      id: sessionId,
+      title: title,
+      durationLabel: subtitle,
+      moodId: moodId,
+      category: category,
+      soundUrl: soundUrl,
+      artworkUrl: artworkUrl,
+      duration: duration
+    };
+  }, [sessionId, title, subtitle, moodId, category, soundUrl, artworkUrl]);
+
+  // Check if this session is already a favorite
+  const sessionIsFavorite = isFavorite(sessionId);
 
   const [isPlaying, setIsPlaying] = useState(true);
-  const [isFavorite, setIsFavorite] = useState(false);
   const [sleepTimer, setSleepTimer] = useState(false);
   const [progress, setProgress] = useState(0);
   const [trackDuration, setTrackDuration] = useState(197);
@@ -152,8 +189,9 @@ export default function PlayerSheet() {
 
   const handleFavorite = useCallback(async () => {
     await Haptics.selectionAsync();
-    setIsFavorite((prev) => !prev);
-  }, []);
+    // Use the favorites store instead of local state
+    toggleFavorite(session);
+  }, [session, toggleFavorite]);
 
   const handleSleep = useCallback(async () => {
     await Haptics.selectionAsync();
@@ -239,7 +277,7 @@ export default function PlayerSheet() {
 
                 <View style={styles.artContainer}>
                   <View style={styles.artWrapper}>
-                    <Image source={ART_URL} style={styles.art} contentFit="cover" />
+                    <Image source={artworkUrl} style={styles.art} contentFit="cover" />
                   </View>
                 </View>
 
@@ -327,25 +365,25 @@ export default function PlayerSheet() {
                 </View>
 
                 <View style={styles.actionRow}>
-                  {/* Add to Favorites Button */}
+                  {/* Add to Favorites Button - NOW CONNECTED TO FAVORITES STORE */}
                   <Pressable onPress={handleFavorite}>
                     {({ pressed }) => (
                       <View style={[
                         styles.actionButton,
-                        styles.actionButtonFavorite, // Separate style for favorites
+                        styles.actionButtonFavorite,
                         pressed && styles.actionButtonPressed,
-                        isFavorite && styles.actionButtonActive
+                        sessionIsFavorite && styles.actionButtonActive
                       ]}>
                         <Ionicons
-                          name={isFavorite ? "heart" : "heart-outline"}
-                          color={isFavorite ? Colors.light.favorited : Colors.light.text}
+                          name={sessionIsFavorite ? "heart" : "heart-outline"}
+                          color={sessionIsFavorite ? Colors.light.favorited : Colors.light.text}
                           size={18}
                         />
                         <Text style={[
                           styles.actionLabel,
-                          isFavorite && styles.actionLabelActive
+                          sessionIsFavorite && styles.actionLabelActive
                         ]}>
-                          Add to favorites
+                          {sessionIsFavorite ? "Remove favorite" : "Add to favorites"}
                         </Text>
                       </View>
                     )}
@@ -356,7 +394,7 @@ export default function PlayerSheet() {
                     {({ pressed }) => (
                       <View style={[
                         styles.actionButton,
-                        styles.actionButtonSleep, // Separate style for sleep timer
+                        styles.actionButtonSleep,
                         pressed && styles.actionButtonPressed,
                         sleepTimer && styles.actionButtonActive
                       ]}>
