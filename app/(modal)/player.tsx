@@ -20,840 +20,1006 @@ const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 // Sleep timer options in minutes
 const SLEEP_TIMER_OPTIONS = [5, 10, 15, 30];
 
+// Repeat modes
+type RepeatMode = 'off' | 'all' | 'one';
+
 // Session interface
 interface Session {
-   id: string;
-   title: string;
-   durationLabel: string;
-   duration: number;
-   moodId: string;
-   category: string;
-   soundUrl: string;
-   artworkUrl?: string;
+    id: string;
+    title: string;
+    durationLabel: string;
+    duration: number;
+    moodId: string;
+    category: string;
+    soundUrl: string;
+    artworkUrl?: string;
 }
 
 export default function PlayerSheet() {
-   const params = useLocalSearchParams();
+    const params = useLocalSearchParams();
 
-   // Extract all session data from params
-   const sessionId = (params.id as string) || Date.now().toString();
-   const soundUrl = (params.soundUrl as string) || DEFAULT_SOUND_URL;
-   const title = (params.title as string) || "Ocean Waves";
-   const subtitle = (params.subtitle as string) || "3 min • Waves";
-   const artworkUrl = (params.artworkUrl as string) || ART_URL;
-   const moodId = (params.moodId as string) || "calm";
-   const category = (params.category as string) || "Calm & Nature";
+    // Extract all session data from params
+    const sessionId = (params.id as string) || Date.now().toString();
+    const soundUrl = (params.soundUrl as string) || DEFAULT_SOUND_URL;
+    const title = (params.title as string) || "Ocean Waves";
+    const subtitle = (params.subtitle as string) || "3 min • Waves";
+    const artworkUrl = (params.artworkUrl as string) || ART_URL;
+    const moodId = (params.moodId as string) || "calm";
+    const category = (params.category as string) || "Calm & Nature";
 
-   // Parse playlist from params if available
-   const playlistParam = params.playlist as string;
-   const initialIndex = params.currentIndex ? parseInt(params.currentIndex as string) : 0;
+    // Parse playlist from params if available
+    const playlistParam = params.playlist as string;
+    const initialIndex = params.currentIndex ? parseInt(params.currentIndex as string) : 0;
 
-   // State for playlist navigation
-   const [currentPlaylist, setCurrentPlaylist] = useState<Session[]>([]);
-   const [currentTrackIndex, setCurrentTrackIndex] = useState<number>(initialIndex);
+    // State for playlist navigation
+    const [currentPlaylist, setCurrentPlaylist] = useState<Session[]>([]);
+    const [currentTrackIndex, setCurrentTrackIndex] = useState<number>(initialIndex);
+    const [shuffledPlaylist, setShuffledPlaylist] = useState<Session[]>([]);
+    const [isShuffled, setIsShuffled] = useState(false);
+    const [repeatMode, setRepeatMode] = useState<RepeatMode>('off');
+    const [originalPlaylist, setOriginalPlaylist] = useState<Session[]>([]);
 
-   // Use the favorites store
-   const { isFavorite, toggleFavorite } = useFavoritesStore();
+    // Use the favorites store
+    const { isFavorite, toggleFavorite } = useFavoritesStore();
 
-   // Create a session object from the params
-   const session = useMemo(() => {
-      // Parse duration from subtitle
-      let duration = 180; // default 3 minutes
-      const match = subtitle.match(/(\d+)\s*min/);
-      if (match) {
-         const minutes = parseInt(match[1]);
-         const secondsMatch = subtitle.match(/(\d+)\s*sec/);
-         const seconds = secondsMatch ? parseInt(secondsMatch[1]) : 0;
-         duration = minutes * 60 + seconds;
-      }
+    // Create a session object from the params
+    const session = useMemo(() => {
+        // Parse duration from subtitle
+        let duration = 180; // default 3 minutes
+        const match = subtitle.match(/(\d+)\s*min/);
+        if (match) {
+            const minutes = parseInt(match[1]);
+            const secondsMatch = subtitle.match(/(\d+)\s*sec/);
+            const seconds = secondsMatch ? parseInt(secondsMatch[1]) : 0;
+            duration = minutes * 60 + seconds;
+        }
 
-      return {
-         id: sessionId,
-         title: title,
-         durationLabel: subtitle,
-         moodId: moodId,
-         category: category,
-         soundUrl: soundUrl,
-         artworkUrl: artworkUrl,
-         duration: duration
-      };
-   }, [sessionId, title, subtitle, moodId, category, soundUrl, artworkUrl]);
+        return {
+            id: sessionId,
+            title: title,
+            durationLabel: subtitle,
+            moodId: moodId,
+            category: category,
+            soundUrl: soundUrl,
+            artworkUrl: artworkUrl,
+            duration: duration
+        };
+    }, [sessionId, title, subtitle, moodId, category, soundUrl, artworkUrl]);
 
-   // Check if this session is already a favorite
-   const sessionIsFavorite = isFavorite(sessionId);
+    // Check if this session is already a favorite
+    const sessionIsFavorite = isFavorite(sessionId);
 
-   const [isPlaying, setIsPlaying] = useState(true);
-   const [sleepTimerActive, setSleepTimerActive] = useState(false);
-   const [sleepTimerDuration, setSleepTimerDuration] = useState<number | null>(null);
-   const [sleepTimerRemaining, setSleepTimerRemaining] = useState<number>(0);
-   const [showSleepTimerOptions, setShowSleepTimerOptions] = useState(false);
-   const [showCustomTimerInput, setShowCustomTimerInput] = useState(false);
-   const [customMinutes, setCustomMinutes] = useState("");
-   const [progress, setProgress] = useState(0);
-   const [trackDuration, setTrackDuration] = useState(197);
-   const [sliderWidth, setSliderWidth] = useState(0);
-   const [sound, setSound] = useState<Audio.Sound | null>(null);
+    const [isPlaying, setIsPlaying] = useState(true);
+    const [sleepTimerActive, setSleepTimerActive] = useState(false);
+    const [sleepTimerDuration, setSleepTimerDuration] = useState<number | null>(null);
+    const [sleepTimerRemaining, setSleepTimerRemaining] = useState<number>(0);
+    const [showSleepTimerOptions, setShowSleepTimerOptions] = useState(false);
+    const [showCustomTimerInput, setShowCustomTimerInput] = useState(false);
+    const [customMinutes, setCustomMinutes] = useState("");
+    const [progress, setProgress] = useState(0);
+    const [trackDuration, setTrackDuration] = useState(197);
+    const [sliderWidth, setSliderWidth] = useState(0);
+    const [sound, setSound] = useState<Audio.Sound | null>(null);
 
-   // Refs for timers - using NodeJS.Timeout for Node.js or number for browser
-   const sleepTimerRef = useRef<NodeJS.Timeout | null>(null);
-   const countdownTimerRef = useRef<NodeJS.Timeout | null>(null);
+    // Refs for timers - using NodeJS.Timeout for Node.js or number for browser
+    const sleepTimerRef = useRef<NodeJS.Timeout | null>(null);
+    const countdownTimerRef = useRef<NodeJS.Timeout | null>(null);
+    const handleNextTrackRef = useRef<() => Promise<void>>(() => Promise.resolve());
 
-   useEffect(() => {
-      const match = subtitle.match(/(\d+)\s*min/);
-      if (match) {
-         const minutes = parseInt(match[1]);
-         const secondsMatch = subtitle.match(/(\d+)\s*sec/);
-         const seconds = secondsMatch ? parseInt(secondsMatch[1]) : 0;
-         setTrackDuration(minutes * 60 + seconds);
-      }
-   }, [subtitle]);
+    useEffect(() => {
+        const match = subtitle.match(/(\d+)\s*min/);
+        if (match) {
+            const minutes = parseInt(match[1]);
+            const secondsMatch = subtitle.match(/(\d+)\s*sec/);
+            const seconds = secondsMatch ? parseInt(secondsMatch[1]) : 0;
+            setTrackDuration(minutes * 60 + seconds);
+        }
+    }, [subtitle]);
 
-   // Setup playlist from params or fetch based on mood
-   useEffect(() => {
-      const setupPlaylist = async () => {
-         try {
-            if (playlistParam) {
-               // If playlist was passed as a parameter
-               const parsedPlaylist = JSON.parse(playlistParam);
-               setCurrentPlaylist(parsedPlaylist);
+    // Setup playlist from params or fetch based on mood
+    useEffect(() => {
+        const setupPlaylist = async () => {
+            try {
+                if (playlistParam) {
+                    // If playlist was passed as a parameter
+                    const parsedPlaylist = JSON.parse(playlistParam);
+                    setCurrentPlaylist(parsedPlaylist);
+                    setOriginalPlaylist(parsedPlaylist);
 
-               // Find the current track in the playlist
-               const index = parsedPlaylist.findIndex((track: Session) => track.id === sessionId);
-               if (index !== -1) {
-                  setCurrentTrackIndex(index);
-               }
-            } else {
-               // Try to fetch playlist based on mood
-               const { fetchSoundEffects } = await import('@/services/api');
-               const playlist = await fetchSoundEffects(moodId);
+                    // Find the current track in the playlist
+                    const index = parsedPlaylist.findIndex((track: Session) => track.id === sessionId);
+                    if (index !== -1) {
+                        setCurrentTrackIndex(index);
+                    }
+                } else {
+                    // Try to fetch playlist based on mood
+                    const { fetchSoundEffects } = await import('@/services/api');
+                    const playlist = await fetchSoundEffects(moodId);
 
-               // Find current track index in the playlist
-               const currentIndex = playlist.findIndex(track => track.id === sessionId);
+                    // Find current track index in the playlist
+                    const currentIndex = playlist.findIndex(track => track.id === sessionId);
 
-               // If current track is found in playlist, use that playlist
-               if (currentIndex !== -1) {
-                  setCurrentPlaylist(playlist);
-                  setCurrentTrackIndex(currentIndex);
-               } else {
-                  // If current track not in playlist (e.g., from favorites), create a playlist with just this track
-                  setCurrentPlaylist([session]);
-                  setCurrentTrackIndex(0);
-               }
+                    // If current track is found in playlist, use that playlist
+                    if (currentIndex !== -1) {
+                        setCurrentPlaylist(playlist);
+                        setOriginalPlaylist(playlist);
+                        setCurrentTrackIndex(currentIndex);
+                    } else {
+                        // If current track not in playlist (e.g., from favorites), create a playlist with just this track
+                        const newPlaylist = [session];
+                        setCurrentPlaylist(newPlaylist);
+                        setOriginalPlaylist(newPlaylist);
+                        setCurrentTrackIndex(0);
+                    }
+                }
+            } catch (error) {
+                console.error('Error setting up playlist:', error);
+                // Fallback: use just the current session
+                const newPlaylist = [session];
+                setCurrentPlaylist(newPlaylist);
+                setOriginalPlaylist(newPlaylist);
+                setCurrentTrackIndex(0);
             }
-         } catch (error) {
-            console.error('Error setting up playlist:', error);
-            // Fallback: use just the current session
-            setCurrentPlaylist([session]);
-            setCurrentTrackIndex(0);
-         }
-      };
+        };
 
-      setupPlaylist();
-   }, [playlistParam, sessionId, moodId, session]);
+        setupPlaylist();
+    }, [playlistParam, sessionId, moodId, session]);
 
-   // Load and manage audio
-   useEffect(() => {
-      let mounted = true;
-      let player: Audio.Sound;
-
-      const loadSound = async () => {
-         try {
-            console.log("Loading sound from:", soundUrl);
-
-            await Audio.setAudioModeAsync({
-               allowsRecordingIOS: false,
-               playsInSilentModeIOS: true,
-               shouldDuckAndroid: true,
-               playThroughEarpieceAndroid: false,
-            });
-
-            if (sound) {
-               await sound.unloadAsync();
+    // Create shuffled playlist when original playlist changes
+    useEffect(() => {
+        if (originalPlaylist.length > 0) {
+            // Create a shuffled copy of the original playlist
+            const shuffled = [...originalPlaylist];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
             }
+            setShuffledPlaylist(shuffled);
+        }
+    }, [originalPlaylist]);
 
-            const { sound: loadedSound } = await Audio.Sound.createAsync(
-               { uri: soundUrl },
-               { shouldPlay: true }
-            );
+    // Load and manage audio
+    useEffect(() => {
+        let mounted = true;
+        let player: Audio.Sound;
 
-            if (!mounted) {
-               loadedSound.unloadAsync();
-               return;
+        const loadSound = async () => {
+            try {
+                console.log("Loading sound from:", soundUrl);
+
+                await Audio.setAudioModeAsync({
+                    allowsRecordingIOS: false,
+                    playsInSilentModeIOS: true,
+                    shouldDuckAndroid: true,
+                    playThroughEarpieceAndroid: false,
+                });
+
+                if (sound) {
+                    await sound.unloadAsync();
+                }
+
+                const { sound: loadedSound } = await Audio.Sound.createAsync(
+                    { uri: soundUrl },
+                    { shouldPlay: true }
+                );
+
+                if (!mounted) {
+                    loadedSound.unloadAsync();
+                    return;
+                }
+
+                player = loadedSound;
+                setSound(player);
+
+                const status = await loadedSound.getStatusAsync();
+                if (status.isLoaded && status.durationMillis) {
+                    setTrackDuration(status.durationMillis / 1000);
+                }
+
+                loadedSound.setOnPlaybackStatusUpdate((status) => {
+                    if (!mounted) return;
+
+                    if (status.isLoaded) {
+                        setProgress(status.positionMillis / 1000);
+                        setIsPlaying(status.isPlaying);
+
+                        if (status.didJustFinish) {
+                            // Auto-play next track when current finishes
+                            handleNextTrackRef.current?.();
+                        }
+                    }
+                });
+
+            } catch (err) {
+                console.error("Error loading sound:", err);
             }
+        };
 
-            player = loadedSound;
-            setSound(player);
+        loadSound();
 
-            const status = await loadedSound.getStatusAsync();
-            if (status.isLoaded && status.durationMillis) {
-               setTrackDuration(status.durationMillis / 1000);
+        return () => {
+            mounted = false;
+            if (player) {
+                player.setOnPlaybackStatusUpdate(null);
+                player.unloadAsync();
             }
+        };
+    }, [soundUrl]);
 
-            loadedSound.setOnPlaybackStatusUpdate((status) => {
-               if (!mounted) return;
-
-               if (status.isLoaded) {
-                  setProgress(status.positionMillis / 1000);
-                  setIsPlaying(status.isPlaying);
-
-                  if (status.didJustFinish) {
-                     // Auto-play next track when current finishes
-                     handleNextTrack();
-                  }
-               }
-            });
-
-         } catch (err) {
-            console.error("Error loading sound:", err);
-         }
-      };
-
-      loadSound();
-
-      return () => {
-         mounted = false;
-         if (player) {
-            player.setOnPlaybackStatusUpdate(null);
-            player.unloadAsync();
-         }
-      };
-   }, [soundUrl]);
-
-   const clearSleepTimer = useCallback(() => {
-      if (sleepTimerRef.current) {
-         clearTimeout(sleepTimerRef.current);
-         sleepTimerRef.current = null;
-      }
-      if (countdownTimerRef.current) {
-         clearInterval(countdownTimerRef.current);
-         countdownTimerRef.current = null;
-      }
-      setSleepTimerActive(false);
-      setSleepTimerDuration(null);
-      setSleepTimerRemaining(0);
-      setShowSleepTimerOptions(false);
-      setShowCustomTimerInput(false);
-      setCustomMinutes("");
-   }, []);
-
-   // Sleep timer countdown
-   useEffect(() => {
-      if (!sleepTimerActive || sleepTimerDuration === null) {
-         if (countdownTimerRef.current) {
-            clearInterval(countdownTimerRef.current);
-            countdownTimerRef.current = null;
-         }
-         setSleepTimerRemaining(0);
-         return;
-      }
-
-      // Set initial remaining time
-      setSleepTimerRemaining(sleepTimerDuration * 60);
-
-      // Start countdown timer
-      countdownTimerRef.current = setInterval(() => {
-         setSleepTimerRemaining(prev => {
-            if (prev <= 1) {
-               // Time's up - stop audio
-               if (sound) {
-                  sound.pauseAsync();
-                  setIsPlaying(false);
-               }
-               clearSleepTimer();
-               return 0;
-            }
-            return prev - 1;
-         });
-      }, 1000) as unknown as NodeJS.Timeout;
-
-      return () => {
-         if (countdownTimerRef.current) {
-            clearInterval(countdownTimerRef.current);
-         }
-      };
-   }, [sleepTimerActive, sleepTimerDuration, sound, clearSleepTimer]);
-
-   // Main sleep timer function
-   useEffect(() => {
-      if (!sleepTimerActive || sleepTimerDuration === null) {
-         if (sleepTimerRef.current) {
+    const clearSleepTimer = useCallback(() => {
+        if (sleepTimerRef.current) {
             clearTimeout(sleepTimerRef.current);
             sleepTimerRef.current = null;
-         }
-         return;
-      }
+        }
+        if (countdownTimerRef.current) {
+            clearInterval(countdownTimerRef.current);
+            countdownTimerRef.current = null;
+        }
+        setSleepTimerActive(false);
+        setSleepTimerDuration(null);
+        setSleepTimerRemaining(0);
+        setShowSleepTimerOptions(false);
+        setShowCustomTimerInput(false);
+        setCustomMinutes("");
+    }, []);
 
-      // Clear any existing timer
-      if (sleepTimerRef.current) {
-         clearTimeout(sleepTimerRef.current);
-      }
+    // Sleep timer countdown
+    useEffect(() => {
+        if (!sleepTimerActive || sleepTimerDuration === null) {
+            if (countdownTimerRef.current) {
+                clearInterval(countdownTimerRef.current);
+                countdownTimerRef.current = null;
+            }
+            setSleepTimerRemaining(0);
+            return;
+        }
 
-      // Set new timer
-      const durationMs = sleepTimerDuration * 60 * 1000;
-      sleepTimerRef.current = setTimeout(() => {
-         if (sound) {
-            sound.pauseAsync();
-            setIsPlaying(false);
-         }
-         clearSleepTimer();
-      }, durationMs) as unknown as NodeJS.Timeout;
+        // Set initial remaining time
+        setSleepTimerRemaining(sleepTimerDuration * 60);
 
-      return () => {
-         if (sleepTimerRef.current) {
-            clearTimeout(sleepTimerRef.current);
-         }
-      };
-   }, [sleepTimerActive, sleepTimerDuration, sound, clearSleepTimer]);
-
-   const sheetRef = useRef<BottomSheet>(null);
-   const snapPoints = useMemo(() => [SCREEN_HEIGHT * 0.92], []);
-
-   const handleClose = useCallback(() => {
-      if (sound) {
-         sound.pauseAsync();
-      }
-      clearSleepTimer();
-      router.back();
-   }, [sound, clearSleepTimer]);
-
-   const renderBackdrop = useCallback(
-      (props: any) => (
-         <BottomSheetBackdrop
-            {...props}
-            disappearsOnIndex={-1}
-            appearsOnIndex={0}
-            opacity={0.7}
-         />
-      ),
-      []
-   );
-
-   const progressAnim = useRef(new Animated.Value(0)).current;
-
-   useEffect(() => {
-      if (trackDuration > 0) {
-         Animated.timing(progressAnim, {
-            toValue: progress / trackDuration,
-            duration: 240,
-            useNativeDriver: false,
-         }).start();
-      }
-   }, [progress, trackDuration, progressAnim]);
-
-   useEffect(() => {
-      const configureAudioForSilentMode = async () => {
-         try {
-            // ONLY configure audio for silent mode - no background tasks
-            await Audio.setAudioModeAsync({
-               allowsRecordingIOS: false,
-               playsInSilentModeIOS: true,
-               shouldDuckAndroid: true,
-               playThroughEarpieceAndroid: false,
+        // Start countdown timer
+        countdownTimerRef.current = setInterval(() => {
+            setSleepTimerRemaining(prev => {
+                if (prev <= 1) {
+                    // Time's up - stop audio
+                    if (sound) {
+                        sound.pauseAsync();
+                        setIsPlaying(false);
+                    }
+                    clearSleepTimer();
+                    return 0;
+                }
+                return prev - 1;
             });
+        }, 1000) as unknown as NodeJS.Timeout;
 
-            console.log('Audio configured for silent mode playback');
-         } catch (error) {
-            console.error('Audio setup failed:', error);
-         }
-      };
+        return () => {
+            if (countdownTimerRef.current) {
+                clearInterval(countdownTimerRef.current);
+            }
+        };
+    }, [sleepTimerActive, sleepTimerDuration, sound, clearSleepTimer]);
 
-      configureAudioForSilentMode();
-   }, []);
+    // Main sleep timer function
+    useEffect(() => {
+        if (!sleepTimerActive || sleepTimerDuration === null) {
+            if (sleepTimerRef.current) {
+                clearTimeout(sleepTimerRef.current);
+                sleepTimerRef.current = null;
+            }
+            return;
+        }
 
-   const handlePlayToggle = useCallback(async () => {
-      await Haptics.selectionAsync();
-      if (!sound) return;
+        // Clear any existing timer
+        if (sleepTimerRef.current) {
+            clearTimeout(sleepTimerRef.current);
+        }
 
-      try {
-         const status = await sound.getStatusAsync();
-         if (!status.isLoaded) return;
+        // Set new timer
+        const durationMs = sleepTimerDuration * 60 * 1000;
+        sleepTimerRef.current = setTimeout(() => {
+            if (sound) {
+                sound.pauseAsync();
+                setIsPlaying(false);
+            }
+            clearSleepTimer();
+        }, durationMs) as unknown as NodeJS.Timeout;
 
-         if (status.isPlaying) {
-            await sound.pauseAsync();
-         } else {
-            await sound.playAsync();
-         }
-      } catch (error) {
-         console.error("Error toggling playback:", error);
-      }
-   }, [sound]);
+        return () => {
+            if (sleepTimerRef.current) {
+                clearTimeout(sleepTimerRef.current);
+            }
+        };
+    }, [sleepTimerActive, sleepTimerDuration, sound, clearSleepTimer]);
 
-   const handleFavorite = useCallback(async () => {
-      await Haptics.selectionAsync();
-      toggleFavorite(session);
-   }, [session, toggleFavorite]);
+    const sheetRef = useRef<BottomSheet>(null);
+    const snapPoints = useMemo(() => [SCREEN_HEIGHT * 0.92], []);
 
-   const handleSleep = useCallback(async () => {
-      await Haptics.selectionAsync();
+    const handleClose = useCallback(() => {
+        if (sound) {
+            sound.pauseAsync();
+        }
+        clearSleepTimer();
+        router.back();
+    }, [sound, clearSleepTimer]);
 
-      if (sleepTimerActive) {
-         clearSleepTimer();
-      } else {
-         setShowSleepTimerOptions(true);
-      }
-   }, [sleepTimerActive, clearSleepTimer]);
+    const renderBackdrop = useCallback(
+        (props: any) => (
+            <BottomSheetBackdrop
+                {...props}
+                disappearsOnIndex={-1}
+                appearsOnIndex={0}
+                opacity={0.7}
+            />
+        ),
+        []
+    );
 
-   const selectSleepTimerDuration = useCallback(async (minutes: number) => {
-      await Haptics.selectionAsync();
+    const progressAnim = useRef(new Animated.Value(0)).current;
 
-      setSleepTimerDuration(minutes);
-      setSleepTimerActive(true);
-      setShowSleepTimerOptions(false);
-      setShowCustomTimerInput(false);
+    useEffect(() => {
+        if (trackDuration > 0) {
+            Animated.timing(progressAnim, {
+                toValue: progress / trackDuration,
+                duration: 240,
+                useNativeDriver: false,
+            }).start();
+        }
+    }, [progress, trackDuration, progressAnim]);
 
-      // Start countdown immediately
-      setSleepTimerRemaining(minutes * 60);
-   }, []);
+    useEffect(() => {
+        const configureAudioForSilentMode = async () => {
+            try {
+                // ONLY configure audio for silent mode - no background tasks
+                await Audio.setAudioModeAsync({
+                    allowsRecordingIOS: false,
+                    playsInSilentModeIOS: true,
+                    shouldDuckAndroid: true,
+                    playThroughEarpieceAndroid: false,
+                });
 
-   const handleCustomTimerSubmit = useCallback(async () => {
-      await Haptics.selectionAsync();
+                console.log('Audio configured for silent mode playback');
+            } catch (error) {
+                console.error('Audio setup failed:', error);
+            }
+        };
 
-      const minutes = parseInt(customMinutes);
-      if (minutes > 0 && minutes <= 240) { // Max 4 hours
-         setSleepTimerDuration(minutes);
-         setSleepTimerActive(true);
-         setShowSleepTimerOptions(false);
-         setShowCustomTimerInput(false);
-         setCustomMinutes("");
+        configureAudioForSilentMode();
+    }, []);
 
-         setSleepTimerRemaining(minutes * 60);
-      }
-   }, [customMinutes]);
+    const handlePlayToggle = useCallback(async () => {
+        await Haptics.selectionAsync();
+        if (!sound) return;
 
-   const handleScrubFromLocation = useCallback(
-      (locationX: number) => {
-         if (!sound || sliderWidth <= 0 || trackDuration <= 0) return;
+        try {
+            const status = await sound.getStatusAsync();
+            if (!status.isLoaded) return;
 
-         const ratio = Math.max(0, Math.min(locationX / sliderWidth, 1));
-         const newPosition = ratio * trackDuration * 1000;
-         sound.setPositionAsync(newPosition);
-         setProgress(ratio * trackDuration);
-      },
-      [sliderWidth, sound, trackDuration]
-   );
+            if (status.isPlaying) {
+                await sound.pauseAsync();
+            } else {
+                await sound.playAsync();
+            }
+        } catch (error) {
+            console.error("Error toggling playback:", error);
+        }
+    }, [sound]);
 
-   const panResponder = useMemo(
-      () =>
-         PanResponder.create({
-            onStartShouldSetPanResponder: () => true,
-            onPanResponderGrant: (evt) => handleScrubFromLocation(evt.nativeEvent.locationX),
-            onPanResponderMove: (evt) => handleScrubFromLocation(evt.nativeEvent.locationX),
-         }),
-      [handleScrubFromLocation]
-   );
+    const handleFavorite = useCallback(async () => {
+        await Haptics.selectionAsync();
+        toggleFavorite(session);
+    }, [session, toggleFavorite]);
 
-   const progressPercentage = useMemo(() => {
-      if (sliderWidth <= 0 || trackDuration <= 0) return 0;
-      return (progress / trackDuration) * sliderWidth;
-   }, [progress, sliderWidth, trackDuration]);
+    const handleSleep = useCallback(async () => {
+        await Haptics.selectionAsync();
 
-   // Next/Previous track functionality
-   const handleNextTrack = useCallback(async () => {
-      await Haptics.selectionAsync();
+        if (sleepTimerActive) {
+            clearSleepTimer();
+        } else {
+            setShowSleepTimerOptions(true);
+        }
+    }, [sleepTimerActive, clearSleepTimer]);
 
-      if (currentPlaylist.length === 0) return;
+    const selectSleepTimerDuration = useCallback(async (minutes: number) => {
+        await Haptics.selectionAsync();
 
-      // Calculate next track index (loop to beginning if at end)
-      const nextIndex = (currentTrackIndex + 1) % currentPlaylist.length;
+        setSleepTimerDuration(minutes);
+        setSleepTimerActive(true);
+        setShowSleepTimerOptions(false);
+        setShowCustomTimerInput(false);
 
-      // Don't navigate if it's the same track (only one in playlist)
-      if (nextIndex === currentTrackIndex && currentPlaylist.length > 1) {
-         return;
-      }
+        // Start countdown immediately
+        setSleepTimerRemaining(minutes * 60);
+    }, []);
 
-      const nextTrack = currentPlaylist[nextIndex];
+    const handleCustomTimerSubmit = useCallback(async () => {
+        await Haptics.selectionAsync();
 
-      // Stop current playback
-      if (sound) {
-         await sound.stopAsync();
-         await sound.unloadAsync();
-         setSound(null);
-      }
+        const minutes = parseInt(customMinutes);
+        if (minutes > 0 && minutes <= 240) { // Max 4 hours
+            setSleepTimerDuration(minutes);
+            setSleepTimerActive(true);
+            setShowSleepTimerOptions(false);
+            setShowCustomTimerInput(false);
+            setCustomMinutes("");
 
-      router.setParams({
-         id: nextTrack.id,
-         title: nextTrack.title,
-         subtitle: nextTrack.durationLabel,
-         soundUrl: nextTrack.soundUrl,
-         artworkUrl: nextTrack.artworkUrl || ART_URL,
-         moodId: nextTrack.moodId,
-         category: nextTrack.category,
-         ...(playlistParam && { playlist: playlistParam }),
-         ...(playlistParam && { currentIndex: nextIndex.toString() }),
-      });
+            setSleepTimerRemaining(minutes * 60);
+        }
+    }, [customMinutes]);
 
-      setCurrentTrackIndex(nextIndex);
-   }, [currentPlaylist, currentTrackIndex, sound, playlistParam]);
+    const handleScrubFromLocation = useCallback(
+        (locationX: number) => {
+            if (!sound || sliderWidth <= 0 || trackDuration <= 0) return;
 
-   const handlePreviousTrack = useCallback(async () => {
-      await Haptics.selectionAsync();
+            const ratio = Math.max(0, Math.min(locationX / sliderWidth, 1));
+            const newPosition = ratio * trackDuration * 1000;
+            sound.setPositionAsync(newPosition);
+            setProgress(ratio * trackDuration);
+        },
+        [sliderWidth, sound, trackDuration]
+    );
 
-      if (currentPlaylist.length === 0) return;
+    const panResponder = useMemo(
+        () =>
+            PanResponder.create({
+                onStartShouldSetPanResponder: () => true,
+                onPanResponderGrant: (evt) => handleScrubFromLocation(evt.nativeEvent.locationX),
+                onPanResponderMove: (evt) => handleScrubFromLocation(evt.nativeEvent.locationX),
+            }),
+        [handleScrubFromLocation]
+    );
 
-      // Calculate previous track index (loop to end if at beginning)
-      const prevIndex = currentTrackIndex === 0
-         ? currentPlaylist.length - 1
-         : currentTrackIndex - 1;
+    const progressPercentage = useMemo(() => {
+        if (sliderWidth <= 0 || trackDuration <= 0) return 0;
+        return (progress / trackDuration) * sliderWidth;
+    }, [progress, sliderWidth, trackDuration]);
 
-      // Don't navigate if it's the same track (only one in playlist)
-      if (prevIndex === currentTrackIndex && currentPlaylist.length > 1) {
-         return;
-      }
+    // Handle shuffle toggle
+    const handleShuffle = useCallback(async () => {
+        await Haptics.selectionAsync();
 
-      const prevTrack = currentPlaylist[prevIndex];
+        if (currentPlaylist.length <= 1) return;
 
-      // Stop current playback
-      if (sound) {
-         await sound.stopAsync();
-         await sound.unloadAsync();
-         setSound(null);
-      }
+        if (isShuffled) {
+            // Turn off shuffle - go back to original order
+            setIsShuffled(false);
+            // Find current track in original playlist
+            const currentTrack = currentPlaylist[currentTrackIndex];
+            const originalIndex = originalPlaylist.findIndex(track => track.id === currentTrack.id);
+            setCurrentTrackIndex(Math.max(0, originalIndex));
+        } else {
+            // Turn on shuffle
+            setIsShuffled(true);
+            // Find current track in shuffled playlist
+            const currentTrack = currentPlaylist[currentTrackIndex];
+            const shuffledIndex = shuffledPlaylist.findIndex(track => track.id === currentTrack.id);
+            setCurrentTrackIndex(Math.max(0, shuffledIndex));
+        }
+    }, [isShuffled, currentPlaylist, currentTrackIndex, originalPlaylist, shuffledPlaylist]);
 
-      router.setParams({
-         id: prevTrack.id,
-         title: prevTrack.title,
-         subtitle: prevTrack.durationLabel,
-         soundUrl: prevTrack.soundUrl,
-         artworkUrl: prevTrack.artworkUrl || ART_URL,
-         moodId: prevTrack.moodId,
-         category: prevTrack.category,
-         ...(playlistParam && { playlist: playlistParam }),
-         ...(playlistParam && { currentIndex: prevIndex.toString() }),
-      });
+    // Handle repeat toggle
+    const handleRepeat = useCallback(async () => {
+        await Haptics.selectionAsync();
 
-      setCurrentTrackIndex(prevIndex);
-   }, [currentPlaylist, currentTrackIndex, sound, playlistParam]);
+        // Cycle through repeat modes: off -> all -> one -> off
+        if (repeatMode === 'off') {
+            setRepeatMode('all');
+        } else if (repeatMode === 'all') {
+            setRepeatMode('one');
+        } else {
+            setRepeatMode('off');
+        }
+    }, [repeatMode]);
 
-   const handleSkipBack = useCallback(async () => {
-      if (!sound) return;
-      if (progress > 3) {
-         await sound.setPositionAsync(0);
-         setProgress(0);
-      } else {
-         await handlePreviousTrack();
-      }
-   }, [progress, sound, handlePreviousTrack]);
+    // Get the active playlist based on shuffle state
+    const activePlaylist = useMemo(() => {
+        return isShuffled ? shuffledPlaylist : originalPlaylist;
+    }, [isShuffled, shuffledPlaylist, originalPlaylist]);
 
-   const handleSkipForward = useCallback(async () => {
-      await handleNextTrack();
-   }, [handleNextTrack]);
+    // Next/Previous track functionality
+    const handleNextTrack = useCallback(async () => {
+        await Haptics.selectionAsync();
 
-   const formatSleepTimerTime = useCallback((seconds: number) => {
-      const minutes = Math.floor(seconds / 60);
-      const secs = seconds % 60;
+        if (activePlaylist.length === 0) return;
 
-      if (minutes > 0) {
-         return `${minutes}:${secs.toString().padStart(2, '0')}`;
-      }
-      return `${secs}s`;
-   }, []);
+        // Handle repeat one mode
+        if (repeatMode === 'one') {
+            // Restart current track
+            if (sound) {
+                await sound.setPositionAsync(0);
+                setProgress(0);
+                await sound.playAsync();
+            }
+            return;
+        }
 
-   // Get sleep timer button text based on state
-   const getSleepTimerButtonText = useCallback(() => {
-      if (!sleepTimerActive || sleepTimerRemaining <= 0) {
-         return "Sleep timer";
-      }
-      return formatSleepTimerTime(sleepTimerRemaining);
-   }, [sleepTimerActive, sleepTimerRemaining, formatSleepTimerTime]);
+        // Calculate next track index
+        let nextIndex = currentTrackIndex + 1;
 
-   return (
-      <View style={styles.container}>
-         <BottomSheet
-            ref={sheetRef}
-            index={0}
-            snapPoints={snapPoints}
-            enablePanDownToClose
-            onClose={handleClose}
-            backdropComponent={renderBackdrop}
-            backgroundStyle={styles.background}
-            handleComponent={null} // ← Hide default handle
-         >
-            <BottomSheetView style={styles.sheetContent}>
-               <LinearGradient
-                  colors={["#03040A", Colors.light.background]}
-                  style={styles.gradient}
-               >
-                  <View style={styles.contentContainer}>
-                     {/* CUSTOM HANDLE - Added here */}
-                     <View style={styles.customHandle}>
-                        <View style={styles.handleIndicator} />
-                     </View>
+        // Handle end of playlist
+        if (nextIndex >= activePlaylist.length) {
+            if (repeatMode === 'all') {
+                // Loop back to beginning
+                nextIndex = 0;
+            } else {
+                // Stop playback at the end
+                if (sound) {
+                    await sound.pauseAsync();
+                    setIsPlaying(false);
+                }
+                return;
+            }
+        }
 
-                     <View style={styles.content}>
-                        <View style={styles.header}>
-                           <Text style={styles.title}>{title}</Text>
-                           <Text style={styles.subtitle}>{subtitle}</Text>
-                        </View>
+        // Don't navigate if it's the same track (only one in playlist)
+        if (nextIndex === currentTrackIndex && activePlaylist.length > 1) {
+            return;
+        }
 
-                        <View style={styles.artContainer}>
-                           <View style={styles.artWrapper}>
-                              <Image source={artworkUrl} style={styles.art} contentFit="cover" />
-                           </View>
-                        </View>
+        const nextTrack = activePlaylist[nextIndex];
 
-                        {/* Track position indicator */}
-                        <View style={styles.trackPosition}>
-                           <Text style={styles.trackPositionText}>
-                              {currentPlaylist.length > 0 ? `${currentTrackIndex + 1}/${currentPlaylist.length}` : '1/1'}
-                           </Text>
-                        </View>
+        // Stop current playback
+        if (sound) {
+            await sound.stopAsync();
+            await sound.unloadAsync();
+            setSound(null);
+        }
 
-                        {/* Sleep Timer Options Modal */}
-                        {showSleepTimerOptions && !showCustomTimerInput && (
-                           <View style={styles.sleepTimerModal}>
-                              <View style={styles.sleepTimerOptions}>
-                                 <Text style={styles.sleepTimerTitle}>Sleep Timer</Text>
-                                 <Text style={styles.sleepTimerSubtitle}>Stop playback after:</Text>
+        router.setParams({
+            id: nextTrack.id,
+            title: nextTrack.title,
+            subtitle: nextTrack.durationLabel,
+            soundUrl: nextTrack.soundUrl,
+            artworkUrl: nextTrack.artworkUrl || ART_URL,
+            moodId: nextTrack.moodId,
+            category: nextTrack.category,
+            ...(playlistParam && { playlist: playlistParam }),
+            ...(playlistParam && { currentIndex: nextIndex.toString() }),
+        });
 
-                                 <View style={styles.sleepTimerButtons}>
-                                    {SLEEP_TIMER_OPTIONS.map((minutes) => (
-                                       <Pressable
-                                          key={minutes}
-                                          onPress={() => selectSleepTimerDuration(minutes)}
-                                          style={({ pressed }) => [
-                                             styles.sleepTimerOption,
-                                             pressed && styles.sleepTimerOptionPressed
-                                          ]}
-                                       >
-                                          <Text style={styles.sleepTimerOptionText}>
-                                             {minutes} min
-                                          </Text>
-                                       </Pressable>
-                                    ))}
-                                 </View>
+        setCurrentTrackIndex(nextIndex);
+    }, [activePlaylist, currentTrackIndex, sound, playlistParam, repeatMode]);
 
-                                 {/* Custom Timer and Cancel buttons in same row */}
-                                 <View style={styles.sleepTimerBottomRow}>
-                                    <Pressable
-                                       onPress={() => setShowCustomTimerInput(true)}
-                                       style={({ pressed }) => [
-                                          styles.sleepTimerOption,
-                                          styles.sleepTimerCustomOption,
-                                          pressed && styles.sleepTimerOptionPressed
-                                       ]}
-                                    >
-                                       <View style={[styles.sleepTimerCustomText]}>
-                                          <Ionicons name="add" size={20} color={Colors.light.accent} style={{ marginRight: 8 }} />
-                                          <Text style={[styles.sleepTimerOptionText]}>
-                                             Custom
-                                          </Text>
-                                       </View>
-                                    </Pressable>
+    const handlePreviousTrack = useCallback(async () => {
+        await Haptics.selectionAsync();
 
-                                    <Pressable
-                                       onPress={() => setShowSleepTimerOptions(false)}
-                                       style={styles.sleepTimerCancelRight}
-                                    >
-                                       <Text style={styles.sleepTimerCancelText}>Cancel</Text>
-                                    </Pressable>
-                                 </View>
-                              </View>
-                           </View>
-                        )}
+        if (activePlaylist.length === 0) return;
 
-                        {/* Custom Timer Input Modal */}
-                        {showCustomTimerInput && (
-                           <View style={styles.sleepTimerModal}>
-                              <View style={styles.sleepTimerOptions}>
+        // Calculate previous track index
+        let prevIndex = currentTrackIndex - 1;
 
-                                 <View style={styles.customTimerInputContainer}>
-                                    <TextInput
-                                       style={styles.customTimerInput}
-                                       value={customMinutes}
-                                       onChangeText={setCustomMinutes}
-                                       placeholder="22"
-                                       placeholderTextColor="rgba(59, 130, 246, 0.5)"
-                                       keyboardType="number-pad"
-                                       maxLength={3}
-                                       autoFocus
-                                       selectionColor={Colors.light.accent}
-                                    />
-                                    <Text style={styles.customTimerLabel}>minutes</Text>
-                                 </View>
+        // Handle beginning of playlist
+        if (prevIndex < 0) {
+            if (repeatMode === 'all') {
+                // Loop to the end
+                prevIndex = activePlaylist.length - 1;
+            } else {
+                // Go to beginning of current track
+                if (sound) {
+                    await sound.setPositionAsync(0);
+                    setProgress(0);
+                }
+                return;
+            }
+        }
 
-                                 {/* Add this container to align the buttons properly */}
-                                 <View style={styles.customTimerButtonsContainer}>
-                                    <Pressable
-                                       onPress={handleCustomTimerSubmit}
-                                       style={({ pressed }) => [
-                                          styles.sleepTimerOption,
-                                          styles.sleepTimerCustomSubmit,
-                                          pressed && styles.sleepTimerOptionPressed,
-                                          (!customMinutes || parseInt(customMinutes) <= 0 || parseInt(customMinutes) > 240) &&
-                                          styles.sleepTimerCustomSubmitDisabled
-                                       ]}
-                                       disabled={!customMinutes || parseInt(customMinutes) <= 0 || parseInt(customMinutes) > 240}
-                                    >
-                                       <Text style={styles.sleepTimerOptionText}>
-                                          Set Timer
-                                       </Text>
-                                    </Pressable>
+        const prevTrack = activePlaylist[prevIndex];
 
-                                    <Pressable
-                                       onPress={() => setShowCustomTimerInput(false)}
-                                    >
-                                       <Text style={styles.sleepTimerCancelText}>Back</Text>
-                                    </Pressable>
-                                 </View>
-                              </View>
-                           </View>
-                        )}
+        // Stop current playback
+        if (sound) {
+            await sound.stopAsync();
+            await sound.unloadAsync();
+            setSound(null);
+        }
 
-                        <View style={styles.progressSection}>
-                           <View
-                              style={styles.progressTrack}
-                              onLayout={(event) => setSliderWidth(event.nativeEvent.layout.width)}
-                              {...panResponder.panHandlers}
-                           >
-                              <Animated.View style={[styles.progressFill, { width: progressPercentage }]} />
-                              <Animated.View
-                                 style={[
-                                    styles.progressThumb,
-                                    { transform: [{ translateX: progressPercentage }] },
-                                 ]}
-                              />
-                           </View>
-                           <View style={styles.progressLabels}>
-                              <Text style={styles.progressText}>{formatTime(progress)}</Text>
-                              <Text style={styles.progressText}>{formatTime(trackDuration)}</Text>
-                           </View>
-                        </View>
+        router.setParams({
+            id: prevTrack.id,
+            title: prevTrack.title,
+            subtitle: prevTrack.durationLabel,
+            soundUrl: prevTrack.soundUrl,
+            artworkUrl: prevTrack.artworkUrl || ART_URL,
+            moodId: prevTrack.moodId,
+            category: prevTrack.category,
+            ...(playlistParam && { playlist: playlistParam }),
+            ...(playlistParam && { currentIndex: prevIndex.toString() }),
+        });
 
-                        <View style={styles.controlsRow}>
-                           <Pressable onPress={() => { }}>
-                              {({ pressed }) => (
-                                 <View style={[
-                                    styles.iconButton,
-                                    pressed && styles.iconButtonPressed
-                                 ]}>
-                                    <Ionicons name="repeat" color={Colors.light.tabIconDefault} size={24} />
-                                    <Text style={styles.iconLabel}>Repeat</Text>
-                                 </View>
-                              )}
-                           </Pressable>
+        setCurrentTrackIndex(prevIndex);
+    }, [activePlaylist, currentTrackIndex, sound, playlistParam, repeatMode]);
 
-                           <Pressable onPress={handleSkipBack}>
-                              {({ pressed }) => (
-                                 <View style={[
-                                    styles.skipButton,
-                                    pressed && styles.skipButtonPressed
-                                 ]}>
-                                    <Ionicons name="play-skip-back" color={Colors.light.text} size={28} />
-                                 </View>
-                              )}
-                           </Pressable>
+    // Update the next track handler ref
+    useEffect(() => {
+        handleNextTrackRef.current = handleNextTrack;
+    }, [handleNextTrack]);
 
-                           <Pressable onPress={handlePlayToggle}>
-                              {({ pressed }) => (
-                                 <View style={[
-                                    styles.playButton,
-                                    pressed && styles.playButtonPressed
-                                 ]}>
-                                    {isPlaying ? (
-                                       <Ionicons name="pause" color={Colors.light.surface} size={32} />
-                                    ) : (
-                                       <Ionicons name="play" color={Colors.light.surface} size={32} />
-                                    )}
-                                 </View>
-                              )}
-                           </Pressable>
+    const handleSkipBack = useCallback(async () => {
+        if (!sound) return;
 
-                           <Pressable onPress={handleSkipForward}>
-                              {({ pressed }) => (
-                                 <View style={[
-                                    styles.skipButton,
-                                    pressed && styles.skipButtonPressed
-                                 ]}>
-                                    <Ionicons name="play-skip-forward" color={Colors.light.text} size={28} />
-                                 </View>
-                              )}
-                           </Pressable>
+        // If we're more than 3 seconds into the track, go to beginning
+        // Otherwise, go to previous track
+        if (progress > 3) {
+            // Skip to beginning of current track
+            await sound.setPositionAsync(0);
+            setProgress(0);
+        } else {
+            // Go to previous track
+            await handlePreviousTrack();
+        }
+    }, [progress, sound, handlePreviousTrack]);
 
-                           <Pressable onPress={() => { }}>
-                              {({ pressed }) => (
-                                 <View style={[
-                                    styles.iconButton,
-                                    pressed && styles.iconButtonPressed
-                                 ]}>
-                                    <Ionicons name="shuffle" color={Colors.light.tabIconDefault} size={24} />
-                                    <Text style={styles.iconLabel}>Shuffle</Text>
-                                 </View>
-                              )}
-                           </Pressable>
-                        </View>
+    const handleSkipForward = useCallback(async () => {
+        // Go to next track
+        await handleNextTrack();
+    }, [handleNextTrack]);
 
-                        <View style={styles.actionRow}>
-                           {/* Add to Favorites Button - NOW CONNECTED TO FAVORITES STORE */}
-                           <Pressable onPress={handleFavorite}>
-                              {({ pressed }) => (
-                                 <View style={[
-                                    styles.actionButton,
-                                    styles.actionButtonFavorite,
-                                    pressed && styles.actionButtonPressed,
-                                    sessionIsFavorite && styles.actionButtonActive
-                                 ]}>
-                                    <Ionicons
-                                       name={sessionIsFavorite ? "heart" : "heart-outline"}
-                                       color={sessionIsFavorite ? Colors.light.favorited2 : Colors.light.text}
-                                       size={18}
-                                    />
-                                    <Text style={[
-                                       styles.actionLabel,
-                                       sessionIsFavorite && styles.actionLabelActive
-                                    ]}>
-                                       {sessionIsFavorite ? "Remove favorite" : "Add to favorites"}
+    // Format time for sleep timer display
+    const formatSleepTimerTime = useCallback((seconds: number) => {
+        const minutes = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+
+        if (minutes > 0) {
+            return `${minutes}:${secs.toString().padStart(2, '0')}`;
+        }
+        return `${secs}s`;
+    }, []);
+
+    // Get sleep timer button text based on state
+    const getSleepTimerButtonText = useCallback(() => {
+        if (!sleepTimerActive || sleepTimerRemaining <= 0) {
+            return "Sleep timer";
+        }
+        return formatSleepTimerTime(sleepTimerRemaining);
+    }, [sleepTimerActive, sleepTimerRemaining, formatSleepTimerTime]);
+
+    // Get repeat button icon based on mode
+    const getRepeatIcon = useMemo(() => {
+        switch (repeatMode) {
+            case 'all':
+                return 'repeat';
+            case 'one':
+                return 'repeat';
+            default:
+                return 'repeat-outline';
+        }
+    }, [repeatMode]);
+
+    // Get repeat button color based on mode
+    const getRepeatColor = useMemo(() => {
+        switch (repeatMode) {
+            case 'all':
+                return Colors.light.accent;
+            case 'one':
+                return Colors.light.accent;
+            default:
+                return Colors.light.tabIconDefault;
+        }
+    }, [repeatMode]);
+
+    // Get shuffle button color based on state
+    const getShuffleColor = useMemo(() => {
+        return isShuffled ? Colors.light.accent : Colors.light.tabIconDefault;
+    }, [isShuffled]);
+
+    return (
+        <View style={styles.container}>
+            <BottomSheet
+                ref={sheetRef}
+                index={0}
+                snapPoints={snapPoints}
+                enablePanDownToClose
+                onClose={handleClose}
+                backdropComponent={renderBackdrop}
+                backgroundStyle={styles.background}
+                handleComponent={null} // ← Hide default handle
+            >
+                <BottomSheetView style={styles.sheetContent}>
+                    <LinearGradient
+                        colors={["#03040A", Colors.light.background]}
+                        style={styles.gradient}
+                    >
+                        <View style={styles.contentContainer}>
+                            {/* CUSTOM HANDLE - Added here */}
+                            <View style={styles.customHandle}>
+                                <View style={styles.handleIndicator} />
+                            </View>
+
+                            <View style={styles.content}>
+                                <View style={styles.header}>
+                                    <Text style={styles.title}>{title}</Text>
+                                    <Text style={styles.subtitle}>{subtitle}</Text>
+                                </View>
+
+                                <View style={styles.artContainer}>
+                                    <View style={styles.artWrapper}>
+                                        <Image source={artworkUrl} style={styles.art} contentFit="cover" />
+                                    </View>
+                                </View>
+
+                                {/* Track position indicator */}
+                                <View style={styles.trackPosition}>
+                                    <Text style={styles.trackPositionText}>
+                                        {activePlaylist.length > 0 ? `${currentTrackIndex + 1}/${activePlaylist.length}` : '1/1'}
+                                        {repeatMode === 'one' && ' (Repeat One)'}
+                                        {repeatMode === 'all' && ' (Repeat All)'}
                                     </Text>
-                                 </View>
-                              )}
-                           </Pressable>
+                                </View>
 
-                           {/* Sleep Timer Button - NOW SHOWS COUNTDOWN INSIDE */}
-                           <Pressable onPress={handleSleep}>
-                              {({ pressed }) => (
-                                 <View style={[
-                                    styles.actionButton,
-                                    styles.actionButtonSleep,
-                                    pressed && styles.actionButtonPressed,
-                                    sleepTimerActive && styles.actionButtonActive
-                                 ]}>
-                                    <Ionicons
-                                       name={sleepTimerActive ? "time" : "time-outline"}
-                                       color={sleepTimerActive ? Colors.light.accent : Colors.light.text}
-                                       size={18}
-                                    />
-                                    <Text style={[
-                                       styles.actionLabel,
-                                       sleepTimerActive && styles.actionLabelActive
-                                    ]}>
-                                       {getSleepTimerButtonText()}
-                                    </Text>
-                                    {sleepTimerActive && sleepTimerRemaining > 0 && (
-                                       <Ionicons
-                                          name="close-circle"
-                                          color={Colors.light.tabIconDefault}
-                                          size={16}
-                                          style={styles.sleepTimerCancelIcon}
-                                       />
-                                    )}
-                                 </View>
-                              )}
-                           </Pressable>
+                                {/* Sleep Timer Options Modal */}
+                                {showSleepTimerOptions && !showCustomTimerInput && (
+                                    <View style={styles.sleepTimerModal}>
+                                        <View style={styles.sleepTimerOptions}>
+                                            <Text style={styles.sleepTimerTitle}>Sleep Timer</Text>
+                                            <Text style={styles.sleepTimerSubtitle}>Stop playback after:</Text>
+
+                                            <View style={styles.sleepTimerButtons}>
+                                                {SLEEP_TIMER_OPTIONS.map((minutes) => (
+                                                    <Pressable
+                                                        key={minutes}
+                                                        onPress={() => selectSleepTimerDuration(minutes)}
+                                                        style={({ pressed }) => [
+                                                            styles.sleepTimerOption,
+                                                            pressed && styles.sleepTimerOptionPressed
+                                                        ]}
+                                                    >
+                                                        <Text style={styles.sleepTimerOptionText}>
+                                                            {minutes} min
+                                                        </Text>
+                                                    </Pressable>
+                                                ))}
+                                            </View>
+
+                                            {/* Custom Timer and Cancel buttons in same row */}
+                                            <View style={styles.sleepTimerBottomRow}>
+                                                <Pressable
+                                                    onPress={() => setShowCustomTimerInput(true)}
+                                                    style={({ pressed }) => [
+                                                        styles.sleepTimerOption,
+                                                        styles.sleepTimerCustomOption,
+                                                        pressed && styles.sleepTimerOptionPressed
+                                                    ]}
+                                                >
+                                                    <View style={[styles.sleepTimerCustomText]}>
+                                                        <Ionicons name="add" size={20} color={Colors.light.accent} style={{ marginRight: 8 }} />
+                                                        <Text style={[styles.sleepTimerOptionText]}>
+                                                            Custom
+                                                        </Text>
+                                                    </View>
+                                                </Pressable>
+
+                                                <Pressable
+                                                    onPress={() => setShowSleepTimerOptions(false)}
+                                                    style={styles.sleepTimerCancelRight}
+                                                >
+                                                    <Text style={styles.sleepTimerCancelText}>Cancel</Text>
+                                                </Pressable>
+                                            </View>
+                                        </View>
+                                    </View>
+                                )}
+
+                                {/* Custom Timer Input Modal */}
+                                {showCustomTimerInput && (
+                                    <View style={styles.sleepTimerModal}>
+                                        <View style={styles.sleepTimerOptions}>
+
+                                            <View style={styles.customTimerInputContainer}>
+                                                <TextInput
+                                                    style={styles.customTimerInput}
+                                                    value={customMinutes}
+                                                    onChangeText={setCustomMinutes}
+                                                    placeholder="22"
+                                                    placeholderTextColor="rgba(59, 130, 246, 0.5)"
+                                                    keyboardType="number-pad"
+                                                    maxLength={3}
+                                                    autoFocus
+                                                    selectionColor={Colors.light.accent}
+                                                />
+                                                <Text style={styles.customTimerLabel}>minutes</Text>
+                                            </View>
+
+                                            {/* Add this container to align the buttons properly */}
+                                            <View style={styles.customTimerButtonsContainer}>
+                                                <Pressable
+                                                    onPress={handleCustomTimerSubmit}
+                                                    style={({ pressed }) => [
+                                                        styles.sleepTimerOption,
+                                                        styles.sleepTimerCustomSubmit,
+                                                        pressed && styles.sleepTimerOptionPressed,
+                                                        (!customMinutes || parseInt(customMinutes) <= 0 || parseInt(customMinutes) > 240) &&
+                                                        styles.sleepTimerCustomSubmitDisabled
+                                                    ]}
+                                                    disabled={!customMinutes || parseInt(customMinutes) <= 0 || parseInt(customMinutes) > 240}
+                                                >
+                                                    <Text style={styles.sleepTimerOptionText}>
+                                                        Set Timer
+                                                    </Text>
+                                                </Pressable>
+
+                                                <Pressable
+                                                    onPress={() => setShowCustomTimerInput(false)}
+                                                >
+                                                    <Text style={styles.sleepTimerCancelText}>Back</Text>
+                                                </Pressable>
+                                            </View>
+                                        </View>
+                                    </View>
+                                )}
+
+                                <View style={styles.progressSection}>
+                                    <View
+                                        style={styles.progressTrack}
+                                        onLayout={(event) => setSliderWidth(event.nativeEvent.layout.width)}
+                                        {...panResponder.panHandlers}
+                                    >
+                                        <Animated.View style={[styles.progressFill, { width: progressPercentage }]} />
+                                        <Animated.View
+                                            style={[
+                                                styles.progressThumb,
+                                                { transform: [{ translateX: progressPercentage }] },
+                                            ]}
+                                        />
+                                    </View>
+                                    <View style={styles.progressLabels}>
+                                        <Text style={styles.progressText}>{formatTime(progress)}</Text>
+                                        <Text style={styles.progressText}>{formatTime(trackDuration)}</Text>
+                                    </View>
+                                </View>
+
+                                <View style={styles.controlsRow}>
+                                    {/* Repeat Button - NOW FUNCTIONAL */}
+                                    <Pressable onPress={handleRepeat}>
+                                        {({ pressed }) => (
+                                            <View style={[
+                                                styles.iconButton,
+                                                pressed && styles.iconButtonPressed
+                                            ]}>
+                                                <Ionicons
+                                                    name={getRepeatIcon}
+                                                    color={getRepeatColor}
+                                                    size={24}
+                                                />
+                                                <Text style={[
+                                                    styles.iconLabel,
+                                                    (repeatMode === 'all' || repeatMode === 'one') && { color: Colors.light.accent }
+                                                ]}>
+                                                    {repeatMode === 'one' ? 'Repeat One' : 'Repeat'}
+                                                </Text>
+                                            </View>
+                                        )}
+                                    </Pressable>
+
+                                    <Pressable onPress={handleSkipBack}>
+                                        {({ pressed }) => (
+                                            <View style={[
+                                                styles.skipButton,
+                                                pressed && styles.skipButtonPressed
+                                            ]}>
+                                                <Ionicons name="play-skip-back" color={Colors.light.text} size={28} />
+                                            </View>
+                                        )}
+                                    </Pressable>
+
+                                    <Pressable onPress={handlePlayToggle}>
+                                        {({ pressed }) => (
+                                            <View style={[
+                                                styles.playButton,
+                                                pressed && styles.playButtonPressed
+                                            ]}>
+                                                {isPlaying ? (
+                                                    <Ionicons name="pause" color={Colors.light.surface} size={32} />
+                                                ) : (
+                                                    <Ionicons name="play" color={Colors.light.surface} size={32} />
+                                                )}
+                                            </View>
+                                        )}
+                                    </Pressable>
+
+                                    <Pressable onPress={handleSkipForward}>
+                                        {({ pressed }) => (
+                                            <View style={[
+                                                styles.skipButton,
+                                                pressed && styles.skipButtonPressed
+                                            ]}>
+                                                <Ionicons name="play-skip-forward" color={Colors.light.text} size={28} />
+                                            </View>
+                                        )}
+                                    </Pressable>
+
+                                    {/* Shuffle Button - NOW FUNCTIONAL */}
+                                    <Pressable onPress={handleShuffle}>
+                                        {({ pressed }) => (
+                                            <View style={[
+                                                styles.iconButton,
+                                                pressed && styles.iconButtonPressed
+                                            ]}>
+                                                <Ionicons
+                                                    name={isShuffled ? "shuffle" : "shuffle-outline"}
+                                                    color={getShuffleColor}
+                                                    size={24}
+                                                />
+                                                <Text style={[
+                                                    styles.iconLabel,
+                                                    isShuffled && { color: Colors.light.accent }
+                                                ]}>
+                                                    Shuffle
+                                                </Text>
+                                            </View>
+                                        )}
+                                    </Pressable>
+                                </View>
+
+                                <View style={styles.actionRow}>
+                                    {/* Add to Favorites Button - NOW CONNECTED TO FAVORITES STORE */}
+                                    <Pressable onPress={handleFavorite}>
+                                        {({ pressed }) => (
+                                            <View style={[
+                                                styles.actionButton,
+                                                styles.actionButtonFavorite,
+                                                pressed && styles.actionButtonPressed,
+                                                sessionIsFavorite && styles.actionButtonActive
+                                            ]}>
+                                                <Ionicons
+                                                    name={sessionIsFavorite ? "heart" : "heart-outline"}
+                                                    color={sessionIsFavorite ? Colors.light.favorited2 : Colors.light.text}
+                                                    size={18}
+                                                />
+                                                <Text style={[
+                                                    styles.actionLabel,
+                                                    sessionIsFavorite && styles.actionLabelActive
+                                                ]}>
+                                                    {sessionIsFavorite ? "Remove favorite" : "Add to favorites"}
+                                                </Text>
+                                            </View>
+                                        )}
+                                    </Pressable>
+
+                                    {/* Sleep Timer Button - NOW SHOWS COUNTDOWN INSIDE */}
+                                    <Pressable onPress={handleSleep}>
+                                        {({ pressed }) => (
+                                            <View style={[
+                                                styles.actionButton,
+                                                styles.actionButtonSleep,
+                                                pressed && styles.actionButtonPressed,
+                                                sleepTimerActive && styles.actionButtonActive
+                                            ]}>
+                                                <Ionicons
+                                                    name={sleepTimerActive ? "time" : "time-outline"}
+                                                    color={sleepTimerActive ? Colors.light.accent : Colors.light.text}
+                                                    size={18}
+                                                />
+                                                <Text style={[
+                                                    styles.actionLabel,
+                                                    sleepTimerActive && styles.actionLabelActive
+                                                ]}>
+                                                    {getSleepTimerButtonText()}
+                                                </Text>
+                                                {sleepTimerActive && sleepTimerRemaining > 0 && (
+                                                    <Ionicons
+                                                        name="close-circle"
+                                                        color={Colors.light.tabIconDefault}
+                                                        size={16}
+                                                        style={styles.sleepTimerCancelIcon}
+                                                    />
+                                                )}
+                                            </View>
+                                        )}
+                                    </Pressable>
+                                </View>
+                            </View>
                         </View>
-                     </View>
-                  </View>
-               </LinearGradient>
-            </BottomSheetView>
-         </BottomSheet>
-      </View>
-   );
+                    </LinearGradient>
+                </BottomSheetView>
+            </BottomSheet>
+        </View>
+    );
 }
 
 function formatTime(totalSeconds: number) {
-   const minutes = Math.floor(totalSeconds / 60)
-      .toString()
-      .padStart(2, "0");
-   const seconds = Math.floor(totalSeconds % 60)
-      .toString()
-      .padStart(2, "0");
-   return `${minutes}:${seconds}`;
+    const minutes = Math.floor(totalSeconds / 60)
+        .toString()
+        .padStart(2, "0");
+    const seconds = Math.floor(totalSeconds % 60)
+        .toString()
+        .padStart(2, "0");
+    return `${minutes}:${seconds}`;
 }
