@@ -12,7 +12,10 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.magmarion.serenity",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "UIBackgroundModes": [
+          "audio"
+        ]
       }
     },
     "android": {
@@ -24,7 +27,8 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.magmarion.serenity"
+      "package": "com.magmarion.serenity",
+      "permissions": []
     },
     "web": {
       "bundler": "metro",
