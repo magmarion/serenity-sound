@@ -550,12 +550,12 @@ function ProfileScreen() {
                                             contentFit="cover"
                                         />
                                     ) : (
-                                        <Ionicons name="person" size={32} color="#1C1208" />
+                                        <Ionicons name="person" size={100} color="#1C1208" />
                                     )}
                                 </View>
 
                                 <View style={styles.avatarBadge}>
-                                    <Ionicons name="camera" size={14} color="#1C1208" />
+                                    <Ionicons name="camera" size={32} color="#1C1208" />
                                 </View>
                             </View>
                         </Pressable>
