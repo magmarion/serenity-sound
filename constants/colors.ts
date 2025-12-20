@@ -23,6 +23,7 @@ export default {
     background: "#05060A",
     accent: accent,
     favorited: "#EF4444",
+    favorited2: accent,
     tabIconDefault: "#F4F4F4",
     tabIconSelected: accent,
     surface: charcoal,

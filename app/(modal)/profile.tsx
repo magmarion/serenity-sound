@@ -252,14 +252,6 @@ function ProfileScreen() {
                         contentContainerStyle={styles.authContainer}
                         showsVerticalScrollIndicator={false}
                     >
-                        <View style={styles.avatarBlock} testID="profile/avatarBlock">
-                            <View style={styles.avatarCircle} testID="profile/avatar">
-                                <View style={styles.avatarInner}>
-                                    <Ionicons name="person" size={32} color="#1C1208" />
-                                </View>
-                            </View>
-                        </View>
-
                         <Text style={styles.authTitle}>
                             {mode === "signin" ? "Sign in" : "Create Account"}
                         </Text>
