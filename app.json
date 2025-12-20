@@ -28,9 +28,7 @@
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "package": "com.magmarion.serenity",
-      "permissions": [
-        "WAKE_LOCK"
-      ]
+      "permissions": []
     },
     "web": {
       "bundler": "metro",

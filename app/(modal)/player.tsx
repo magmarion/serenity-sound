@@ -3,7 +3,7 @@ import Colors from "@/constants/colors";
 import { useFavoritesStore } from '@/store/favoritesStore';
 import { Ionicons } from '@expo/vector-icons';
 import BottomSheet, { BottomSheetBackdrop, BottomSheetView } from "@gorhom/bottom-sheet";
-import { Audio, InterruptionModeIOS, InterruptionModeAndroid } from "expo-av";
+import { Audio } from "expo-av";
 import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
@@ -98,11 +98,11 @@ export default function PlayerSheet() {
 
             await Audio.setAudioModeAsync({
                allowsRecordingIOS: false,
-               staysActiveInBackground: true,
                playsInSilentModeIOS: true,
                shouldDuckAndroid: true,
                playThroughEarpieceAndroid: false,
             });
+
 
             if (sound) {
                await sound.unloadAsync();
@@ -278,22 +278,25 @@ export default function PlayerSheet() {
    }, [progress, trackDuration, progressAnim]);
 
    useEffect(() => {
-      const configureAudioForBackground = async () => {
+      const configureAudioForSilentMode = async () => {
          try {
+            // ONLY configure audio for silent mode - no background tasks
             await Audio.setAudioModeAsync({
                allowsRecordingIOS: false,
-               staysActiveInBackground: true,
                playsInSilentModeIOS: true,
-               interruptionModeIOS: InterruptionModeIOS.DuckOthers, // Use the imported constant
                shouldDuckAndroid: true,
                playThroughEarpieceAndroid: false,
             });
+
+            console.log('Audio configured for silent mode playback');
          } catch (error) {
-            console.error("Failed to set audio mode:", error);
+            console.error('Audio setup failed:', error);
          }
       };
-      configureAudioForBackground();
+
+      configureAudioForSilentMode();
    }, []);
+
    const handlePlayToggle = useCallback(async () => {
       await Haptics.selectionAsync();
       if (!sound) return;
