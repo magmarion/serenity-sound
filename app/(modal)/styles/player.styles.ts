@@ -342,4 +342,14 @@ export const playerStyles = StyleSheet.create({
       fontSize: 18,
       opacity: 0.8,
    },
+   // Add to your existing player.styles.ts
+   trackPosition: {
+      alignItems: 'center',
+      marginTop: 8,
+   },
+   trackPositionText: {
+      fontSize: 12,
+      color: Colors.light.tabIconDefault,
+      opacity: 0.7,
+   },
 });
