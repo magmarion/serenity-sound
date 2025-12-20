@@ -1,15 +1,15 @@
 // app/(modal)/player.tsx
+import Colors from "@/constants/colors";
 import { useFavoritesStore } from '@/store/favoritesStore';
-import { LinearGradient } from "expo-linear-gradient";
+import { Ionicons } from '@expo/vector-icons';
+import BottomSheet, { BottomSheetBackdrop, BottomSheetView } from "@gorhom/bottom-sheet";
+import { Audio, InterruptionModeIOS, InterruptionModeAndroid } from "expo-av";
 import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Animated, Dimensions, PanResponder, Pressable, StyleSheet, Text, View, TextInput } from "react-native";
-import BottomSheet, { BottomSheetBackdrop, BottomSheetView } from "@gorhom/bottom-sheet";
+import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
-import { Ionicons } from '@expo/vector-icons';
-import { Audio } from "expo-av";
-import Colors from "@/constants/colors";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Animated, Dimensions, PanResponder, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
 const ART_URL = "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80";
 const DEFAULT_SOUND_URL = "https://orangefreesounds.com/wp-content/uploads/2022/08/Rain-and-thunder-with-ocean-waves-sound-effect.mp3";
@@ -95,6 +95,14 @@ export default function PlayerSheet() {
       const loadSound = async () => {
          try {
             console.log("Loading sound from:", soundUrl);
+
+            await Audio.setAudioModeAsync({
+               allowsRecordingIOS: false,
+               staysActiveInBackground: true,
+               playsInSilentModeIOS: true,
+               shouldDuckAndroid: true,
+               playThroughEarpieceAndroid: false,
+            });
 
             if (sound) {
                await sound.unloadAsync();
@@ -269,6 +277,23 @@ export default function PlayerSheet() {
       }
    }, [progress, trackDuration, progressAnim]);
 
+   useEffect(() => {
+      const configureAudioForBackground = async () => {
+         try {
+            await Audio.setAudioModeAsync({
+               allowsRecordingIOS: false,
+               staysActiveInBackground: true,
+               playsInSilentModeIOS: true,
+               interruptionModeIOS: InterruptionModeIOS.DuckOthers, // Use the imported constant
+               shouldDuckAndroid: true,
+               playThroughEarpieceAndroid: false,
+            });
+         } catch (error) {
+            console.error("Failed to set audio mode:", error);
+         }
+      };
+      configureAudioForBackground();
+   }, []);
    const handlePlayToggle = useCallback(async () => {
       await Haptics.selectionAsync();
       if (!sound) return;
