@@ -2,9 +2,10 @@
 import { homeStyles as styles } from './styles/home.styles';
 import { Avatar } from "@/components/Avatar";
 import Colors from "@/constants/colors";
-import { fetchSoundEffects } from "@/services/api";
+import { fetchSoundEffects, Session } from "@/services/api";
 import { useAuthStore } from "@/store/auth-store";
 import { useFavoritesStore } from "@/store/favoritesStore";
+import { createPlaylist, findSessionIndex } from "@/utils/playlistHelper";
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
@@ -12,6 +13,9 @@ import { router } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View, } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+
+const ART_URL = "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80";
+const DEFAULT_SOUND_URL = "https://orangefreesounds.com/wp-content/uploads/2022/08/Rain-and-thunder-with-ocean-waves-sound-effect.mp3";
 
 type MoodCard = {
     id: string;
@@ -21,20 +25,6 @@ type MoodCard = {
     accent: string;
     icon: keyof typeof Ionicons.glyphMap;
 };
-
-type Session = {
-    id: string;
-    title: string;
-    durationLabel: string;
-    moodId: string;
-    category: string;
-    soundUrl?: string;
-    duration?: number;
-    artworkUrl?: string;
-};
-
-const ART_URL = "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80";
-const DEFAULT_SOUND_URL = "https://orangefreesounds.com/wp-content/uploads/2022/08/Rain-and-thunder-with-ocean-waves-sound-effect.mp3";
 
 const MOODS: MoodCard[] = [
     {
@@ -150,8 +140,34 @@ function HomeContent() {
     };
 
     const openPlayerForSession = (session: Session) => {
-        const soundUrl = session.soundUrl || DEFAULT_SOUND_URL;
-        const artworkUrl = session.artworkUrl || ART_URL;
+        const soundUrl = session.soundUrl;
+        const artworkUrl = session.artworkUrl;
+
+        // Create playlist from all sessions
+        const playlist = createPlaylist(sessions);
+
+        // Find session index in the playlist
+        const currentIndex = findSessionIndex(playlist, session.id);
+
+        // If session not found in playlist (shouldn't happen but just in case)
+        if (currentIndex === -1) {
+            console.warn(`Session ${session.id} not found in playlist, using default`);
+            router.push({
+                pathname: '/(modal)/player',
+                params: {
+                    id: session.id,
+                    moodId: session.moodId,
+                    category: session.category,
+                    soundUrl: soundUrl || DEFAULT_SOUND_URL,
+                    title: session.title || 'Sound',
+                    subtitle: session.durationLabel || '3 min • Ambient',
+                    artworkUrl: artworkUrl || ART_URL,
+                },
+            });
+            return;
+        }
+
+        console.log(`Opening player: ${session.title}, index: ${currentIndex + 1}/${playlist.length}`);
 
         router.push({
             pathname: '/(modal)/player',
@@ -159,10 +175,12 @@ function HomeContent() {
                 id: session.id,
                 moodId: session.moodId,
                 category: session.category,
-                soundUrl: soundUrl,
+                soundUrl: soundUrl || DEFAULT_SOUND_URL,
                 title: session.title || 'Sound',
                 subtitle: session.durationLabel || '3 min • Ambient',
-                artworkUrl: artworkUrl,
+                artworkUrl: artworkUrl || ART_URL,
+                playlist: JSON.stringify(playlist),
+                currentIndex: currentIndex.toString(),
             },
         });
     };

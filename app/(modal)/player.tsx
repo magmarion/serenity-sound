@@ -9,7 +9,7 @@ import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Animated, Dimensions, PanResponder, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Animated, Dimensions, PanResponder, Pressable, Text, TextInput, View } from "react-native";
 import { playerStyles as styles } from "./styles/player.styles";
 
 const ART_URL = "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80";
@@ -19,6 +19,18 @@ const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 // Sleep timer options in minutes
 const SLEEP_TIMER_OPTIONS = [5, 10, 15, 30];
+
+// Session interface
+interface Session {
+   id: string;
+   title: string;
+   durationLabel: string;
+   duration: number;
+   moodId: string;
+   category: string;
+   soundUrl: string;
+   artworkUrl?: string;
+}
 
 export default function PlayerSheet() {
    const params = useLocalSearchParams();
@@ -31,6 +43,14 @@ export default function PlayerSheet() {
    const artworkUrl = (params.artworkUrl as string) || ART_URL;
    const moodId = (params.moodId as string) || "calm";
    const category = (params.category as string) || "Calm & Nature";
+
+   // Parse playlist from params if available
+   const playlistParam = params.playlist as string;
+   const initialIndex = params.currentIndex ? parseInt(params.currentIndex as string) : 0;
+
+   // State for playlist navigation
+   const [currentPlaylist, setCurrentPlaylist] = useState<Session[]>([]);
+   const [currentTrackIndex, setCurrentTrackIndex] = useState<number>(initialIndex);
 
    // Use the favorites store
    const { isFavorite, toggleFavorite } = useFavoritesStore();
@@ -88,6 +108,49 @@ export default function PlayerSheet() {
       }
    }, [subtitle]);
 
+   // Setup playlist from params or fetch based on mood
+   useEffect(() => {
+      const setupPlaylist = async () => {
+         try {
+            if (playlistParam) {
+               // If playlist was passed as a parameter
+               const parsedPlaylist = JSON.parse(playlistParam);
+               setCurrentPlaylist(parsedPlaylist);
+
+               // Find the current track in the playlist
+               const index = parsedPlaylist.findIndex((track: Session) => track.id === sessionId);
+               if (index !== -1) {
+                  setCurrentTrackIndex(index);
+               }
+            } else {
+               // Try to fetch playlist based on mood
+               const { fetchSoundEffects } = await import('@/services/api');
+               const playlist = await fetchSoundEffects(moodId);
+
+               // Find current track index in the playlist
+               const currentIndex = playlist.findIndex(track => track.id === sessionId);
+
+               // If current track is found in playlist, use that playlist
+               if (currentIndex !== -1) {
+                  setCurrentPlaylist(playlist);
+                  setCurrentTrackIndex(currentIndex);
+               } else {
+                  // If current track not in playlist (e.g., from favorites), create a playlist with just this track
+                  setCurrentPlaylist([session]);
+                  setCurrentTrackIndex(0);
+               }
+            }
+         } catch (error) {
+            console.error('Error setting up playlist:', error);
+            // Fallback: use just the current session
+            setCurrentPlaylist([session]);
+            setCurrentTrackIndex(0);
+         }
+      };
+
+      setupPlaylist();
+   }, [playlistParam, sessionId, moodId, session]);
+
    // Load and manage audio
    useEffect(() => {
       let mounted = true;
@@ -103,7 +166,6 @@ export default function PlayerSheet() {
                shouldDuckAndroid: true,
                playThroughEarpieceAndroid: false,
             });
-
 
             if (sound) {
                await sound.unloadAsync();
@@ -135,8 +197,8 @@ export default function PlayerSheet() {
                   setIsPlaying(status.isPlaying);
 
                   if (status.didJustFinish) {
-                     loadedSound.setPositionAsync(0);
-                     loadedSound.pauseAsync();
+                     // Auto-play next track when current finishes
+                     handleNextTrack();
                   }
                }
             });
@@ -318,7 +380,6 @@ export default function PlayerSheet() {
 
    const handleFavorite = useCallback(async () => {
       await Haptics.selectionAsync();
-      // Use the favorites store instead of local state
       toggleFavorite(session);
    }, [session, toggleFavorite]);
 
@@ -326,10 +387,8 @@ export default function PlayerSheet() {
       await Haptics.selectionAsync();
 
       if (sleepTimerActive) {
-         // If timer is active, turn it off
          clearSleepTimer();
       } else {
-         // If timer is not active, show options
          setShowSleepTimerOptions(true);
       }
    }, [sleepTimerActive, clearSleepTimer]);
@@ -357,7 +416,6 @@ export default function PlayerSheet() {
          setShowCustomTimerInput(false);
          setCustomMinutes("");
 
-         // Start countdown immediately
          setSleepTimerRemaining(minutes * 60);
       }
    }, [customMinutes]);
@@ -389,28 +447,97 @@ export default function PlayerSheet() {
       return (progress / trackDuration) * sliderWidth;
    }, [progress, sliderWidth, trackDuration]);
 
+   // Next/Previous track functionality
+   const handleNextTrack = useCallback(async () => {
+      await Haptics.selectionAsync();
+
+      if (currentPlaylist.length === 0) return;
+
+      // Calculate next track index (loop to beginning if at end)
+      const nextIndex = (currentTrackIndex + 1) % currentPlaylist.length;
+
+      // Don't navigate if it's the same track (only one in playlist)
+      if (nextIndex === currentTrackIndex && currentPlaylist.length > 1) {
+         return;
+      }
+
+      const nextTrack = currentPlaylist[nextIndex];
+
+      // Stop current playback
+      if (sound) {
+         await sound.stopAsync();
+         await sound.unloadAsync();
+         setSound(null);
+      }
+
+      router.setParams({
+         id: nextTrack.id,
+         title: nextTrack.title,
+         subtitle: nextTrack.durationLabel,
+         soundUrl: nextTrack.soundUrl,
+         artworkUrl: nextTrack.artworkUrl || ART_URL,
+         moodId: nextTrack.moodId,
+         category: nextTrack.category,
+         ...(playlistParam && { playlist: playlistParam }),
+         ...(playlistParam && { currentIndex: nextIndex.toString() }),
+      });
+
+      setCurrentTrackIndex(nextIndex);
+   }, [currentPlaylist, currentTrackIndex, sound, playlistParam]);
+
+   const handlePreviousTrack = useCallback(async () => {
+      await Haptics.selectionAsync();
+
+      if (currentPlaylist.length === 0) return;
+
+      // Calculate previous track index (loop to end if at beginning)
+      const prevIndex = currentTrackIndex === 0
+         ? currentPlaylist.length - 1
+         : currentTrackIndex - 1;
+
+      // Don't navigate if it's the same track (only one in playlist)
+      if (prevIndex === currentTrackIndex && currentPlaylist.length > 1) {
+         return;
+      }
+
+      const prevTrack = currentPlaylist[prevIndex];
+
+      // Stop current playback
+      if (sound) {
+         await sound.stopAsync();
+         await sound.unloadAsync();
+         setSound(null);
+      }
+
+      router.setParams({
+         id: prevTrack.id,
+         title: prevTrack.title,
+         subtitle: prevTrack.durationLabel,
+         soundUrl: prevTrack.soundUrl,
+         artworkUrl: prevTrack.artworkUrl || ART_URL,
+         moodId: prevTrack.moodId,
+         category: prevTrack.category,
+         ...(playlistParam && { playlist: playlistParam }),
+         ...(playlistParam && { currentIndex: prevIndex.toString() }),
+      });
+
+      setCurrentTrackIndex(prevIndex);
+   }, [currentPlaylist, currentTrackIndex, sound, playlistParam]);
+
    const handleSkipBack = useCallback(async () => {
       if (!sound) return;
-      const status = await sound.getStatusAsync();
-      if (status.isLoaded) {
-         const newPosition = Math.max(0, status.positionMillis - 10000);
-         sound.setPositionAsync(newPosition);
+      if (progress > 3) {
+         await sound.setPositionAsync(0);
+         setProgress(0);
+      } else {
+         await handlePreviousTrack();
       }
-   }, [sound]);
+   }, [progress, sound, handlePreviousTrack]);
 
    const handleSkipForward = useCallback(async () => {
-      if (!sound) return;
-      const status = await sound.getStatusAsync();
-      if (status.isLoaded) {
-         const newPosition = Math.min(
-            trackDuration * 1000,
-            status.positionMillis + 10000
-         );
-         sound.setPositionAsync(newPosition);
-      }
-   }, [sound, trackDuration]);
+      await handleNextTrack();
+   }, [handleNextTrack]);
 
-   // Format time for sleep timer display
    const formatSleepTimerTime = useCallback((seconds: number) => {
       const minutes = Math.floor(seconds / 60);
       const secs = seconds % 60;
@@ -462,6 +589,13 @@ export default function PlayerSheet() {
                            <View style={styles.artWrapper}>
                               <Image source={artworkUrl} style={styles.art} contentFit="cover" />
                            </View>
+                        </View>
+
+                        {/* Track position indicator */}
+                        <View style={styles.trackPosition}>
+                           <Text style={styles.trackPositionText}>
+                              {currentPlaylist.length > 0 ? `${currentTrackIndex + 1}/${currentPlaylist.length}` : '1/1'}
+                           </Text>
                         </View>
 
                         {/* Sleep Timer Options Modal */}
