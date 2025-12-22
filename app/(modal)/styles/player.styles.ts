@@ -114,8 +114,10 @@ export const playerStyles = StyleSheet.create({
    iconButton: {
       alignItems: "center",
       gap: 4,
-      padding: 8,
+      paddingVertical: 8,
+      paddingHorizontal: 8,
       minWidth: 50,
+      minHeight: 44,
    },
    iconButtonPressed: {
       opacity: 0.6,

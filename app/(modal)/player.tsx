@@ -756,6 +756,8 @@ export default function PlayerSheet() {
                                                     <Pressable
                                                         key={minutes}
                                                         onPress={() => selectSleepTimerDuration(minutes)}
+                                                        accessibilityRole="button"
+                                                        accessibilityLabel={`Set sleep timer for ${minutes} minutes`}
                                                         style={({ pressed }) => [
                                                             styles.sleepTimerOption,
                                                             pressed && styles.sleepTimerOptionPressed
@@ -772,6 +774,7 @@ export default function PlayerSheet() {
                                             <View style={styles.sleepTimerBottomRow}>
                                                 <Pressable
                                                     onPress={() => setShowCustomTimerInput(true)}
+                                                    accessibilityRole="button"
                                                     style={({ pressed }) => [
                                                         styles.sleepTimerOption,
                                                         styles.sleepTimerCustomOption,
@@ -789,6 +792,8 @@ export default function PlayerSheet() {
                                                 <Pressable
                                                     onPress={() => setShowSleepTimerOptions(false)}
                                                     style={styles.sleepTimerCancelRight}
+                                                    accessibilityRole="button"
+                                                    accessibilityLabel="Cancel sleep timer"
                                                 >
                                                     <Text style={styles.sleepTimerCancelText}>Cancel</Text>
                                                 </Pressable>
@@ -807,14 +812,15 @@ export default function PlayerSheet() {
                                                     style={styles.customTimerInput}
                                                     value={customMinutes}
                                                     onChangeText={setCustomMinutes}
-                                                    placeholder="22"
+                                                    accessibilityLabel="Custom sleep timer duration"
+                                                    accessibilityHint="Enter number of minutes"
+                                                    placeholder="00"
                                                     placeholderTextColor="rgba(59, 130, 246, 0.5)"
                                                     keyboardType="number-pad"
                                                     maxLength={3}
                                                     autoFocus
                                                     selectionColor={Colors.light.accent}
                                                 />
-                                                <Text style={styles.customTimerLabel}>minutes</Text>
                                             </View>
 
                                             {/* Add this container to align the buttons properly */}
@@ -866,8 +872,19 @@ export default function PlayerSheet() {
                                 </View>
 
                                 <View style={styles.controlsRow}>
-                                    {/* Repeat Button - NOW FUNCTIONAL */}
-                                    <Pressable onPress={handleRepeat}>
+                                    {/* Repeat Button */}
+                                    <Pressable
+                                        onPress={handleRepeat}
+                                        accessibilityRole="button"
+                                        accessibilityLabel={
+                                            repeatMode === "off"
+                                                ? "Enable repeat"
+                                                : repeatMode === "all"
+                                                    ? "Enable repeat one"
+                                                    : "Disable repeat"
+                                        }
+                                        accessibilityState={{ selected: repeatMode !== "off" }}
+                                    >
                                         {({ pressed }) => (
                                             <View style={[
                                                 styles.iconButton,
@@ -888,7 +905,12 @@ export default function PlayerSheet() {
                                         )}
                                     </Pressable>
 
-                                    <Pressable onPress={handleSkipBack}>
+                                    <Pressable
+                                        onPress={handleSkipBack}
+                                        accessibilityRole="button"
+                                        accessibilityLabel="Previous track"
+                                        accessibilityHint="Plays the previous sound"
+                                    >
                                         {({ pressed }) => (
                                             <View style={[
                                                 styles.skipButton,
@@ -899,7 +921,12 @@ export default function PlayerSheet() {
                                         )}
                                     </Pressable>
 
-                                    <Pressable onPress={handlePlayToggle}>
+                                    <Pressable
+                                        onPress={handlePlayToggle}
+                                        accessibilityRole="button"
+                                        accessibilityLabel={isPlaying ? "Pause playback" : "Play audio"}
+                                        accessibilityHint="Controls audio playback"
+                                    >
                                         {({ pressed }) => (
                                             <View style={[
                                                 styles.playButton,
@@ -914,7 +941,12 @@ export default function PlayerSheet() {
                                         )}
                                     </Pressable>
 
-                                    <Pressable onPress={handleSkipForward}>
+                                    <Pressable
+                                        onPress={handleSkipForward}
+                                        accessibilityRole="button"
+                                        accessibilityLabel="Next track"
+                                        accessibilityHint="Plays the next sound"
+                                    >
                                         {({ pressed }) => (
                                             <View style={[
                                                 styles.skipButton,
@@ -926,7 +958,12 @@ export default function PlayerSheet() {
                                     </Pressable>
 
                                     {/* Shuffle Button - NOW FUNCTIONAL */}
-                                    <Pressable onPress={handleShuffle}>
+                                    <Pressable
+                                        onPress={handleShuffle}
+                                        accessibilityRole="button"
+                                        accessibilityLabel={isShuffled ? "Disable shuffle" : "Enable shuffle"}
+                                        accessibilityState={{ selected: isShuffled }}
+                                    >
                                         {({ pressed }) => (
                                             <View style={[
                                                 styles.iconButton,
@@ -949,8 +986,17 @@ export default function PlayerSheet() {
                                 </View>
 
                                 <View style={styles.actionRow}>
-                                    {/* Add to Favorites Button - NOW CONNECTED TO FAVORITES STORE */}
-                                    <Pressable onPress={handleFavorite}>
+                                    {/* Add to Favorites Button */}
+                                    <Pressable
+                                        onPress={handleFavorite}
+                                        accessibilityRole="button"
+                                        accessibilityLabel={
+                                            sessionIsFavorite
+                                                ? "Remove from favorites"
+                                                : "Add to favorites"
+                                        }
+                                        accessibilityState={{ selected: sessionIsFavorite }}
+                                    >
                                         {({ pressed }) => (
                                             <View style={[
                                                 styles.actionButton,
@@ -974,7 +1020,15 @@ export default function PlayerSheet() {
                                     </Pressable>
 
                                     {/* Sleep Timer Button - NOW SHOWS COUNTDOWN INSIDE */}
-                                    <Pressable onPress={handleSleep}>
+                                    <Pressable
+                                        onPress={handleSleep}
+                                        accessibilityRole="button"
+                                        accessibilityLabel={
+                                            sleepTimerActive
+                                                ? `Sleep timer active, ${getSleepTimerButtonText()} remaining`
+                                                : "Set sleep timer"
+                                        }
+                                    >
                                         {({ pressed }) => (
                                             <View style={[
                                                 styles.actionButton,

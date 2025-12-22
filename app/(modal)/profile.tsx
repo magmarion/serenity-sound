@@ -480,6 +480,12 @@ function ProfileScreen() {
                                 </Text>
                                 <Pressable
                                     onPress={() => setMode(mode === "signin" ? "signup" : "signin")}
+                                    accessibilityRole="button"
+                                    accessibilityLabel={
+                                        mode === "signin"
+                                            ? "Switch to sign up"
+                                            : "Switch to sign in"
+                                    }
                                 >
                                     <Text style={styles.modeSwitchLink}>
                                         {mode === "signin" ? "Sign up" : "Sign in"}
@@ -540,7 +546,12 @@ function ProfileScreen() {
                     keyboardDismissMode="interactive"
                 >
                     <View style={styles.avatarBlock}>
-                        <Pressable onPress={handleChangeAvatar}>
+                        <Pressable
+                            onPress={handleChangeAvatar}
+                            accessibilityRole="button"
+                            accessibilityLabel="Change profile photo"
+                            accessibilityHint="Opens options to update your profile picture"
+                        >
                             <View style={styles.avatarCircle}>
                                 <View style={styles.avatarInner}>
                                     {profile?.photoURL ? (
@@ -662,6 +673,9 @@ function ProfileScreen() {
                             onPress={() => console.log("Change password pressed")}
                             style={styles.securityRowContainer}
                             testID="profile/changePassword"
+                            accessibilityRole="button"
+                            accessibilityLabel="Change password"
+                            accessibilityHint="Opens password change screen"
                         >
                             <View style={[
                                 styles.securityRow,
@@ -702,6 +716,7 @@ function ProfileScreen() {
                         style={styles.primaryButtonContainer}
                         testID="profile/save"
                         accessibilityRole="button"
+                        accessibilityLabel="Save profile changes"
                     >
                         <View style={[
                             styles.primaryButton,
@@ -718,6 +733,8 @@ function ProfileScreen() {
                         style={styles.secondaryButtonContainer}
                         testID="profile/signout"
                         accessibilityRole="button"
+                        accessibilityLabel="Sign out"
+                        accessibilityHint="Logs you out of your account"
                     >
                         <View style={[
                             styles.secondaryButton,

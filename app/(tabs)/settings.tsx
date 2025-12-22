@@ -172,6 +172,9 @@ function SettingsScreen() {
           onPressIn={handlePressIn}
           onPressOut={handlePressOut}
           android_ripple={{ color: "rgba(255,255,255,0.04)" }}
+          accessibilityRole="button"
+          accessibilityLabel={row.label}
+          accessibilityHint={`Opens ${row.label.toLowerCase()} settings`}
         >
           <View style={[
             styles.rowContent,
