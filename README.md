@@ -39,36 +39,54 @@ SerenitySound1 är en app som hjälper användare att slappna av, få fokus elle
 
 Planering och Research
 
-- [x] Målgruppsanalys.
-- [x] Backlog i projekthanteringsverktyg.
+- [x] Målgruppsanalys genomförd.
+- [x] Backlog skapad och använd i projekthanteringsverktyg.
 
 Design & Prototyping
-- [x] Wireframes i Figma
-- [x] Prototyp skapad i Figma
-- [x] Responsiv design för minst två skärmstorlekar
-- [x] Följer WCAG 2.1-standarder
+- [x] Wireframes skapade i Figma
+- [x] Interaktiv prototyp skapad i Figma
+- [x] Responsiv design verifierad för minst två skärmstorlekar
+- [x] WCAG 2.1 beaktad och testad i designfasen
 
 Applikationsutveckling
-- [x] Utvecklad med [React Native/Expo] 
-- [x] Databas: [Firebase] 
-- [x] State-hantering implementerad.
-- [ ] Semantisk HTML och WCAG 2.1-standarder följda.
-- [x] Responsiv design för mobil och padda.
-- [x] Git och GitHub används för versionshantering.
-- [x] 2-3 sidor med abstract, tech stack, och dokumentation av arbetsprocess.
-- [x] Appen är hostat.
-- [ ] Fri från tekniska fel, konsekvent design, och obruten navigation.
+- [x] Utvecklad i React Native med TypeScript och Expo
+- [x] Databas och autentisering via Firebase
+- [x] State-hantering implementerad med Zustand.
+- [x] WCAG 2.1 nivå A och AA implementerad i applikationskoden
+- [x] Responsiv för mobil och padda.
+- [x] Git och GitHub används konsekvent.
+- [x] Dokumentation omfattar abstract, tech stack och arbetsprocess
+
+- [x] Appen är hostad i Android EAS build men iOS-distribution krävde Apple Developer-konto.
+- [?!] Fri från tekniska fel, konsekvent design, och obruten navigation.
 
 **Krav för väl godkänt:**
-- [x] Interaktiv prototyp som liknar den färdiga produkten.
-- [x] Fullständig WCAG 2.1-nivå A och AA.
-- [x] State management: [Zustand]
-- [ ] CRUD med säker autentisering [Firebase Auth]
-- [ ] Fullt responsiv för alla skärmstorlekar.
-- [ ] Optimering: Återanvänd kod & komponenter.
-- [ ] Testad med WebAIM WAVE utan fel
-- [x] Feature branches och pull requests används.
-- [x] Tydliga commit-meddelanden.
+
+Design och tillgänglighet
+- [x] Interaktiv prototyp som nära motsvarar den färdiga produkten
+- [x] Fullständig WCAG 2.1 nivå A och AA utan undantag
+- [x] Kontrast, touch targets och interaktioner verifierade och dokumenterade
+
+Teknisk Implementation
+- [x] State management implementerad med Zustand
+- [x] CRUD för användare via Firebase Auth
+   - Create via registrering
+   - Read via hämtning av användardata
+   - Update via redigering av profil
+   - Delete hanterat och dokumenterat
+
+- [?!] Återanvändning av komponenter och gemensamma UI-mönster
+- [?!] Fullt responsiv inom mobil och surfplatta spannet
+
+Kvalitet och process
+- [x] Feature branches och pull requests används
+- [x] Tydliga och konsekventa commit-meddelanden
+- [x] Tillgänglighetsarbete uppdelat i separata commits ?
+- [x] Användarupplevelse optimerad med tydlig feedback och laddningsindikatorer ?
+
+Testning och dokumentation
 - [ ] Automatiserat flöde för bygge och deploy.
-- [ ] 3-6 sidor med djupgående analys, reflektion, och motivering av tekniska val.
-- [ ] Optimerad användarupplevelse med minimala laddningstider och tydlig återkoppling.
+- [ ] Tillgänglighet testad i Figma samt verifierad i implementation
+- [ ] WCAG-arbete dokumenterat i rapporten
+- [ ] Djupgående analys och reflektion över tekniska val
+- [ ] Motivering av arkitektur, state-hantering och tillgänglighet  ?
