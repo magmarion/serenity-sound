@@ -1,6 +1,6 @@
 // app/(modal)/player.tsx
 import Colors from "@/constants/colors";
-import { useFavoritesStore } from '@/store/favoritesStore';
+import { useFavoritesStore } from '@/store/favorites-store';
 import { Ionicons } from '@expo/vector-icons';
 import BottomSheet, { BottomSheetBackdrop, BottomSheetView } from "@gorhom/bottom-sheet";
 import { Audio } from "expo-av";

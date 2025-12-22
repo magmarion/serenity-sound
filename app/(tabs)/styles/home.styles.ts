@@ -149,11 +149,11 @@ export const homeStyles = StyleSheet.create({
         marginTop: 2,
     },
     sessionHeartButton: {
-        padding: 8,
+        minWidth: 44,
+        minHeight: 44,
+        padding: 10,
         marginRight: 4,
-        borderRadius: 20,
-        width: 40,
-        height: 40,
+        borderRadius: 22,
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -164,7 +164,6 @@ export const homeStyles = StyleSheet.create({
         shadowRadius: 10,
         elevation: 6,
     },
-
     errorContainer: {
         flex: 1,
         backgroundColor: Colors.palette.background,

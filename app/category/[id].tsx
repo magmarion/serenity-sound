@@ -1,7 +1,7 @@
 // app/category/[id].tsx
 import Colors from "@/constants/colors";
 import { fetchSoundEffects, Session } from "@/services/api";
-import { useFavoritesStore } from "@/store/favoritesStore";
+import { useFavoritesStore } from "@/store/favorites-store";
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";

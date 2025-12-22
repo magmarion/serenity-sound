@@ -1,5 +1,5 @@
 // app/(tabs)/favorites.tsx
-import { useFavoritesStore } from '@/store/favoritesStore';
+import { useFavoritesStore } from '@/store/favorites-store';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
