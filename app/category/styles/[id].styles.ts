@@ -19,11 +19,12 @@ export const categoryDetailStyles = StyleSheet.create({
         paddingBottom: 10,
     },
     backButton: {
-        width: 40,
-        height: 40,
+        minWidth: 44,
+        minHeight: 44,
+        padding: 10,
         alignItems: 'center',
         justifyContent: 'center',
-        borderRadius: 20,
+        borderRadius: 22,
         backgroundColor: 'rgba(255, 255, 255, 0.1)',
     },
     headerCenter: {
@@ -31,8 +32,9 @@ export const categoryDetailStyles = StyleSheet.create({
         flex: 1,
     },
     infoButton: {
-        width: 40,
-        height: 40,
+        minWidth: 44,
+        minHeight: 44,
+        padding: 10,
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -42,7 +44,6 @@ export const categoryDetailStyles = StyleSheet.create({
         fontWeight: "600",
         textAlign: 'center',
     },
-    // ADDED: Sounds counter style
     soundsCounter: {
         color: Colors.palette.muted,
         fontSize: 13,
@@ -128,11 +129,11 @@ export const categoryDetailStyles = StyleSheet.create({
         marginTop: 2,
     },
     sessionHeartButton: {
-        padding: 8,
+        minWidth: 44,
+        minHeight: 44,
+        padding: 10,
         marginRight: 4,
-        borderRadius: 20,
-        width: 40,
-        height: 40,
+        borderRadius: 22,
         alignItems: 'center',
         justifyContent: 'center',
     },
