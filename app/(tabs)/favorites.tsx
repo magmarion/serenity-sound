@@ -117,7 +117,9 @@ const SwipeableRow = memo(function SwipeableRow({
 
             {/* The actual swipable card */}
             <GestureDetector gesture={panGesture}>
-                <Animated.View style={animatedRowStyle}>
+                <Animated.View style={animatedRowStyle}
+                    accessibilityLabel={`Favorite sound ${session.title}`}
+                >
                     <LinearGradient
                         colors={config.gradient}
                         start={{ x: 0, y: 0 }}
@@ -142,11 +144,13 @@ const SwipeableRow = memo(function SwipeableRow({
                                 ]}>
                                     <Pressable
                                         testID={`favorites.play.${session.id}`}
-                                        accessibilityRole="button"
                                         onPress={onPressPlay}
                                         onPressIn={() => setIsPressed(true)}
                                         onPressOut={() => setIsPressed(false)}
                                         style={styles.playButton}
+                                        accessibilityRole="button"
+                                        accessibilityLabel={`Play ${session.title}`}
+                                        accessibilityHint="Opens the sound player"
                                     >
                                         <Text style={styles.playText}>Play</Text>
                                     </Pressable>
@@ -177,12 +181,18 @@ const SwipeableRow = memo(function SwipeableRow({
                             <Pressable
                                 onPress={handleCancelDelete}
                                 style={[styles.confirmationButton, styles.cancelButton]}
+                                accessibilityRole="button"
+                                accessibilityLabel="Cancel removal"
+                                accessibilityHint="Closes the confirmation dialog"
                             >
                                 <Text style={styles.cancelButtonText}>Cancel</Text>
                             </Pressable>
                             <Pressable
                                 onPress={handleConfirmDelete}
                                 style={[styles.confirmationButton, styles.deleteButton]}
+                                accessibilityRole="button"
+                                accessibilityLabel={`Remove ${session.title} from favorites`}
+                                accessibilityHint="Removes the sound from your favorites"
                             >
                                 <Text style={styles.deleteButtonText}>Remove</Text>
                             </Pressable>
@@ -416,6 +426,7 @@ export default function FavoritesScreen() {
                             ItemSeparatorComponent={() => <View style={{ height: 6 }} />}
                             showsVerticalScrollIndicator={false}
                             showsHorizontalScrollIndicator={false}
+                            accessibilityRole="list"
                             renderItem={({ item }) => (
                                 <SwipeableRow
                                     session={item}

@@ -223,6 +223,9 @@ function CategoryCard({
             onPress={handlePress}
             style={styles.cardWrap}
             testID={`category-card-${item.id}`}
+            accessibilityRole="button"
+            accessibilityLabel={`${item.title} category`}
+            accessibilityHint={`Opens ${item.title.toLowerCase()} sounds`}
         >
             <LinearGradient
                 colors={item.gradient}
@@ -328,6 +331,9 @@ export default function CategoriesScreen() {
                                 autoCapitalize="none"
                                 autoCorrect={false}
                                 testID="categories-search"
+                                accessibilityLabel="Search categories"
+                                accessibilityHint="Filters the category list as you type"
+                                accessibilityRole="search"
                             />
                         </View>
                     </View>
@@ -344,6 +350,7 @@ export default function CategoriesScreen() {
                         showsHorizontalScrollIndicator={false}
                         keyboardShouldPersistTaps="handled"
                         testID="categories-list"
+                        accessibilityRole='list'
                     />
                 </View>
             </SafeAreaView>

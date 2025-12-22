@@ -211,7 +211,13 @@ export default function CategoryDetailScreen() {
             {/* Header */}
             <SafeAreaView style={styles.safeArea} edges={["top"]}>
                 <View style={styles.header}>
-                    <Pressable onPress={handleBack} style={styles.backButton}>
+                    <Pressable
+                        onPress={handleBack}
+                        style={styles.backButton}
+                        accessibilityRole="button"
+                        accessibilityLabel="Go back"
+                        accessibilityHint="Returns to the previous screen"
+                    >
                         <Ionicons name="chevron-back" size={24} color={Colors.light.text} />
                     </Pressable>
 
@@ -226,7 +232,13 @@ export default function CategoryDetailScreen() {
                         </Text>
                     </View>
 
-                    <Pressable onPress={handleInfoPress} style={styles.infoButton}>
+                    <Pressable
+                        onPress={handleInfoPress}
+                        style={styles.infoButton}
+                        accessibilityRole="button"
+                        accessibilityLabel="Category information"
+                        accessibilityHint="Opens information about this category"
+                    >
                         <Ionicons name="information-circle-outline" size={24} color={Colors.light.text} />
                     </Pressable>
                 </View>
@@ -245,7 +257,13 @@ export default function CategoryDetailScreen() {
                 ) : error ? (
                     <View style={styles.errorMessage}>
                         <Text style={styles.errorText}>{error}</Text>
-                        <Pressable onPress={loadCategorySounds} style={styles.retryButton}>
+                        <Pressable
+                            onPress={loadCategorySounds}
+                            style={styles.retryButton}
+                            accessibilityRole="button"
+                            accessibilityLabel="Retry loading sounds"
+                            accessibilityHint="Attempts to load sounds again"
+                        >
                             <Text style={styles.retryText}>Retry</Text>
                         </Pressable>
                     </View>
@@ -260,7 +278,12 @@ export default function CategoryDetailScreen() {
 
                             return (
                                 <View key={session.id} style={styles.sessionRow}>
-                                    <Pressable onPress={() => openPlayerForSession(session)}>
+                                    <Pressable
+                                        onPress={() => openPlayerForSession(session)}
+                                        accessibilityRole="button"
+                                        accessibilityLabel={`Play ${session.title}`}
+                                        accessibilityHint="Opens the sound player"
+                                    >
                                         {({ pressed }) => (
                                             <View style={[
                                                 styles.sessionIconWrap,
@@ -283,7 +306,17 @@ export default function CategoryDetailScreen() {
                                         </Text>
                                     </View>
 
-                                    <Pressable onPress={() => handleToggleFavorite(session)}>
+                                    <Pressable
+                                        onPress={() => handleToggleFavorite(session)}
+                                        accessibilityRole="button"
+                                        accessibilityLabel={
+                                            sessionIsFavorite
+                                                ? `Remove ${session.title} from favorites`
+                                                : `Add ${session.title} to favorites`
+                                        }
+                                        accessibilityHint="Toggles favorite status"
+                                        accessibilityState={{ selected: sessionIsFavorite }}
+                                    >
                                         {({ pressed }) => (
                                             <View style={[
                                                 styles.sessionHeartButton,
@@ -308,8 +341,11 @@ export default function CategoryDetailScreen() {
             {/* Info Modal */}
             {showInfoModal && (
                 <Pressable
-                    style={styles.modalOverlay}
                     onPress={() => setShowInfoModal(false)}
+                    style={styles.modalOverlay}
+                    accessibilityRole="button"
+                    accessibilityLabel="Close category information"
+                    accessibilityHint="Closes the information dialog"
                 >
                     <View style={[styles.modalContent, { backgroundColor: categoryConfig.gradient[0] }]}>
                         <View style={styles.modalHeader}>
@@ -320,6 +356,9 @@ export default function CategoryDetailScreen() {
                             <Pressable
                                 onPress={() => setShowInfoModal(false)}
                                 style={styles.modalCloseButton}
+                                accessibilityRole="button"
+                                accessibilityLabel="Close"
+                                accessibilityHint="Closes the information dialog"
                             >
                                 <Ionicons name="close" size={24} color={Colors.light.text} />
                             </Pressable>

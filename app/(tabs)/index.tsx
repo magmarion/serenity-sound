@@ -230,6 +230,10 @@ function HomeContent() {
                         <Pressable
                             onPress={() => router.push('/(modal)/profile')}
                             style={styles.profileRow}
+                            accessibilityRole="button"
+                            accessibilityLabel="Open profile"
+                            accessibilityHint="Navigates to your profile screen"
+
                         >
                             <Avatar
                                 size={52}
@@ -272,6 +276,10 @@ function HomeContent() {
                             key={mood.id}
                             onPress={() => handleMoodPress(mood.id)}
                             style={styles.moodTile}
+                            accessibilityRole="button"
+                            accessibilityLabel={`${mood.title} mood`}
+                            accessibilityHint={`Opens ${mood.title.toLowerCase()} category`}
+
                         >
                             {({ pressed }) => (
                                 <LinearGradient
@@ -303,7 +311,11 @@ function HomeContent() {
                 ) : error ? (
                     <View style={styles.errorMessage}>
                         <Text style={styles.errorText}>{error}</Text>
-                        <Pressable onPress={loadSessions} style={styles.retryButton}>
+                        <Pressable onPress={loadSessions} style={styles.retryButton}
+                            accessibilityRole="button"
+                            accessibilityLabel="Retry loading sounds"
+                            accessibilityHint="Attempts to load sounds again"
+                        >
                             <Text style={styles.retryText}>Retry</Text>
                         </Pressable>
                     </View>
@@ -321,6 +333,9 @@ function HomeContent() {
                                 <View key={session.id} style={styles.sessionRow}>
                                     <Pressable
                                         onPress={() => openPlayerForSession(session)}
+                                        accessibilityRole="button"
+                                        accessibilityLabel={`Play ${session.title}`}
+                                        accessibilityHint="Opens the sound player"
                                     >
                                         {({ pressed }) => (
                                             <View style={[
@@ -346,6 +361,14 @@ function HomeContent() {
 
                                     <Pressable
                                         onPress={() => handleToggleFavorite(session)}
+                                        accessibilityRole="button"
+                                        accessibilityLabel={
+                                            sessionIsFavorite
+                                                ? `Remove ${session.title} from favorites`
+                                                : `Add ${session.title} to favorites`
+                                        }
+                                        accessibilityHint="Toggles favorite status"
+                                        accessibilityState={{ selected: sessionIsFavorite }}
                                     >
                                         {({ pressed }) => (
                                             <View style={[
