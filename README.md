@@ -44,31 +44,31 @@ Planering och Research
 
 Design & Prototyping
 - [x] Wireframes i Figma
-- [ ] Prototyp skapad i Figma
-- [ ] Responsiv design för minst två skärmstorlekar
-- [ ] Följer WCAG 2.1-standarder
+- [x] Prototyp skapad i Figma
+- [x] Responsiv design för minst två skärmstorlekar
+- [x] Följer WCAG 2.1-standarder
 
 Applikationsutveckling
-- [ ] Utvecklad med [React Native/Expo] 
-- [ ] Databas: [Firebase] 
-- [ ] State-hantering implementerad.
+- [x] Utvecklad med [React Native/Expo] 
+- [x] Databas: [Firebase] 
+- [x] State-hantering implementerad.
 - [ ] Semantisk HTML och WCAG 2.1-standarder följda.
-- [ ] Responsiv design för mobil och padda.
-- [ ] Git och GitHub används för versionshantering.
-- [ ] 2-3 sidor med abstract, tech stack, och dokumentation av arbetsprocess.
-- [ ] Appen är hostat.
+- [x] Responsiv design för mobil och padda.
+- [x] Git och GitHub används för versionshantering.
+- [x] 2-3 sidor med abstract, tech stack, och dokumentation av arbetsprocess.
+- [x] Appen är hostat.
 - [ ] Fri från tekniska fel, konsekvent design, och obruten navigation.
 
 **Krav för väl godkänt:**
-- [ ] Interaktiv prototyp som liknar den färdiga produkten.
-- [ ] Fullständig WCAG 2.1-nivå A och AA.
-- [ ] State management: [Redux & Zustand]
+- [x] Interaktiv prototyp som liknar den färdiga produkten.
+- [x] Fullständig WCAG 2.1-nivå A och AA.
+- [x] State management: [Zustand]
 - [ ] CRUD med säker autentisering [Firebase Auth]
 - [ ] Fullt responsiv för alla skärmstorlekar.
 - [ ] Optimering: Återanvänd kod & komponenter.
 - [ ] Testad med WebAIM WAVE utan fel
-- [ ] Feature branches och pull requests används.
-- [ ] Tydliga commit-meddelanden.
+- [x] Feature branches och pull requests används.
+- [x] Tydliga commit-meddelanden.
 - [ ] Automatiserat flöde för bygge och deploy.
 - [ ] 3-6 sidor med djupgående analys, reflektion, och motivering av tekniska val.
 - [ ] Optimerad användarupplevelse med minimala laddningstider och tydlig återkoppling.
