@@ -10,7 +10,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Animated, Dimensions, PanResponder, Pressable, Text, TextInput, View } from "react-native";
-import { playerStyles as styles } from "./styles/player.styles";
+import { playerStyles as styles } from "@/styles/modal/player.styles";
 
 const ART_URL = "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80";
 const DEFAULT_SOUND_URL = "https://orangefreesounds.com/wp-content/uploads/2022/08/Rain-and-thunder-with-ocean-waves-sound-effect.mp3";

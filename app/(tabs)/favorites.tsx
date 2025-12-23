@@ -9,7 +9,7 @@ import { FlatList, Modal, Pressable, StyleSheet, Text, View } from "react-native
 import { Gesture, GestureDetector, GestureHandlerRootView, } from 'react-native-gesture-handler';
 import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withSpring, withTiming, } from 'react-native-reanimated';
 import { SafeAreaView } from "react-native-safe-area-context";
-import { favoritesStyles as styles } from './styles/favorites.styles';
+import { favoritesStyles as styles } from '@/styles/tabs/favorites.styles';
 
 const ART_URL = "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80";
 const DEFAULT_SOUND_URL = "https://orangefreesounds.com/wp-content/uploads/2022/08/Rain-and-thunder-with-ocean-waves-sound-effect.mp3";
