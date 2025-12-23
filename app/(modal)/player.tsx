@@ -1,7 +1,7 @@
 // app/(modal)/player.tsx
 import Colors from "@/constants/colors";
 import { useFavoritesStore } from '@/store/favorites-store';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import BottomSheet, { BottomSheetBackdrop, BottomSheetView } from "@gorhom/bottom-sheet";
 import { Audio } from "expo-av";
 import * as Haptics from "expo-haptics";
@@ -21,7 +21,10 @@ const SLEEP_TIMER_OPTIONS = [5, 10, 15, 30];
 
 type RepeatMode = 'off' | 'all' | 'one';
 
-// Session interface
+type RepeatIcon =
+    | { type: 'material'; name: 'repeat-one' }
+    | { type: 'ion'; name: 'repeat' | 'repeat-outline' };
+
 interface Session {
     id: string;
     title: string;
@@ -143,7 +146,7 @@ export default function PlayerSheet() {
                         setOriginalPlaylist(playlist);
                         setCurrentTrackIndex(currentIndex);
                     } else {
-                        // If current track not in playlist (e.g., from favorites), create a playlist with just this track
+                        // If current track not in playlist, create a playlist with just this track
                         const newPlaylist = [session];
                         setCurrentPlaylist(newPlaylist);
                         setOriginalPlaylist(newPlaylist);
@@ -368,7 +371,6 @@ export default function PlayerSheet() {
     useEffect(() => {
         const configureAudioForSilentMode = async () => {
             try {
-                // ONLY configure audio for silent mode - no background tasks
                 await Audio.setAudioModeAsync({
                     allowsRecordingIOS: false,
                     playsInSilentModeIOS: true,
@@ -472,34 +474,18 @@ export default function PlayerSheet() {
         return (progress / trackDuration) * sliderWidth;
     }, [progress, sliderWidth, trackDuration]);
 
-    // Handle shuffle toggle
     const handleShuffle = useCallback(async () => {
         await Haptics.selectionAsync();
 
-        if (currentPlaylist.length <= 1) return;
+        if (originalPlaylist.length <= 1) return;
 
-        if (isShuffled) {
-            // Turn off shuffle - go back to original order
-            setIsShuffled(false);
-            // Find current track in original playlist
-            const currentTrack = currentPlaylist[currentTrackIndex];
-            const originalIndex = originalPlaylist.findIndex(track => track.id === currentTrack.id);
-            setCurrentTrackIndex(Math.max(0, originalIndex));
-        } else {
-            // Turn on shuffle
-            setIsShuffled(true);
-            // Find current track in shuffled playlist
-            const currentTrack = currentPlaylist[currentTrackIndex];
-            const shuffledIndex = shuffledPlaylist.findIndex(track => track.id === currentTrack.id);
-            setCurrentTrackIndex(Math.max(0, shuffledIndex));
-        }
-    }, [isShuffled, currentPlaylist, currentTrackIndex, originalPlaylist, shuffledPlaylist]);
+        setIsShuffled(prev => !prev);
+    }, [originalPlaylist.length]);
 
     // Handle repeat toggle
     const handleRepeat = useCallback(async () => {
         await Haptics.selectionAsync();
 
-        // Cycle through repeat modes: off -> all -> one -> off
         if (repeatMode === 'off') {
             setRepeatMode('all');
         } else if (repeatMode === 'all') {
@@ -514,7 +500,6 @@ export default function PlayerSheet() {
         return isShuffled ? shuffledPlaylist : originalPlaylist;
     }, [isShuffled, shuffledPlaylist, originalPlaylist]);
 
-    // Next/Previous track functionality
     const handleNextTrack = useCallback(async () => {
         await Haptics.selectionAsync();
 
@@ -669,19 +654,18 @@ export default function PlayerSheet() {
         return formatSleepTimerTime(sleepTimerRemaining);
     }, [sleepTimerActive, sleepTimerRemaining, formatSleepTimerTime]);
 
-    // Get repeat button icon based on mode
-    const getRepeatIcon = useMemo(() => {
-        switch (repeatMode) {
-            case 'all':
-                return 'repeat';
-            case 'one':
-                return 'repeat';
-            default:
-                return 'repeat-outline';
+    const getRepeatIcon = useMemo<RepeatIcon>(() => {
+        if (repeatMode === 'one') {
+            return { type: 'material', name: 'repeat-one' };
         }
+
+        if (repeatMode === 'all') {
+            return { type: 'ion', name: 'repeat' };
+        }
+
+        return { type: 'ion', name: 'repeat-outline' };
     }, [repeatMode]);
 
-    // Get repeat button color based on mode
     const getRepeatColor = useMemo(() => {
         switch (repeatMode) {
             case 'all':
@@ -737,8 +721,6 @@ export default function PlayerSheet() {
                                 <View style={styles.trackPosition}>
                                     <Text style={styles.trackPositionText}>
                                         {activePlaylist.length > 0 ? `${currentTrackIndex + 1}/${activePlaylist.length}` : '1/1'}
-                                        {repeatMode === 'one' && ' (Repeat One)'}
-                                        {repeatMode === 'all' && ' (Repeat All)'}
                                     </Text>
                                 </View>
 
@@ -876,7 +858,7 @@ export default function PlayerSheet() {
                                         accessibilityRole="button"
                                         accessibilityLabel={
                                             repeatMode === "off"
-                                                ? "Enable repeat"
+                                                ? "Enable repeat all"
                                                 : repeatMode === "all"
                                                     ? "Enable repeat one"
                                                     : "Disable repeat"
@@ -888,16 +870,27 @@ export default function PlayerSheet() {
                                                 styles.iconButton,
                                                 pressed && styles.iconButtonPressed
                                             ]}>
-                                                <Ionicons
-                                                    name={getRepeatIcon}
-                                                    color={getRepeatColor}
-                                                    size={24}
-                                                />
-                                                <Text style={[
-                                                    styles.iconLabel,
-                                                    (repeatMode === 'all' || repeatMode === 'one') && { color: Colors.light.accent }
-                                                ]}>
-                                                    {repeatMode === 'one' ? 'Repeat One' : 'Repeat'}
+                                                {getRepeatIcon.type === 'material' ? (
+                                                    <MaterialIcons
+                                                        name={getRepeatIcon.name}
+                                                        size={24}
+                                                        color={getRepeatColor}
+                                                    />
+                                                ) : (
+                                                    <Ionicons
+                                                        name={getRepeatIcon.name}
+                                                        size={24}
+                                                        color={getRepeatColor}
+                                                    />
+                                                )}
+
+                                                <Text
+                                                    style={[
+                                                        styles.iconLabel,
+                                                        repeatMode !== 'off' && { color: Colors.light.accent }
+                                                    ]}
+                                                >
+                                                    Repeat
                                                 </Text>
                                             </View>
                                         )}
