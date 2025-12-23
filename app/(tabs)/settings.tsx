@@ -6,7 +6,7 @@ import { Stack, useRouter } from "expo-router";
 import React, { memo, useCallback, useMemo, useState } from "react";
 import { Pressable, ScrollView, StatusBar, StyleSheet, Text, View, } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { settingsStyles as styles } from "./styles/settings.styles";
+import { settingsStyles as styles } from "@/styles/tabs/settings.styles";
 
 type SettingsRow = {
   id: string;

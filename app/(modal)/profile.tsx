@@ -8,7 +8,7 @@ import { useRouter } from "expo-router";
 import React, { memo, useState } from "react";
 import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View, } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { profileStyles as styles } from "./styles/profile.styles";
+import { profileStyles as styles } from "@/styles/modal/profile.styles";
 
 type Mode = "signin" | "signup";
 

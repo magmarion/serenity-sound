@@ -7,7 +7,7 @@ import { Blocks, CloudLightning, CloudRain, Coffee, Flame, Moon, Search, Trees, 
 import React, { useCallback, useMemo, useState } from "react";
 import { FlatList, ListRenderItem, Pressable, StyleSheet, Text, TextInput, View, } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { categoriesStyles as styles } from "./styles/categories.styles";
+import { categoriesStyles as styles } from "@/styles/tabs/categories.styles";
 
 type CategoryId =
     | "rain"
