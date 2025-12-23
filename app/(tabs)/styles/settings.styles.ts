@@ -1,7 +1,6 @@
 import { StyleSheet } from "react-native";
 
-export
-    const settingsStyles = StyleSheet.create({
+export const settingsStyles = StyleSheet.create({
         container: {
             flex: 1,
         },
