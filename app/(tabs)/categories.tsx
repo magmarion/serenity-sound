@@ -290,22 +290,18 @@ export default function CategoriesScreen() {
 
     return (
         <View style={styles.container} testID="categories-screen">
-            {/* Background - matching home screen */}
+            {/* Background */}
             <LinearGradient
-                colors={["#0B0F2E", "#05060A"]}
+                colors={["#0B0A2A", "#05060A"]}
                 style={StyleSheet.absoluteFill}
             />
-
-            {/* EXTRA GRADIENT ABOVE HEADER - matching home screen */}
             <LinearGradient
                 colors={["#591A1B", "#591A1B"]}
                 style={styles.topGradientExtension}
             />
-
             <Stack.Screen options={{ title: "Categories" }} />
 
             <SafeAreaView style={styles.safeArea} edges={["top"]}>
-                {/* HEADER - matching home screen style */}
                 <LinearGradient
                     colors={["#591A1B", "#0F172B", "#0B0E14"]}
                     locations={[0, 0.4, 1]}

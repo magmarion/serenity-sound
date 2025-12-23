@@ -93,7 +93,6 @@ export default function HomeScreen() {
         </HomeErrorBoundary>
     );
 }
-
 /* MAIN CONTENT */
 function HomeContent() {
     const moodMap = useMemo(() => {
@@ -208,16 +207,14 @@ function HomeContent() {
         <View style={styles.container}>
             {/* Background */}
             <LinearGradient
-                colors={["#0B0F2E", "#05060A"]}
+                colors={["#0B0A2A", "#05060A"]}
                 style={StyleSheet.absoluteFill}
             />
-
             {/* EXTRA GRADIENT ABOVE HEADER */}
             <LinearGradient
                 colors={["#591A1B", "#591A1B"]}
                 style={styles.topGradientExtension}
             />
-
             {/* HEADER */}
             <SafeAreaView style={styles.safeArea} edges={["top"]}>
                 <LinearGradient

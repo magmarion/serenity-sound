@@ -696,7 +696,7 @@ export default function PlayerSheet() {
             >
                 <BottomSheetView style={styles.sheetContent}>
                     <LinearGradient
-                        colors={["#03040A", Colors.light.background]}
+                        colors={["#0B0A2A", "#05060A"]}
                         style={styles.gradient}
                     >
                         <View style={styles.contentContainer}>
