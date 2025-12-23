@@ -371,10 +371,13 @@ export default function FavoritesScreen() {
                     title: session.title || 'Sound',
                     subtitle: session.durationLabel || '3 min • Ambient',
                     artworkUrl: artworkUrl,
+                    playlist: JSON.stringify(favorites),
+                    currentIndex: favorites.findIndex(item => item.id === session.id).toString(),
                 },
             });
+
         },
-        [haptics]
+        [haptics, favorites]
     );
 
     return (
