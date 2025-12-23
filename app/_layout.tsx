@@ -40,15 +40,22 @@ export default function RootLayout() {
         <QueryClientProvider client={queryClient}>
             <SafeAreaProvider>
                 <GestureHandlerRootView style={{ flex: 1 }}>
-                    <Stack screenOptions={{ headerShown: false }}>
+                    <Stack
+                        screenOptions={{
+                            headerShown: false,
+                            contentStyle: { backgroundColor: "transparent" },
+                        }}
+                    >
                         <Stack.Screen name="(tabs)" />
                         <Stack.Screen
                             name="(modal)"
                             options={{
-                                animation: "slide_from_bottom",
+                                presentation: "transparentModal",
+                                animation: "none",
                             }}
                         />
                     </Stack>
+
                 </GestureHandlerRootView>
             </SafeAreaProvider>
         </QueryClientProvider>
