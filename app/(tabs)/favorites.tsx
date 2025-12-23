@@ -366,6 +366,7 @@ export default function FavoritesScreen() {
             router.push({
                 pathname: '/(modal)/player',
                 params: {
+                    id: session.id,
                     soundUrl: soundUrl,
                     title: session.title || 'Sound',
                     subtitle: session.durationLabel || '3 min • Ambient',

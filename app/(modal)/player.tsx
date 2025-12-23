@@ -17,10 +17,8 @@ const DEFAULT_SOUND_URL = "https://orangefreesounds.com/wp-content/uploads/2022/
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
-// Sleep timer options in minutes
 const SLEEP_TIMER_OPTIONS = [5, 10, 15, 30];
 
-// Repeat modes
 type RepeatMode = 'off' | 'all' | 'one';
 
 // Session interface
@@ -64,8 +62,8 @@ export default function PlayerSheet() {
 
     // Create a session object from the params
     const session = useMemo(() => {
-        // Parse duration from subtitle
-        let duration = 180; // default 3 minutes
+        const sessionId = (params.id as string) || Date.now().toString();
+        let duration = 180;
         const match = subtitle.match(/(\d+)\s*min/);
         if (match) {
             const minutes = parseInt(match[1]);
@@ -84,7 +82,7 @@ export default function PlayerSheet() {
             artworkUrl: artworkUrl,
             duration: duration
         };
-    }, [sessionId, title, subtitle, moodId, category, soundUrl, artworkUrl]);
+    }, [params.id, title, subtitle, moodId, category, soundUrl, artworkUrl]);
 
     // Check if this session is already a favorite
     const sessionIsFavorite = isFavorite(sessionId);
