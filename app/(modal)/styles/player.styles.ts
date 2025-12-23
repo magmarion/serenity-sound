@@ -154,15 +154,15 @@ export const playerStyles = StyleSheet.create({
    },
    actionRow: {
       flexDirection: "row",
-      gap: 16,
+      gap: 46,
       marginTop: 20,
       justifyContent: 'center',
    },
    actionButton: {
       borderWidth: 1,
       borderColor: 'rgba(255, 255, 255, 0.15)',
-      borderRadius: 24,
-      paddingVertical: 18,
+      borderRadius: 20,
+      paddingVertical: 16,
       paddingHorizontal: 16,
       backgroundColor: 'rgba(255, 255, 255, 0.05)',
       flexDirection: "row",
@@ -171,10 +171,10 @@ export const playerStyles = StyleSheet.create({
       gap: 8,
    },
    actionButtonFavorite: {
-      width: 180,
+      width: 160,
    },
    actionButtonSleep: {
-      width: 180,
+      width: 160,
    },
    actionButtonPressed: {
       backgroundColor: 'rgba(255, 255, 255, 0.1)',

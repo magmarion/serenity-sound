@@ -1004,7 +1004,7 @@ export default function PlayerSheet() {
                                                     styles.actionLabel,
                                                     sessionIsFavorite && styles.actionLabelActive
                                                 ]}>
-                                                    {sessionIsFavorite ? "Remove favorite" : "Add to favorites"}
+                                                    {sessionIsFavorite ? "Favorited" : "Favorite"}
                                                 </Text>
                                             </View>
                                         )}
