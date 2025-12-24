@@ -1,5 +1,6 @@
+// app/_layout.tsx - UPDATED
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Stack } from "expo-router";
+import { Stack, useSegments, useRootNavigationState, router } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -12,8 +13,12 @@ SplashScreen.preventAutoHideAsync();
 const queryClient = new QueryClient();
 
 export default function RootLayout() {
-    const initializeAuth = useAuthStore(state => state.initializeAuth);
-    const isLoading = useAuthStore(state => state.isLoading);
+    const initializeAuth = useAuthStore((state) => state.initializeAuth);
+    const isLoading = useAuthStore((state) => state.isLoading);
+    const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+
+    const segments = useSegments();
+    const navigationState = useRootNavigationState();
 
     useEffect(() => {
         const unsubscribe = initializeAuth();
@@ -27,6 +32,35 @@ export default function RootLayout() {
             SplashScreen.hideAsync();
         }
     }, [isLoading]);
+
+    // Auth redirection logic
+    useEffect(() => {
+        if (isLoading || !navigationState?.key) return;
+
+        const currentSegment = segments[0];
+        console.log("Auth check:", { isAuthenticated, currentSegment, segments });
+
+        // Define public routes that don't require authentication
+        const publicRoutes = ["index", "sign-in"]; // Landing page and sign-in
+        const modalRoutes = ["(modal)"]; // Modal routes are special
+
+        // If user is NOT authenticated and trying to access protected routes
+        if (!isAuthenticated) {
+            if (currentSegment && !publicRoutes.includes(currentSegment) && !modalRoutes.includes(currentSegment)) {
+                console.log("Redirecting to landing (not authenticated)");
+                router.replace("/");
+            }
+        }
+        // If user IS authenticated and trying to access auth routes
+        else if (isAuthenticated) {
+            // Use type assertion to fix the TypeScript error
+            const segment = currentSegment as string;
+            if (segment === "index" || segment === "sign-in") {
+                console.log("Redirecting to home (authenticated)");
+                router.replace("/(tabs)/home");
+            }
+        }
+    }, [isAuthenticated, isLoading, segments, navigationState]);
 
     if (isLoading) {
         return (
@@ -46,7 +80,9 @@ export default function RootLayout() {
                             contentStyle: { backgroundColor: "transparent" },
                         }}
                     >
-                        <Stack.Screen name="(tabs)" />
+                        <Stack.Screen name="index" /> {/* Landing page */}
+                        <Stack.Screen name="sign-in" /> {/* Sign in page */}
+                        <Stack.Screen name="(tabs)" /> {/* Main app tabs */}
                         <Stack.Screen
                             name="(modal)"
                             options={{
@@ -55,7 +91,6 @@ export default function RootLayout() {
                             }}
                         />
                     </Stack>
-
                 </GestureHandlerRootView>
             </SafeAreaProvider>
         </QueryClientProvider>
