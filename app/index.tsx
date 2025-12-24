@@ -62,11 +62,6 @@ export default function LandingScreen() {
         router.push("/sign-in?mode=signup"); // Pass mode as query param
     }, []);
 
-    const onGuest = useCallback(() => {
-        console.log("[landing] continue as guest");
-        router.replace("/(tabs)/home"); // Go directly to main app home
-    }, []);
-
     const icon = useMemo(() => {
         const barHeights = [14, 22, 10, 18, 12];
         return (
@@ -143,17 +138,6 @@ export default function LandingScreen() {
                         >
                             <Wand2 color={COLORS.orange} size={16} />
                             <Text style={styles.secondaryText}>Create Account</Text>
-                        </Pressable>
-
-                        <Pressable
-                            onPress={onGuest}
-                            style={({ pressed }) => [
-                                styles.ghostButton,
-                                pressed ? styles.ghostPressed : null,
-                            ]}
-                            testID="landingGuest"
-                        >
-                            <Text style={styles.ghostText}>Continue as Guest</Text>
                         </Pressable>
                     </View>
 
@@ -330,20 +314,6 @@ const styles = StyleSheet.create({
         color: COLORS.text,
         fontSize: 15,
         fontWeight: "800",
-    },
-    ghostButton: {
-        height: 36,
-        alignItems: "center",
-        justifyContent: "center",
-        borderRadius: 14,
-    },
-    ghostPressed: {
-        opacity: 0.85,
-    },
-    ghostText: {
-        color: COLORS.faint,
-        fontSize: 13,
-        fontWeight: "700",
     },
     footer: {
         alignItems: "center",

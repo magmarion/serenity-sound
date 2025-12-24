@@ -1,9 +1,18 @@
-// app/components/auth/AuthForm.tsx
-import React, { useState, useCallback } from 'react';
-import { View, Text, ScrollView, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native';
+// app/components/auth/AuthForm.tsx - UPDATED
+import { COLORS } from '@/styles/modal/profile.styles';
+import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import React, { useCallback, useState } from 'react';
+import {
+    KeyboardAvoidingView,
+    Platform,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    Text,
+    View
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { profileStyles as styles, COLORS } from '@/styles/modal/profile.styles';
 import { SignInForm } from './SignInForm';
 import { SignUpForm } from './SignUpForm';
 
@@ -33,6 +42,7 @@ export function AuthForm({
     const [mode, setMode] = useState<'signin' | 'signup'>(initialMode);
     const [focusedAuth, setFocusedAuth] = useState<string | null>(null);
     const [primaryButtonPressed, setPrimaryButtonPressed] = useState(false);
+    const [headerButtonPressed, setHeaderButtonPressed] = useState(false);
 
     // Form state
     const [email, setEmail] = useState('');
@@ -103,12 +113,43 @@ export function AuthForm({
         setMode(prev => prev === 'signin' ? 'signup' : 'signin');
     }, []);
 
+    const handleBackPress = useCallback(() => {
+        if (onBack) {
+            onBack();
+        }
+    }, [onBack]);
+
     return (
         <View style={localStyles.root}>
             <LinearGradient
                 colors={["#0B0F2E", "#05060A"]}
                 style={StyleSheet.absoluteFill}
             />
+
+            {/* Header with Back Button */}
+            {showBackButton && (
+                <View
+                    style={[localStyles.header, { paddingTop: insets.top + 10 }]}
+                >
+                    <Pressable
+                        onPressIn={() => setHeaderButtonPressed(true)}
+                        onPressOut={() => setHeaderButtonPressed(false)}
+                        onPress={handleBackPress}
+                        accessibilityRole="button"
+                        accessibilityLabel="Back"
+                    >
+                        <View
+                            style={[
+                                localStyles.headerBackButton,
+                                headerButtonPressed && localStyles.headerIconButtonPressed,
+                            ]}
+                        >
+                            <Ionicons name="arrow-back" size={20} color={COLORS.text} />
+                            <Text style={localStyles.backText}>Back</Text>
+                        </View>
+                    </Pressable>
+                </View>
+            )}
 
             <KeyboardAvoidingView
                 style={localStyles.keyboardAvoidingView}
@@ -118,7 +159,11 @@ export function AuthForm({
                 <ScrollView
                     contentContainerStyle={[
                         localStyles.authContainer,
-                        { paddingTop: insets.top + (isInModal ? 60 : 40) }
+                        {
+                            paddingTop: showBackButton
+                                ? 20 // Less padding when we have header
+                                : insets.top + (isInModal ? 60 : 40)
+                        }
                     ]}
                     showsVerticalScrollIndicator={false}
                 >
@@ -182,6 +227,33 @@ const localStyles = StyleSheet.create({
     root: {
         flex: 1,
         backgroundColor: COLORS.bgBottom,
+    },
+    header: {
+        paddingBottom: 24,
+        paddingHorizontal: 20,
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "flex-start",
+    },
+    headerBackButton: {
+        height: 40,
+        borderRadius: 12,
+        flexDirection: "row",
+        alignItems: "center",
+        paddingHorizontal: 12,
+        gap: 6,
+        backgroundColor: "rgba(255,255,255,0.04)",
+        borderWidth: 1,
+        borderColor: "rgba(255,255,255,0.10)",
+    },
+    backText: {
+        color: COLORS.text,
+        fontSize: 14,
+        fontWeight: "600",
+    },
+    headerIconButtonPressed: {
+        transform: [{ scale: 0.98 }],
+        opacity: 0.85,
     },
     keyboardAvoidingView: {
         flex: 1,

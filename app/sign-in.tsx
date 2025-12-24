@@ -1,4 +1,4 @@
-// app/sign-in.tsx
+// app/sign-in.tsx - UPDATED
 import { useLocalSearchParams, router } from 'expo-router';
 import { View } from 'react-native';
 import { useAuthStore } from '@/store/auth-store';
@@ -22,7 +22,7 @@ export default function SignInScreen() {
     ) => {
         if (mode === 'signin') {
             await signInWithEmail(data.email, data.password);
-            router.replace('/(tabs)/home'); // Will be renamed to home
+            router.replace('/(tabs)/home');
         } else {
             // Sign up flow
             await signUpWithEmail(data.email, data.password);
@@ -36,12 +36,12 @@ export default function SignInScreen() {
                 });
             }
 
-            router.replace('/(tabs)/home'); // Will be renamed to home
+            router.replace('/(tabs)/home');
         }
     };
 
     const handleBack = () => {
-        router.back();
+        router.back(); // Go back to landing page
     };
 
     return (
@@ -50,7 +50,7 @@ export default function SignInScreen() {
                 mode={initialMode}
                 onSubmit={handleSubmit}
                 onBack={handleBack}
-                showBackButton={true}
+                showBackButton={true} // Show back button for sign-in screen
                 isInModal={false}
             />
         </View>
