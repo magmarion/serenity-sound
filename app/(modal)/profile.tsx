@@ -9,6 +9,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import React, { memo, useEffect, useRef, useState } from "react";
 import {
+    ActivityIndicator,
     Alert,
     Animated,
     KeyboardAvoidingView,
@@ -40,6 +41,35 @@ const COLORS = {
     dangerSoft: "rgba(255,90,82,0.16)",
 } as const;
 
+// Add this right after your COLORS object
+const localStyles = StyleSheet.create({
+    overlay: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.85)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 1000,
+    },
+    loadingContainer: {
+        backgroundColor: COLORS.cardTop,
+        padding: 24,
+        borderRadius: 16,
+        alignItems: 'center',
+        gap: 12,
+        borderWidth: 1,
+        borderColor: COLORS.cardBorder,
+    },
+    loadingText: {
+        color: COLORS.text,
+        fontSize: 16,
+        fontWeight: '600',
+    },
+});
+
 function ProfileScreen() {
     const router = useRouter();
     const insets = useSafeAreaInsets();
@@ -58,7 +88,7 @@ function ProfileScreen() {
     const [securityRowPressed, setSecurityRowPressed] = useState(false);
     const [saveSuccess, setSaveSuccess] = useState(false);
     const saveButtonOpacity = useRef(new Animated.Value(0)).current;
-
+    const [signOutLoading, setSignOutLoading] = useState(false);
     const [hasChanges, setHasChanges] = useState(false);
 
     // Local state for field values
@@ -192,6 +222,20 @@ function ProfileScreen() {
         );
     };
 
+    // Add this function after your other handlers (like handleSaveChanges, handleAuthSubmit, etc.)
+    const handleSignOut = async () => {
+        setSignOutLoading(true);
+        try {
+            await signOut();
+            // Dismiss all modals and go to landing
+            router.dismissAll();
+            router.replace("/");
+        } catch (error) {
+            console.error("Sign out error:", error);
+            setSignOutLoading(false);
+        }
+    };
+
     const openCamera = async () => {
         const permission = await ImagePicker.requestCameraPermissionsAsync();
         if (!permission.granted) return;
@@ -279,6 +323,14 @@ function ProfileScreen() {
     */
     return (
         <View style={styles.root} testID="profile/root">
+            {signOutLoading && (
+                <View style={localStyles.overlay}>
+                    <View style={localStyles.loadingContainer}>
+                        <ActivityIndicator size="large" color={COLORS.accent} />
+                        <Text style={localStyles.loadingText}>Signing you out...</Text>
+                    </View>
+                </View>
+            )}
             {/* Background */}
             <LinearGradient
                 colors={["#0B0F2E", "#05060A"]}
@@ -509,7 +561,8 @@ function ProfileScreen() {
                     <Pressable
                         onPressIn={() => setSecondaryButtonPressed(true)}
                         onPressOut={() => setSecondaryButtonPressed(false)}
-                        onPress={signOut}
+                        onPress={handleSignOut}
+                        disabled={signOutLoading}
                         style={styles.secondaryButtonContainer}
                         testID="profile/signout"
                         accessibilityRole="button"
@@ -520,9 +573,14 @@ function ProfileScreen() {
                             style={[
                                 styles.secondaryButton,
                                 secondaryButtonPressed && styles.btnPressed,
+                                signOutLoading && styles.buttonDisabled,
                             ]}
                         >
-                            <Text style={styles.secondaryButtonText}>Sign Out</Text>
+                            {signOutLoading ? (
+                                <ActivityIndicator color={COLORS.accent} size="small" />
+                            ) : (
+                                <Text style={styles.secondaryButtonText}>Sign Out</Text>
+                            )}
                         </View>
                     </Pressable>
 
