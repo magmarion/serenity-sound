@@ -25,11 +25,12 @@ export const profileStyles = StyleSheet.create({
         backgroundColor: "transparent",
     },
     header: {
-        height: 52,
-        paddingHorizontal: 16,
+        paddingTop: 10,
+        paddingBottom: 24,
+        paddingHorizontal: 20,
         flexDirection: "row",
         alignItems: "center",
-        justifyContent: "space-between",
+        justifyContent: "flex-start",
     },
     headerIconButtonContainer: {
     },
@@ -101,19 +102,28 @@ export const profileStyles = StyleSheet.create({
         justifyContent: "center",
         overflow: "hidden",
     },
-    avatarBadge: {
-        position: "absolute",
-        right: -2,
-        bottom: -2,
-        width: 50,
-        height: 50,
-        borderRadius: 24,
-        backgroundColor: "#F7B26B",
-        borderWidth: 2,
-        borderColor: COLORS.bgBottom,
-        alignItems: "center",
-        justifyContent: "center",
+    editProfileButton: {
+        marginTop: 12,
     },
+
+    editProfileButtonInner: {
+        paddingVertical: 8,
+        paddingHorizontal: 18,
+        borderRadius: 20,
+        borderWidth: 1,
+        borderColor: COLORS.cardBorder,
+        backgroundColor: "rgba(255,255,255,0.05)",
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 6,
+    },
+
+    editProfileButtonText: {
+        color: COLORS.accent,
+        fontSize: 14,
+        fontWeight: "600",
+    },
+
     authTitle: {
         fontSize: 28,
         fontWeight: '800',
@@ -186,19 +196,6 @@ export const profileStyles = StyleSheet.create({
         paddingHorizontal: 16,
         paddingTop: 10,
         paddingBottom: Platform.OS === 'ios' ? 40 : 20,
-    },
-    name: {
-        marginTop: 10,
-        color: COLORS.text,
-        fontSize: 18,
-        fontWeight: "700",
-        textAlign: 'center',
-    },
-    email: {
-        marginTop: 3,
-        color: COLORS.subText,
-        fontSize: 12,
-        textAlign: 'center',
     },
     sectionTitle: {
         marginTop: 10,
