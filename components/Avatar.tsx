@@ -17,8 +17,8 @@ export interface AvatarProps {
     userOverride?: Pick<UserProfile, 'name' | 'email' | 'photoURL'> | null;
     testID?: string;
     borderRadius?: number | 'circle' | 'rounded';
-    showContainer?: boolean; // NEW: Add container styling option
-    containerColors?: [string, string]; // NEW: Gradient colors for container
+    showContainer?: boolean;
+    containerColors?: [string, string];
 }
 
 export const Avatar: React.FC<AvatarProps> = ({ 

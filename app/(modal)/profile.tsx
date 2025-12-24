@@ -547,10 +547,12 @@ function ProfileScreen() {
                 >
                     <View style={styles.avatarBlock}>
                         <Pressable
-                            onPress={handleChangeAvatar}
-                            accessibilityRole="button"
-                            accessibilityLabel="Change profile photo"
-                            accessibilityHint="Opens options to update your profile picture"
+                            onPress={() => {
+                                // TODO: öppna fullskärmsvy för bilden
+                            }}
+                            accessibilityRole="imagebutton"
+                            accessibilityLabel="Profile photo"
+                            accessibilityHint="Opens profile photo in full screen"
                         >
                             <View style={styles.avatarCircle}>
                                 <View style={styles.avatarInner}>
@@ -564,21 +566,30 @@ function ProfileScreen() {
                                         <Ionicons name="person" size={100} color="#1C1208" />
                                     )}
                                 </View>
-
-                                <View style={styles.avatarBadge}>
-                                    <Ionicons name="camera" size={32} color="#1C1208" />
-                                </View>
                             </View>
                         </Pressable>
 
-                        <Text style={styles.name}>
-                            {profile?.name || user?.displayName || "User"}
-                        </Text>
-
-                        <Text style={styles.email}>
-                            {profile?.email || user?.email || ""}
-                        </Text>
+                        {/* Edit button BELOW the image */}
+                        <Pressable
+                            onPress={handleChangeAvatar}
+                            accessibilityRole="button"
+                            accessibilityLabel="Edit profile"
+                            accessibilityHint="Change profile photo and personal information"
+                            style={styles.editProfileButton}
+                        >
+                            <View style={styles.editProfileButtonInner}>
+                                <Ionicons
+                                    name="create-outline"
+                                    size={14}
+                                    color={COLORS.accent}
+                                />
+                                <Text style={styles.editProfileButtonText}>
+                                    Edit profile
+                                </Text>
+                            </View>
+                        </Pressable>
                     </View>
+
 
                     <Text style={styles.sectionTitle} testID="profile/personalInfoTitle">
                         Personal Information
