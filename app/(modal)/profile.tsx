@@ -1,14 +1,14 @@
 import type { UserProfile } from "@/store/auth-store";
 import { useAuthStore } from "@/store/auth-store";
+import { profileStyles as styles } from "@/styles/modal/profile.styles";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import React, { memo, useState } from "react";
-import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View, } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { profileStyles as styles } from "@/styles/modal/profile.styles";
+import React, { memo, useEffect, useRef, useState } from "react";
+import { ActivityIndicator, Alert, Animated, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View, } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type Mode = "signin" | "signup";
 
@@ -33,8 +33,8 @@ const COLORS = {
 
 function ProfileScreen() {
     const router = useRouter();
+    const insets = useSafeAreaInsets();
     const {
-        user,
         profile,
         isAuthenticated,
         signInWithEmail,
@@ -51,9 +51,11 @@ function ProfileScreen() {
     const [headerButtonPressed, setHeaderButtonPressed] = useState(false);
     const [primaryButtonPressed, setPrimaryButtonPressed] = useState(false);
     const [secondaryButtonPressed, setSecondaryButtonPressed] = useState(false);
+    const [saveButtonPressed, setSaveButtonPressed] = useState(false);
     const [securityRowPressed, setSecurityRowPressed] = useState(false);
     const [draftProfile, setDraftProfile] = useState<UserProfile | null>(null);
     const [saveSuccess, setSaveSuccess] = useState(false);
+    const saveButtonOpacity = useRef(new Animated.Value(0)).current;
 
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -62,6 +64,7 @@ function ProfileScreen() {
     const [loading, setLoading] = useState(false);
     const [signupUsername, setSignupUsername] = useState("");
     const [signupPhone, setSignupPhone] = useState("");
+    const [hasChanges, setHasChanges] = useState(false);
 
     // Local state for field values (separate from draftProfile to prevent focus loss)
     const [localFields, setLocalFields] = useState({
@@ -93,6 +96,17 @@ function ProfileScreen() {
         }
     }, [profile]);
 
+    useEffect(() => {
+        if (hasChanges) {
+            Animated.timing(saveButtonOpacity, {
+                toValue: 1,
+                duration: 200,
+                useNativeDriver: true,
+            }).start();
+        }
+    }, [hasChanges, saveButtonOpacity]);
+
+
     // Field configurations (static, doesn't depend on values)
     const fieldConfigs = React.useMemo(() => [
         { key: "name" as FieldKey, label: "Name", icon: "person" as const, keyboardType: "default" as const },
@@ -119,18 +133,36 @@ function ProfileScreen() {
     }, [draftProfile, localFields]);
 
     const handleSaveChanges = async () => {
-        if (!draftProfile || !profile) return;
+        if (!profile) return;
 
         try {
-            const { uid, createdAt, updatedAt, ...changes } = draftProfile;
+            const updatedProfile = {
+                ...profile,
+                ...localFields,
+            };
+            const { uid, createdAt, updatedAt, ...changes } = updatedProfile;
             await updateProfile(changes);
             setSaveSuccess(true);
 
-            setTimeout(() => setSaveSuccess(false), 2000);
+            setTimeout(() => {
+                Animated.timing(saveButtonOpacity, {
+                    toValue: 0,
+                    duration: 250,
+                    useNativeDriver: true,
+                }).start(() => {
+                    setSaveSuccess(false);
+                    setHasChanges(false);
+                });
+            }, 1200);
+
+
         } catch (error) {
-            console.error("Error saving profile", error);
+            console.error("Failed to save profile", error);
         }
     };
+
+
+
 
     const handleSignIn = async () => {
         if (!email || !password) return;
@@ -222,28 +254,32 @@ function ProfileScreen() {
                     colors={["#0B0F2E", "#05060A"]}
                     style={StyleSheet.absoluteFill}
                 />
-                <SafeAreaView style={styles.safe} edges={["top"]}>
-                    <View style={styles.header} testID="profile/header">
-                        <Pressable
-                            onPressIn={() => setHeaderButtonPressed(true)}
-                            onPressOut={() => setHeaderButtonPressed(false)}
-                            onPress={() => router.back()}
-                            testID="profile/back"
-                            accessibilityRole="button"
-                            accessibilityLabel="Back"
+                <View
+                    style={[
+                        styles.header,
+                        { paddingTop: insets.top + 10 },
+                    ]}
+                    testID="profile/header"
+                >
+                    <Pressable
+                        onPressIn={() => setHeaderButtonPressed(true)}
+                        onPressOut={() => setHeaderButtonPressed(false)}
+                        onPress={() => router.back()}
+                        testID="profile/back"
+                        accessibilityRole="button"
+                        accessibilityLabel="Back"
+                    >
+                        <View
+                            style={[
+                                styles.headerBackButton,
+                                headerButtonPressed && styles.headerIconButtonPressed,
+                            ]}
                         >
-                            <View
-                                style={[
-                                    styles.headerBackButton,
-                                    headerButtonPressed && styles.headerIconButtonPressed
-                                ]}
-                            >
-                                <Ionicons name="arrow-back" size={20} color={COLORS.text} />
-                                <Text style={styles.backText}>Back</Text>
-                            </View>
-                        </Pressable>
-                    </View>
-                </SafeAreaView>
+                            <Ionicons name="arrow-back" size={20} color={COLORS.text} />
+                            <Text style={styles.backText}>Back</Text>
+                        </View>
+                    </Pressable>
+                </View>
 
                 <KeyboardAvoidingView
                     style={styles.keyboardAvoidingView}
@@ -508,29 +544,32 @@ function ProfileScreen() {
                 colors={["#0B0F2E", "#05060A"]}
                 style={StyleSheet.absoluteFill}
             />
-
-            <SafeAreaView style={styles.safe} edges={["top"]}>
-                <View style={styles.header} testID="profile/header">
-                    <Pressable
-                        onPressIn={() => setHeaderButtonPressed(true)}
-                        onPressOut={() => setHeaderButtonPressed(false)}
-                        onPress={() => router.back()}
-                        testID="profile/back"
-                        accessibilityRole="button"
-                        accessibilityLabel="Back"
+            <View
+                style={[
+                    styles.header,
+                    { paddingTop: insets.top + 10 },
+                ]}
+                testID="profile/header"
+            >
+                <Pressable
+                    onPressIn={() => setHeaderButtonPressed(true)}
+                    onPressOut={() => setHeaderButtonPressed(false)}
+                    onPress={() => router.back()}
+                    testID="profile/back"
+                    accessibilityRole="button"
+                    accessibilityLabel="Back"
+                >
+                    <View
+                        style={[
+                            styles.headerBackButton,
+                            headerButtonPressed && styles.headerIconButtonPressed
+                        ]}
                     >
-                        <View
-                            style={[
-                                styles.headerBackButton,
-                                headerButtonPressed && styles.headerIconButtonPressed
-                            ]}
-                        >
-                            <Ionicons name="arrow-back" size={20} color={COLORS.text} />
-                            <Text style={styles.backText}>Back</Text>
-                        </View>
-                    </Pressable>
-                </View>
-            </SafeAreaView>
+                        <Ionicons name="arrow-back" size={20} color={COLORS.text} />
+                        <Text style={styles.backText}>Back</Text>
+                    </View>
+                </Pressable>
+            </View>
 
             <KeyboardAvoidingView
                 style={styles.keyboardAvoidingView}
@@ -547,12 +586,8 @@ function ProfileScreen() {
                 >
                     <View style={styles.avatarBlock}>
                         <Pressable
-                            onPress={() => {
-                                // TODO: öppna fullskärmsvy för bilden
-                            }}
-                            accessibilityRole="imagebutton"
                             accessibilityLabel="Profile photo"
-                            accessibilityHint="Opens profile photo in full screen"
+                            testID="profile/avatar"
                         >
                             <View style={styles.avatarCircle}>
                                 <View style={styles.avatarInner}>
@@ -576,6 +611,7 @@ function ProfileScreen() {
                             accessibilityLabel="Edit profile"
                             accessibilityHint="Change profile photo and personal information"
                             style={styles.editProfileButton}
+                            testID="profile/edit"
                         >
                             <View style={styles.editProfileButtonInner}>
                                 <Ionicons
@@ -589,7 +625,6 @@ function ProfileScreen() {
                             </View>
                         </Pressable>
                     </View>
-
 
                     <Text style={styles.sectionTitle} testID="profile/personalInfoTitle">
                         Personal Information
@@ -634,12 +669,14 @@ function ProfileScreen() {
                                             style={styles.inputField}
                                             value={localFields[config.key]}
                                             keyboardType={config.keyboardType}
-                                            onChangeText={(text) =>
+                                            onChangeText={(text) => {
                                                 setLocalFields(prev => ({
                                                     ...prev,
                                                     [config.key]: text
-                                                }))
-                                            }
+                                                }));
+                                                setHasChanges(true);
+                                            }}
+
                                             onFocus={() => {
                                                 console.log("Focus on:", config.key);
                                                 handleFieldFocus(config.key);
@@ -703,39 +740,41 @@ function ProfileScreen() {
                         </Pressable>
                     </LinearGradient>
 
-                    {saveSuccess && (
-                        <View
+                    {(hasChanges || saveSuccess) && (
+                        <Animated.View
                             style={{
-                                backgroundColor: "rgba(0,0,0,0.6)",
-                                paddingVertical: 10,
-                                paddingHorizontal: 14,
-                                borderRadius: 10,
-                                alignItems: "center",
-                                marginBottom: 10,
+                                opacity: saveButtonOpacity,
+                                transform: [
+                                    {
+                                        translateY: saveButtonOpacity.interpolate({
+                                            inputRange: [0, 1],
+                                            outputRange: [8, 0],
+                                        }),
+                                    },
+                                ],
                             }}
                         >
-                            <Text style={{ color: "#fff", fontSize: 13 }}>
-                                Profile updated successfully
-                            </Text>
-                        </View>
+                            <Pressable
+                                onPressIn={() => setSaveButtonPressed(true)}
+                                onPressOut={() => setSaveButtonPressed(false)}
+                                onPress={handleSaveChanges}
+                                style={styles.primaryButtonContainer}
+                                accessibilityRole="button"
+                                accessibilityLabel="Save profile changes"
+                            >
+                                <View
+                                    style={[
+                                        styles.primaryButton,
+                                        saveButtonPressed && styles.btnPressed,
+                                    ]}
+                                >
+                                    <Text style={styles.primaryButtonText}>
+                                        {saveSuccess ? "Changes saved" : "Save changes"}
+                                    </Text>
+                                </View>
+                            </Pressable>
+                        </Animated.View>
                     )}
-
-                    <Pressable
-                        onPressIn={() => setPrimaryButtonPressed(true)}
-                        onPressOut={() => setPrimaryButtonPressed(false)}
-                        onPress={handleSaveChanges}
-                        style={styles.primaryButtonContainer}
-                        testID="profile/save"
-                        accessibilityRole="button"
-                        accessibilityLabel="Save profile changes"
-                    >
-                        <View style={[
-                            styles.primaryButton,
-                            primaryButtonPressed && styles.btnPressed
-                        ]}>
-                            <Text style={styles.primaryButtonText}>Save Changes</Text>
-                        </View>
-                    </Pressable>
 
                     <Pressable
                         onPressIn={() => setSecondaryButtonPressed(true)}

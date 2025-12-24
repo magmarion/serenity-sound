@@ -25,7 +25,6 @@ export const profileStyles = StyleSheet.create({
         backgroundColor: "transparent",
     },
     header: {
-        paddingTop: 10,
         paddingBottom: 24,
         paddingHorizontal: 20,
         flexDirection: "row",
