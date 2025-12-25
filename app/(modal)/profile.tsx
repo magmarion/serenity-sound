@@ -289,8 +289,6 @@ function ProfileScreen() {
                     <BackButton
                         onPress={() => router.back()}
                         accessibilityLabel="Go back to settings"
-                        iconColor={COLORS.text}
-                        iconSize={20}
                     />
                 </View>
 
@@ -298,7 +296,7 @@ function ProfileScreen() {
                     mode="signin"
                     onSubmit={handleAuthSubmit}
                     onBack={() => router.back()}
-                    showBackButton={false} // We already have our own back button
+                    showBackButton={false}
                     isInModal={true}
                 />
             </View>
@@ -330,8 +328,6 @@ function ProfileScreen() {
                 <BackButton
                     onPress={() => router.back()}
                     accessibilityLabel="Go back to settings"
-                    iconColor={COLORS.text}
-                    iconSize={20}
                 />
             </View>
 

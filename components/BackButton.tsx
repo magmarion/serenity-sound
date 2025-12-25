@@ -1,5 +1,6 @@
+// components/BackButton.tsx
 import { useRouter } from 'expo-router';
-import { ArrowLeft } from 'lucide-react-native';
+import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { StyleSheet, TouchableOpacity, ViewStyle } from 'react-native';
 
@@ -42,7 +43,7 @@ export const BackButton: React.FC<BackButtonProps> = ({
             accessibilityHint="Returns to the previous screen"
             activeOpacity={0.7}
         >
-            <ArrowLeft color={iconColor} size={iconSize} />
+            <Ionicons name="arrow-back" size={iconSize} color={iconColor} />
         </TouchableOpacity>
     );
 };

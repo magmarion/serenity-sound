@@ -10,6 +10,7 @@ import React, { useEffect, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View, } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { categoryDetailStyles as styles } from '@/styles/category/id.styles';
+import { BackButton } from '@/components/BackButton'; // Add this import
 
 const ART_URL = "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80";
 const DEFAULT_SOUND_URL = "https://orangefreesounds.com/wp-content/uploads/2022/08/Rain-and-thunder-with-ocean-waves-sound-effect.mp3";
@@ -191,10 +192,6 @@ export default function CategoryDetailScreen() {
         toggleFavorite(session);
     };
 
-    const handleBack = () => {
-        router.back();
-    };
-
     const handleInfoPress = () => {
         Haptics.selectionAsync();
         setShowInfoModal(true);
@@ -211,15 +208,13 @@ export default function CategoryDetailScreen() {
             {/* Header */}
             <SafeAreaView style={styles.safeArea} edges={["top"]}>
                 <View style={styles.header}>
-                    <Pressable
-                        onPress={handleBack}
-                        style={styles.backButton}
-                        accessibilityRole="button"
-                        accessibilityLabel="Go back"
-                        accessibilityHint="Returns to the previous screen"
-                    >
-                        <Ionicons name="chevron-back" size={24} color={Colors.light.text} />
-                    </Pressable>
+                    {/* REPLACE the custom back button with BackButton component */}
+                    <BackButton
+                        onPress={router.back}
+                        accessibilityLabel="Go back to categories"
+                        iconColor={Colors.light.text}
+                        iconSize={24}
+                    />
 
                     <View style={styles.headerCenter}>
                         <Text style={styles.categoryTitle}>{categoryConfig.title}</Text>

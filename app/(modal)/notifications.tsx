@@ -1,4 +1,4 @@
-import { BackButton } from '@/components/BackButton'; // Add this import
+import { BackButton } from '@/components/BackButton';
 import { useRouter } from 'expo-router';
 import { Bell, Download, Mail, MessageSquare, Play, Smartphone, Star } from 'lucide-react-native';
 import React, { useState } from 'react';
@@ -79,7 +79,6 @@ export default function NotificationsScreen() {
         <View style={styles.wrapper}>
             <SafeAreaView style={styles.container} edges={['top']}>
                 <View style={styles.header}>
-                    {/* Replace the old TouchableOpacity with BackButton */}
                     <BackButton
                         accessibilityLabel="Go back to settings"
                     />
