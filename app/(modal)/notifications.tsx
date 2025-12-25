@@ -1,5 +1,4 @@
 import { BackButton } from '@/components/BackButton';
-import { useRouter } from 'expo-router';
 import { Bell, Download, Mail, MessageSquare, Play, Smartphone, Star } from 'lucide-react-native';
 import React, { useState } from 'react';
 import { Animated, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
@@ -57,7 +56,6 @@ const NotificationItem = ({ icon, title, description, isEnabled, onToggle }: Not
 };
 
 export default function NotificationsScreen() {
-    const router = useRouter();
     const [settings, setSettings] = useState({
         pushNotifications: true,
         emailAlerts: false,
