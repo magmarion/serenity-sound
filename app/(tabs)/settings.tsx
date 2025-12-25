@@ -146,11 +146,6 @@ function SettingsScreen() {
     ];
   }, [onRowPress, router]);
 
-  const handleRowPress = useCallback(async (rowId: string) => {
-    await Haptics.selectionAsync();
-    onRowPress(rowId);
-  }, [onRowPress]);
-
   const RowItem: React.FC<{ row: SettingsRow; index: number; totalRows: number; onPress?: () => void }> = ({ row, index, totalRows, onPress }) => {
     const [isPressed, setIsPressed] = useState(false);
 
