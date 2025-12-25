@@ -1,6 +1,5 @@
 // app/(tabs)/settings.tsx
 import { FontAwesome6, Ionicons } from "@expo/vector-icons";
-import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
 import { Stack, useRouter } from "expo-router";
 import React, { memo, useCallback, useMemo, useState } from "react";
