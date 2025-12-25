@@ -1,4 +1,4 @@
-// app/sign-in.tsx - UPDATED
+// app/sign-in.tsx
 import { useLocalSearchParams, router } from 'expo-router';
 import { View } from 'react-native';
 import { useAuthStore } from '@/store/auth-store';
@@ -41,7 +41,7 @@ export default function SignInScreen() {
     };
 
     const handleBack = () => {
-        router.back(); // Go back to landing page
+        router.back();
     };
 
     return (
@@ -50,7 +50,7 @@ export default function SignInScreen() {
                 mode={initialMode}
                 onSubmit={handleSubmit}
                 onBack={handleBack}
-                showBackButton={true} // Show back button for sign-in screen
+                showBackButton={true}
                 isInModal={false}
             />
         </View>

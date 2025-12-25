@@ -53,7 +53,6 @@ export default function PlayerSheet() {
     const initialIndex = params.currentIndex ? parseInt(params.currentIndex as string) : 0;
 
     // State for playlist navigation
-    const [currentPlaylist, setCurrentPlaylist] = useState<Session[]>([]);
     const [currentTrackIndex, setCurrentTrackIndex] = useState<number>(initialIndex);
     const [shuffledPlaylist, setShuffledPlaylist] = useState<Session[]>([]);
     const [isShuffled, setIsShuffled] = useState(false);
@@ -124,7 +123,6 @@ export default function PlayerSheet() {
                 if (playlistParam) {
                     // If playlist was passed as a parameter
                     const parsedPlaylist = JSON.parse(playlistParam);
-                    setCurrentPlaylist(parsedPlaylist);
                     setOriginalPlaylist(parsedPlaylist);
 
                     // Find the current track in the playlist
@@ -142,13 +140,11 @@ export default function PlayerSheet() {
 
                     // If current track is found in playlist, use that playlist
                     if (currentIndex !== -1) {
-                        setCurrentPlaylist(playlist);
                         setOriginalPlaylist(playlist);
                         setCurrentTrackIndex(currentIndex);
                     } else {
                         // If current track not in playlist, create a playlist with just this track
                         const newPlaylist = [session];
-                        setCurrentPlaylist(newPlaylist);
                         setOriginalPlaylist(newPlaylist);
                         setCurrentTrackIndex(0);
                     }
@@ -157,7 +153,6 @@ export default function PlayerSheet() {
                 console.error('Error setting up playlist:', error);
                 // Fallback: use just the current session
                 const newPlaylist = [session];
-                setCurrentPlaylist(newPlaylist);
                 setOriginalPlaylist(newPlaylist);
                 setCurrentTrackIndex(0);
             }
@@ -179,10 +174,10 @@ export default function PlayerSheet() {
         }
     }, [originalPlaylist]);
 
-    // Load and manage audio
+    const soundRef = useRef<Audio.Sound | null>(null);
+
     useEffect(() => {
         let mounted = true;
-        let player: Audio.Sound;
 
         const loadSound = async () => {
             try {
@@ -195,8 +190,9 @@ export default function PlayerSheet() {
                     playThroughEarpieceAndroid: false,
                 });
 
-                if (sound) {
-                    await sound.unloadAsync();
+                if (soundRef.current) {
+                    await soundRef.current.unloadAsync();
+                    soundRef.current = null;
                 }
 
                 const { sound: loadedSound } = await Audio.Sound.createAsync(
@@ -205,32 +201,23 @@ export default function PlayerSheet() {
                 );
 
                 if (!mounted) {
-                    loadedSound.unloadAsync();
+                    await loadedSound.unloadAsync();
                     return;
                 }
 
-                player = loadedSound;
-                setSound(player);
-
-                const status = await loadedSound.getStatusAsync();
-                if (status.isLoaded && status.durationMillis) {
-                    setTrackDuration(status.durationMillis / 1000);
-                }
+                soundRef.current = loadedSound;
+                setSound(loadedSound);
 
                 loadedSound.setOnPlaybackStatusUpdate((status) => {
-                    if (!mounted) return;
+                    if (!mounted || !status.isLoaded) return;
 
-                    if (status.isLoaded) {
-                        setProgress(status.positionMillis / 1000);
-                        setIsPlaying(status.isPlaying);
+                    setProgress(status.positionMillis / 1000);
+                    setIsPlaying(status.isPlaying);
 
-                        if (status.didJustFinish) {
-                            // Auto-play next track when current finishes
-                            handleNextTrackRef.current?.();
-                        }
+                    if (status.didJustFinish) {
+                        handleNextTrackRef.current?.();
                     }
                 });
-
             } catch (err) {
                 console.error("Error loading sound:", err);
             }
@@ -240,12 +227,14 @@ export default function PlayerSheet() {
 
         return () => {
             mounted = false;
-            if (player) {
-                player.setOnPlaybackStatusUpdate(null);
-                player.unloadAsync();
+            if (soundRef.current) {
+                soundRef.current.setOnPlaybackStatusUpdate(null);
+                soundRef.current.unloadAsync();
+                soundRef.current = null;
             }
         };
     }, [soundUrl]);
+
 
     const clearSleepTimer = useCallback(() => {
         if (sleepTimerRef.current) {

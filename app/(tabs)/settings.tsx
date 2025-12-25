@@ -1,6 +1,5 @@
 // app/(tabs)/settings.tsx
 import { FontAwesome6, Ionicons } from "@expo/vector-icons";
-import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
 import { Stack, useRouter } from "expo-router";
 import React, { memo, useCallback, useMemo, useState } from "react";
@@ -57,7 +56,7 @@ function SettingsScreen() {
             iconName: "notifications",
             iconBg: "rgba(255,140,84,0.18)",
             iconSet: "Ionicons",
-            onPress: () => onRowPress("notifications"),
+            onPress: () => { router.push('/(modal)/notifications'); },
           },
         ],
       },
@@ -145,11 +144,6 @@ function SettingsScreen() {
       },
     ];
   }, [onRowPress, router]);
-
-  const handleRowPress = useCallback(async (rowId: string) => {
-    await Haptics.selectionAsync();
-    onRowPress(rowId);
-  }, [onRowPress]);
 
   const RowItem: React.FC<{ row: SettingsRow; index: number; totalRows: number; onPress?: () => void }> = ({ row, index, totalRows, onPress }) => {
     const [isPressed, setIsPressed] = useState(false);

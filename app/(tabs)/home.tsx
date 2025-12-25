@@ -106,7 +106,7 @@ function HomeContent() {
     const [error, setError] = useState<string | null>(null);
 
     const { isFavorite, toggleFavorite } = useFavoritesStore();
-    const { user, profile, isAuthenticated } = useAuthStore();
+    const { user, profile } = useAuthStore();
 
     useEffect(() => {
         loadSessions();

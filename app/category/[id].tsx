@@ -1,15 +1,16 @@
 // app/category/[id].tsx
+import { BackButton } from '@/components/BackButton'; // Add this import
 import Colors from "@/constants/colors";
 import { fetchSoundEffects, Session } from "@/services/api";
 import { useFavoritesStore } from "@/store/favorites-store";
+import { categoryDetailStyles as styles } from '@/styles/category/id.styles';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View, } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { categoryDetailStyles as styles } from '@/styles/category/id.styles';
 
 const ART_URL = "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80";
 const DEFAULT_SOUND_URL = "https://orangefreesounds.com/wp-content/uploads/2022/08/Rain-and-thunder-with-ocean-waves-sound-effect.mp3";
@@ -139,11 +140,8 @@ export default function CategoryDetailScreen() {
     // Use Zustand store
     const { isFavorite, toggleFavorite } = useFavoritesStore();
 
-    useEffect(() => {
-        loadCategorySounds();
-    }, [categoryId]);
 
-    const loadCategorySounds = async () => {
+    const loadCategorySounds = useCallback(async () => {
         try {
             setLoading(true);
             setError(null);
@@ -165,7 +163,11 @@ export default function CategoryDetailScreen() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [categoryId]); // Add categoryId as dependency
+
+    useEffect(() => {
+        loadCategorySounds();
+    }, [loadCategorySounds]); // Now it's stable
 
     const openPlayerForSession = (session: Session) => {
         const soundUrl = session.soundUrl || DEFAULT_SOUND_URL;
@@ -191,10 +193,6 @@ export default function CategoryDetailScreen() {
         toggleFavorite(session);
     };
 
-    const handleBack = () => {
-        router.back();
-    };
-
     const handleInfoPress = () => {
         Haptics.selectionAsync();
         setShowInfoModal(true);
@@ -211,15 +209,13 @@ export default function CategoryDetailScreen() {
             {/* Header */}
             <SafeAreaView style={styles.safeArea} edges={["top"]}>
                 <View style={styles.header}>
-                    <Pressable
-                        onPress={handleBack}
-                        style={styles.backButton}
-                        accessibilityRole="button"
-                        accessibilityLabel="Go back"
-                        accessibilityHint="Returns to the previous screen"
-                    >
-                        <Ionicons name="chevron-back" size={24} color={Colors.light.text} />
-                    </Pressable>
+                    {/* REPLACE the custom back button with BackButton component */}
+                    <BackButton
+                        onPress={router.back}
+                        accessibilityLabel="Go back to categories"
+                        iconColor={Colors.light.text}
+                        iconSize={24}
+                    />
 
                     <View style={styles.headerCenter}>
                         <Text style={styles.categoryTitle}>{categoryConfig.title}</Text>
