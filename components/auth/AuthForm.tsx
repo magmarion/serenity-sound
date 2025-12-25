@@ -1,12 +1,11 @@
-// app/components/auth/AuthForm.tsx - UPDATED
+// app/components/auth/AuthForm.tsx
+import { BackButton } from '@/components/BackButton';
 import { COLORS } from '@/styles/modal/profile.styles';
-import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useCallback, useState } from 'react';
 import {
     KeyboardAvoidingView,
     Platform,
-    Pressable,
     ScrollView,
     StyleSheet,
     Text,
@@ -42,7 +41,6 @@ export function AuthForm({
     const [mode, setMode] = useState<'signin' | 'signup'>(initialMode);
     const [focusedAuth, setFocusedAuth] = useState<string | null>(null);
     const [primaryButtonPressed, setPrimaryButtonPressed] = useState(false);
-    const [headerButtonPressed, setHeaderButtonPressed] = useState(false);
 
     // Form state
     const [email, setEmail] = useState('');
@@ -131,23 +129,12 @@ export function AuthForm({
                 <View
                     style={[localStyles.header, { paddingTop: insets.top + 10 }]}
                 >
-                    <Pressable
-                        onPressIn={() => setHeaderButtonPressed(true)}
-                        onPressOut={() => setHeaderButtonPressed(false)}
+                    <BackButton
                         onPress={handleBackPress}
-                        accessibilityRole="button"
-                        accessibilityLabel="Back"
-                    >
-                        <View
-                            style={[
-                                localStyles.headerBackButton,
-                                headerButtonPressed && localStyles.headerIconButtonPressed,
-                            ]}
-                        >
-                            <Ionicons name="arrow-back" size={20} color={COLORS.text} />
-                            <Text style={localStyles.backText}>Back</Text>
-                        </View>
-                    </Pressable>
+                        accessibilityLabel="Go back"
+                        iconColor={COLORS.text}
+                        iconSize={20}
+                    />
                 </View>
             )}
 
@@ -234,26 +221,6 @@ const localStyles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "flex-start",
-    },
-    headerBackButton: {
-        height: 40,
-        borderRadius: 12,
-        flexDirection: "row",
-        alignItems: "center",
-        paddingHorizontal: 12,
-        gap: 6,
-        backgroundColor: "rgba(255,255,255,0.04)",
-        borderWidth: 1,
-        borderColor: "rgba(255,255,255,0.10)",
-    },
-    backText: {
-        color: COLORS.text,
-        fontSize: 14,
-        fontWeight: "600",
-    },
-    headerIconButtonPressed: {
-        transform: [{ scale: 0.98 }],
-        opacity: 0.85,
     },
     keyboardAvoidingView: {
         flex: 1,

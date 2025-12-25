@@ -1,5 +1,5 @@
-// app/(modal)/profile.tsx - CLEANED VERSION
 import { AuthForm } from "@/components/auth";
+import { BackButton } from "@/components/BackButton";
 import { useAuthStore } from "@/store/auth-store";
 import { profileStyles as styles } from "@/styles/modal/profile.styles";
 import { Ionicons } from "@expo/vector-icons";
@@ -82,7 +82,6 @@ function ProfileScreen() {
         updateProfile,
     } = useAuthStore();
 
-    const [headerButtonPressed, setHeaderButtonPressed] = useState(false);
     const [secondaryButtonPressed, setSecondaryButtonPressed] = useState(false);
     const [saveButtonPressed, setSaveButtonPressed] = useState(false);
     const [securityRowPressed, setSecurityRowPressed] = useState(false);
@@ -287,24 +286,12 @@ function ProfileScreen() {
                     style={[styles.header, { paddingTop: insets.top + 10 }]}
                     testID="profile/header"
                 >
-                    <Pressable
-                        onPressIn={() => setHeaderButtonPressed(true)}
-                        onPressOut={() => setHeaderButtonPressed(false)}
+                    <BackButton
                         onPress={() => router.back()}
-                        testID="profile/back"
-                        accessibilityRole="button"
-                        accessibilityLabel="Back"
-                    >
-                        <View
-                            style={[
-                                styles.headerBackButton,
-                                headerButtonPressed && styles.headerIconButtonPressed,
-                            ]}
-                        >
-                            <Ionicons name="arrow-back" size={20} color={COLORS.text} />
-                            <Text style={styles.backText}>Back</Text>
-                        </View>
-                    </Pressable>
+                        accessibilityLabel="Go back to settings"
+                        iconColor={COLORS.text}
+                        iconSize={20}
+                    />
                 </View>
 
                 <AuthForm
@@ -340,24 +327,12 @@ function ProfileScreen() {
                 style={[styles.header, { paddingTop: insets.top + 10 }]}
                 testID="profile/header"
             >
-                <Pressable
-                    onPressIn={() => setHeaderButtonPressed(true)}
-                    onPressOut={() => setHeaderButtonPressed(false)}
+                <BackButton
                     onPress={() => router.back()}
-                    testID="profile/back"
-                    accessibilityRole="button"
-                    accessibilityLabel="Back"
-                >
-                    <View
-                        style={[
-                            styles.headerBackButton,
-                            headerButtonPressed && styles.headerIconButtonPressed,
-                        ]}
-                    >
-                        <Ionicons name="arrow-back" size={20} color={COLORS.text} />
-                        <Text style={styles.backText}>Back</Text>
-                    </View>
-                </Pressable>
+                    accessibilityLabel="Go back to settings"
+                    iconColor={COLORS.text}
+                    iconSize={20}
+                />
             </View>
 
             <KeyboardAvoidingView

@@ -21,11 +21,12 @@ export const categoryDetailStyles = StyleSheet.create({
     backButton: {
         minWidth: 44,
         minHeight: 44,
-        padding: 10,
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderRadius: 22,
+        alignItems: 'center' as const,
+        justifyContent: 'center' as const,
+        borderRadius: 12,
         backgroundColor: 'rgba(255, 255, 255, 0.1)',
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.15)',
     },
     headerCenter: {
         alignItems: 'center',

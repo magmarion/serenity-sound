@@ -56,7 +56,7 @@ function SettingsScreen() {
             iconName: "notifications",
             iconBg: "rgba(255,140,84,0.18)",
             iconSet: "Ionicons",
-            onPress: () => onRowPress("notifications"),
+            onPress: () => { router.push('/(modal)/notifications'); },
           },
         ],
       },
