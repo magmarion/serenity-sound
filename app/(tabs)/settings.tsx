@@ -156,7 +156,6 @@ function SettingsScreen() {
       setIsPressed(false);
     }, []);
 
-    // EXACT SAME PATTERN AS YOUR FAVORITES SCREEN
     const IconComponent = (row.iconSet === 'FontAwesome' ? FontAwesome6 : Ionicons) as React.ComponentType<any>;
 
     return (
