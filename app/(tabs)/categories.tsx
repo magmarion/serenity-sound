@@ -41,10 +41,9 @@ type Category = {
     | "Wind"
     | "Moon"
     | "Waves";
-    moodIcon?: keyof typeof Ionicons.glyphMap; // Added for home screen icon consistency
+    moodIcon?: keyof typeof Ionicons.glyphMap; // For home screen icon consistency
 };
 
-// Updated colors to match home screen mood tiles gradient style
 const CATEGORIES: Category[] = [
     {
         id: "sleep",
