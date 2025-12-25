@@ -53,7 +53,6 @@ export default function PlayerSheet() {
     const initialIndex = params.currentIndex ? parseInt(params.currentIndex as string) : 0;
 
     // State for playlist navigation
-    const [currentPlaylist, setCurrentPlaylist] = useState<Session[]>([]);
     const [currentTrackIndex, setCurrentTrackIndex] = useState<number>(initialIndex);
     const [shuffledPlaylist, setShuffledPlaylist] = useState<Session[]>([]);
     const [isShuffled, setIsShuffled] = useState(false);
@@ -124,7 +123,6 @@ export default function PlayerSheet() {
                 if (playlistParam) {
                     // If playlist was passed as a parameter
                     const parsedPlaylist = JSON.parse(playlistParam);
-                    setCurrentPlaylist(parsedPlaylist);
                     setOriginalPlaylist(parsedPlaylist);
 
                     // Find the current track in the playlist
@@ -142,13 +140,11 @@ export default function PlayerSheet() {
 
                     // If current track is found in playlist, use that playlist
                     if (currentIndex !== -1) {
-                        setCurrentPlaylist(playlist);
                         setOriginalPlaylist(playlist);
                         setCurrentTrackIndex(currentIndex);
                     } else {
                         // If current track not in playlist, create a playlist with just this track
                         const newPlaylist = [session];
-                        setCurrentPlaylist(newPlaylist);
                         setOriginalPlaylist(newPlaylist);
                         setCurrentTrackIndex(0);
                     }
@@ -157,7 +153,6 @@ export default function PlayerSheet() {
                 console.error('Error setting up playlist:', error);
                 // Fallback: use just the current session
                 const newPlaylist = [session];
-                setCurrentPlaylist(newPlaylist);
                 setOriginalPlaylist(newPlaylist);
                 setCurrentTrackIndex(0);
             }
