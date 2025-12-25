@@ -3,13 +3,14 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router, Stack } from "expo-router";
 import { UserRound, Wand2 } from "lucide-react-native";
 import React, { useCallback, useMemo, useRef, useState } from "react";
-import { Animated, Pressable, SafeAreaView, StyleSheet, Text, View, } from "react-native";
-
+import { Animated, Pressable, StyleSheet, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function LandingScreen() {
     const pressAnim = useRef<Animated.Value>(new Animated.Value(0)).current;
     const [signInPressed, setSignInPressed] = useState(false);
     const [createAccountPressed, setCreateAccountPressed] = useState(false);
+    const insets = useSafeAreaInsets();
 
     const signInScale = pressAnim.interpolate({
         inputRange: [0, 1],
@@ -77,7 +78,14 @@ export default function LandingScreen() {
                 style={StyleSheet.absoluteFill}
             />
 
-            <SafeAreaView style={styles.safe} testID="landingSafe">
+            {/* Using a regular View with safe area insets instead of deprecated SafeAreaView */}
+            <View style={[
+                styles.safe,
+                {
+                    paddingTop: Math.max(insets.top, 16), // Use insets, with minimum of 16px
+                    paddingBottom: Math.max(insets.bottom, 16)
+                }
+            ]} testID="landingSafe">
                 <View style={styles.content}>
                     <View style={styles.logoSection}>
                         {icon}
@@ -139,7 +147,7 @@ export default function LandingScreen() {
                         </View>
                     </View>
                 </View>
-            </SafeAreaView>
-        </View>
+            </View>
+        </View >
     );
 }
