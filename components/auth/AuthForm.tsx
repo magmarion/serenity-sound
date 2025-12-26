@@ -2,7 +2,14 @@ import { BackButton } from "@/components/BackButton";
 import { COLORS } from "@/styles/modal/profile.styles";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useCallback, useEffect, useState } from "react";
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View, } from "react-native";
+import {
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text,
+    View,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { SignInForm } from "./SignInForm";
 import { SignUpForm } from "./SignUpForm";
@@ -40,7 +47,6 @@ export function AuthForm({
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [touched, setTouched] = useState<Record<string, boolean>>({});
 
-    /* RESET FORM WHEN MODE CHANGES */
     useEffect(() => {
         setEmail("");
         setPassword("");
@@ -53,27 +59,31 @@ export function AuthForm({
         setFocusedAuth(null);
     }, [mode]);
 
-    const validate = useCallback(
-        (values: any) => {
+    const validateInline = useCallback(
+        (values: any, touchedSnapshot = touched) => {
             const schema = mode === "signin" ? signInSchema : signUpSchema;
             const result = schema.safeParse(values);
 
             if (result.success) {
                 setErrors({});
-                return true;
+                return;
             }
 
             const nextErrors: Record<string, string> = {};
 
             for (const issue of result.error.issues) {
                 const field = issue.path[0] as string;
-                if (touched[field]) {
-                    nextErrors[field] = issue.message;
-                }
-            }
 
+                if (!touchedSnapshot[field]) continue;
+
+                if (field === "email") {
+                    const value = values.email as string;
+                    if (value.length === 0) continue;
+                    if (value.includes("@")) continue;
+                }
+                nextErrors[field] = issue.message;
+            }
             setErrors(nextErrors);
-            return false;
         },
         [mode, touched]
     );
@@ -128,8 +138,11 @@ export function AuthForm({
         (field: string, setter: (v: string) => void) =>
             (value: string) => {
                 setter(value);
-                setTouched((prev) => ({ ...prev, [field]: true }));
-                validate({
+
+                const nextTouched = { ...touched, [field]: true };
+                setTouched(nextTouched);
+
+                validateInline({
                     email,
                     password,
                     confirmPassword,
@@ -137,7 +150,7 @@ export function AuthForm({
                     username,
                     phone,
                     [field]: value,
-                });
+                }, nextTouched);
             };
 
     return (
