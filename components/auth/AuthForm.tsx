@@ -3,15 +3,10 @@ import { BackButton } from '@/components/BackButton';
 import { COLORS } from '@/styles/modal/profile.styles';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useCallback, useState } from 'react';
-import {
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    View
-} from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ZodError } from 'zod';
+import { signInSchema, signUpSchema } from './auth.schema';
 import { SignInForm } from './SignInForm';
 import { SignUpForm } from './SignUpForm';
 
@@ -54,42 +49,43 @@ export function AuthForm({
     const handleSubmit = useCallback(async () => {
         if (loading) return;
 
-        // Basic validation
-        if (!email || !password) {
-            alert('Please fill in all required fields');
-            return;
-        }
-
-        if (mode === 'signup') {
-            if (!name) {
-                alert('Please enter your name');
-                return;
-            }
-            if (password !== confirmPassword) {
-                alert('Passwords do not match');
-                return;
-            }
-        }
-
-        setLoading(true);
         try {
-            await onSubmit(mode, {
-                email,
-                password,
-                ...(mode === 'signup' && {
-                    name,
-                    username,
-                    phone,
-                    confirmPassword,
-                }),
-            });
-        } catch (error) {
-            console.error('Auth error:', error);
-            // Error handling will be done by the parent component
+            const data =
+                mode === "signin"
+                    ? signInSchema.parse({ email, password })
+                    : signUpSchema.parse({
+                        name,
+                        email,
+                        password,
+                        confirmPassword,
+                        username,
+                        phone,
+                    });
+
+            setLoading(true);
+            await onSubmit(mode, data);
+        } catch (err) {
+            if (err instanceof ZodError) {
+                alert(err.issues[0].message);
+                return;
+            }
+
+            console.error("Auth error:", err);
         } finally {
             setLoading(false);
         }
-    }, [mode, email, password, confirmPassword, name, username, phone, loading, onSubmit]);
+    }, [
+        mode,
+        email,
+        password,
+        confirmPassword,
+        name,
+        username,
+        phone,
+        loading,
+        onSubmit,
+    ]);
+
 
     const handlePrimaryPressIn = useCallback(() => {
         setPrimaryButtonPressed(true);
