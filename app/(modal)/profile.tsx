@@ -465,7 +465,7 @@ function ProfileScreen() {
                         <Pressable
                             onPressIn={() => setSecurityRowPressed(true)}
                             onPressOut={() => setSecurityRowPressed(false)}
-                            onPress={() => console.log("Change password pressed")}
+                            onPress={() => router.push("/change-password")}
                             style={styles.securityRowContainer}
                             testID="profile/changePassword"
                             accessibilityRole="button"
