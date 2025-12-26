@@ -1,15 +1,8 @@
 import { BackButton } from "@/components/BackButton";
 import { COLORS } from "@/styles/modal/profile.styles";
 import { LinearGradient } from "expo-linear-gradient";
-import React, { useCallback, useState } from "react";
-import {
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    View,
-} from "react-native";
+import React, { useCallback, useEffect, useState } from "react";
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View, } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { SignInForm } from "./SignInForm";
 import { SignUpForm } from "./SignUpForm";
@@ -45,6 +38,12 @@ export function AuthForm({
     const [phone, setPhone] = useState("");
 
     const [errors, setErrors] = useState<Record<string, string>>({});
+    const [touched, setTouched] = useState<Record<string, boolean>>({});
+
+    useEffect(() => {
+        setErrors({});
+        setTouched({});
+    }, [mode]);
 
     const validate = useCallback(
         (values: any) => {
@@ -57,21 +56,25 @@ export function AuthForm({
             }
 
             const nextErrors: Record<string, string> = {};
+
             for (const issue of result.error.issues) {
-                const key = issue.path[0];
-                if (key) nextErrors[key as string] = issue.message;
+                const field = issue.path[0] as string;
+                if (touched[field]) {
+                    nextErrors[field] = issue.message;
+                }
             }
 
             setErrors(nextErrors);
             return false;
         },
-        [mode]
+        [mode, touched]
     );
 
     const handleSubmit = useCallback(async () => {
         if (loading) return;
 
-        const isValid = validate({
+        const schema = mode === "signin" ? signInSchema : signUpSchema;
+        const result = schema.safeParse({
             email,
             password,
             confirmPassword,
@@ -80,23 +83,29 @@ export function AuthForm({
             phone,
         });
 
-        if (!isValid) return;
+        if (!result.success) {
+            const submitErrors: Record<string, string> = {};
+            for (const issue of result.error.issues) {
+                const field = issue.path[0] as string;
+                submitErrors[field] = issue.message;
+            }
+            setErrors(submitErrors);
+            setTouched(
+                Object.keys(submitErrors).reduce((acc, key) => {
+                    acc[key] = true;
+                    return acc;
+                }, {} as Record<string, boolean>)
+            );
+            return;
+        }
 
         setLoading(true);
         try {
-            await onSubmit(mode, {
-                email,
-                password,
-                name,
-                confirmPassword,
-                username,
-                phone,
-            });
+            await onSubmit(mode, result.data);
         } finally {
             setLoading(false);
         }
     }, [
-        validate,
         loading,
         mode,
         email,
@@ -112,6 +121,7 @@ export function AuthForm({
         (field: string, setter: (v: string) => void) =>
             (value: string) => {
                 setter(value);
+                setTouched((prev) => ({ ...prev, [field]: true }));
                 validate({
                     email,
                     password,
@@ -130,7 +140,6 @@ export function AuthForm({
                 style={StyleSheet.absoluteFill}
             />
 
-            {/* HEADER — RESTORED */}
             {showBackButton && (
                 <View
                     style={[
