@@ -1,30 +1,23 @@
-// app/components/auth/AuthForm.tsx
-import { BackButton } from '@/components/BackButton';
-import { COLORS } from '@/styles/modal/profile.styles';
-import { LinearGradient } from 'expo-linear-gradient';
-import React, { useCallback, useState } from 'react';
+import { BackButton } from "@/components/BackButton";
+import { COLORS } from "@/styles/modal/profile.styles";
+import { LinearGradient } from "expo-linear-gradient";
+import React, { useCallback, useEffect, useState } from "react";
 import {
     KeyboardAvoidingView,
     Platform,
     ScrollView,
     StyleSheet,
     Text,
-    View
-} from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { SignInForm } from './SignInForm';
-import { SignUpForm } from './SignUpForm';
+    View,
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { SignInForm } from "./SignInForm";
+import { SignUpForm } from "./SignUpForm";
+import { signInSchema, signUpSchema } from "./auth.schema";
 
 interface AuthFormProps {
-    mode: 'signin' | 'signup';
-    onSubmit: (mode: 'signin' | 'signup', data: {
-        email: string;
-        password: string;
-        name?: string;
-        username?: string;
-        phone?: string;
-        confirmPassword?: string;
-    }) => Promise<void>;
+    mode: "signin" | "signup";
+    onSubmit: (mode: "signin" | "signup", data: any) => Promise<void>;
     onBack?: () => void;
     showBackButton?: boolean;
     isInModal?: boolean;
@@ -38,84 +31,127 @@ export function AuthForm({
     isInModal = false,
 }: AuthFormProps) {
     const insets = useSafeAreaInsets();
-    const [mode, setMode] = useState<'signin' | 'signup'>(initialMode);
+
+    const [mode, setMode] = useState<"signin" | "signup">(initialMode);
     const [focusedAuth, setFocusedAuth] = useState<string | null>(null);
     const [primaryButtonPressed, setPrimaryButtonPressed] = useState(false);
-
-    // Form state
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [confirmPassword, setConfirmPassword] = useState('');
-    const [name, setName] = useState('');
-    const [username, setUsername] = useState('');
-    const [phone, setPhone] = useState('');
     const [loading, setLoading] = useState(false);
+
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
+    const [name, setName] = useState("");
+    const [username, setUsername] = useState("");
+    const [phone, setPhone] = useState("");
+
+    const [errors, setErrors] = useState<Record<string, string>>({});
+    const [touched, setTouched] = useState<Record<string, boolean>>({});
+
+    useEffect(() => {
+        setEmail("");
+        setPassword("");
+        setConfirmPassword("");
+        setName("");
+        setUsername("");
+        setPhone("");
+        setErrors({});
+        setTouched({});
+        setFocusedAuth(null);
+    }, [mode]);
+
+    const validateInline = useCallback(
+        (values: any, touchedSnapshot = touched) => {
+            const schema = mode === "signin" ? signInSchema : signUpSchema;
+            const result = schema.safeParse(values);
+
+            if (result.success) {
+                setErrors({});
+                return;
+            }
+
+            const nextErrors: Record<string, string> = {};
+
+            for (const issue of result.error.issues) {
+                const field = issue.path[0] as string;
+
+                if (!touchedSnapshot[field]) continue;
+
+                if (field === "email") {
+                    const value = values.email as string;
+                    if (value.length === 0) continue;
+                    if (value.includes("@")) continue;
+                }
+                nextErrors[field] = issue.message;
+            }
+            setErrors(nextErrors);
+        },
+        [mode, touched]
+    );
 
     const handleSubmit = useCallback(async () => {
         if (loading) return;
 
-        // Basic validation
-        if (!email || !password) {
-            alert('Please fill in all required fields');
-            return;
-        }
+        const schema = mode === "signin" ? signInSchema : signUpSchema;
+        const result = schema.safeParse({
+            email,
+            password,
+            confirmPassword,
+            name,
+            username,
+            phone,
+        });
 
-        if (mode === 'signup') {
-            if (!name) {
-                alert('Please enter your name');
-                return;
+        if (!result.success) {
+            const submitErrors: Record<string, string> = {};
+            const submitTouched: Record<string, boolean> = {};
+
+            for (const issue of result.error.issues) {
+                const field = issue.path[0] as string;
+                submitErrors[field] = issue.message;
+                submitTouched[field] = true;
             }
-            if (password !== confirmPassword) {
-                alert('Passwords do not match');
-                return;
-            }
+
+            setErrors(submitErrors);
+            setTouched(submitTouched);
+            return;
         }
 
         setLoading(true);
         try {
-            await onSubmit(mode, {
-                email,
-                password,
-                ...(mode === 'signup' && {
-                    name,
-                    username,
-                    phone,
-                    confirmPassword,
-                }),
-            });
-        } catch (error) {
-            console.error('Auth error:', error);
-            // Error handling will be done by the parent component
+            await onSubmit(mode, result.data);
         } finally {
             setLoading(false);
         }
-    }, [mode, email, password, confirmPassword, name, username, phone, loading, onSubmit]);
+    }, [
+        loading,
+        mode,
+        email,
+        password,
+        confirmPassword,
+        name,
+        username,
+        phone,
+        onSubmit,
+    ]);
 
-    const handlePrimaryPressIn = useCallback(() => {
-        setPrimaryButtonPressed(true);
-    }, []);
+    const onChange =
+        (field: string, setter: (v: string) => void) =>
+            (value: string) => {
+                setter(value);
 
-    const handlePrimaryPressOut = useCallback(() => {
-        setPrimaryButtonPressed(false);
-    }, []);
+                const nextTouched = { ...touched, [field]: true };
+                setTouched(nextTouched);
 
-    const handleFocus = useCallback((field: string) => {
-        setFocusedAuth(field);
-    }, []);
-
-    const handleBlur = useCallback(() => {
-        setFocusedAuth(null);
-    }, []);
-
-    const handleSwitchMode = useCallback(() => {
-        setMode(prev => prev === 'signin' ? 'signup' : 'signin');
-    }, []);
-
-    const handleBackPress = useCallback(() => {
-        if (onBack) {
-            onBack();
-        }
-    }, [onBack]);
+                validateInline({
+                    email,
+                    password,
+                    confirmPassword,
+                    name,
+                    username,
+                    phone,
+                    [field]: value,
+                }, nextTouched);
+            };
 
     return (
         <View style={localStyles.root}>
@@ -124,13 +160,15 @@ export function AuthForm({
                 style={StyleSheet.absoluteFill}
             />
 
-            {/* Header with Back Button */}
             {showBackButton && (
                 <View
-                    style={[localStyles.header, { paddingTop: insets.top + 10 }]}
+                    style={[
+                        localStyles.header,
+                        { paddingTop: insets.top + 10 },
+                    ]}
                 >
                     <BackButton
-                        onPress={handleBackPress}
+                        onPress={onBack}
                         accessibilityLabel="Go back"
                         iconColor={COLORS.text}
                         iconSize={20}
@@ -140,44 +178,50 @@ export function AuthForm({
 
             <KeyboardAvoidingView
                 style={localStyles.keyboardAvoidingView}
-                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+                behavior={Platform.OS === "ios" ? "padding" : "height"}
+                keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
             >
                 <ScrollView
                     contentContainerStyle={[
                         localStyles.authContainer,
                         {
                             paddingTop: showBackButton
-                                ? 20 // Less padding when we have header
-                                : insets.top + (isInModal ? 60 : 40)
-                        }
+                                ? 20
+                                : insets.top + (isInModal ? 60 : 40),
+                        },
                     ]}
                     showsVerticalScrollIndicator={false}
                 >
                     <Text style={localStyles.authTitle}>
                         {mode === "signin" ? "Sign in" : "Create Account"}
                     </Text>
+
                     <Text style={localStyles.authSubtitle}>
                         {mode === "signin"
                             ? "Sign in to save your preferences and access more features."
                             : "Create an account to get started"}
                     </Text>
 
-                    {mode === 'signin' ? (
+                    {mode === "signin" ? (
                         <SignInForm
                             email={email}
                             password={password}
+                            errors={errors}
                             loading={loading}
                             focusedAuth={focusedAuth}
-                            onEmailChange={setEmail}
-                            onPasswordChange={setPassword}
-                            onFocus={handleFocus}
-                            onBlur={handleBlur}
+                            onEmailChange={onChange("email", setEmail)}
+                            onPasswordChange={onChange("password", setPassword)}
+                            onFocus={setFocusedAuth}
+                            onBlur={() => setFocusedAuth(null)}
                             onSubmit={handleSubmit}
-                            onSwitchToSignUp={handleSwitchMode}
+                            onSwitchToSignUp={() => setMode("signup")}
                             primaryButtonPressed={primaryButtonPressed}
-                            onPrimaryPressIn={handlePrimaryPressIn}
-                            onPrimaryPressOut={handlePrimaryPressOut}
+                            onPrimaryPressIn={() =>
+                                setPrimaryButtonPressed(true)
+                            }
+                            onPrimaryPressOut={() =>
+                                setPrimaryButtonPressed(false)
+                            }
                         />
                     ) : (
                         <SignUpForm
@@ -187,21 +231,32 @@ export function AuthForm({
                             confirmPassword={confirmPassword}
                             username={username}
                             phone={phone}
+                            errors={errors}
                             loading={loading}
                             focusedAuth={focusedAuth}
-                            onNameChange={setName}
-                            onEmailChange={setEmail}
-                            onPasswordChange={setPassword}
-                            onConfirmPasswordChange={setConfirmPassword}
-                            onUsernameChange={setUsername}
-                            onPhoneChange={setPhone}
-                            onFocus={handleFocus}
-                            onBlur={handleBlur}
+                            onNameChange={onChange("name", setName)}
+                            onEmailChange={onChange("email", setEmail)}
+                            onPasswordChange={onChange("password", setPassword)}
+                            onConfirmPasswordChange={onChange(
+                                "confirmPassword",
+                                setConfirmPassword
+                            )}
+                            onUsernameChange={onChange(
+                                "username",
+                                setUsername
+                            )}
+                            onPhoneChange={onChange("phone", setPhone)}
+                            onFocus={setFocusedAuth}
+                            onBlur={() => setFocusedAuth(null)}
                             onSubmit={handleSubmit}
-                            onSwitchToSignIn={handleSwitchMode}
+                            onSwitchToSignIn={() => setMode("signin")}
                             primaryButtonPressed={primaryButtonPressed}
-                            onPrimaryPressIn={handlePrimaryPressIn}
-                            onPrimaryPressOut={handlePrimaryPressOut}
+                            onPrimaryPressIn={() =>
+                                setPrimaryButtonPressed(true)
+                            }
+                            onPrimaryPressOut={() =>
+                                setPrimaryButtonPressed(false)
+                            }
                         />
                     )}
                 </ScrollView>
@@ -232,15 +287,15 @@ const localStyles = StyleSheet.create({
     },
     authTitle: {
         fontSize: 28,
-        fontWeight: '800',
+        fontWeight: "800",
         color: COLORS.text,
         marginBottom: 8,
-        textAlign: 'center',
+        textAlign: "center",
     },
     authSubtitle: {
         fontSize: 16,
         color: COLORS.subText,
-        textAlign: 'center',
+        textAlign: "center",
         marginBottom: 32,
         lineHeight: 22,
         paddingHorizontal: 20,

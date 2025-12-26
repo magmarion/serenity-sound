@@ -1,8 +1,7 @@
-// app/components/auth/SignUpForm.tsx
-import { COLORS, profileStyles as styles } from '@/styles/modal/profile.styles';
-import { Ionicons } from '@expo/vector-icons';
-import React from 'react';
-import { ActivityIndicator, Pressable, Text, TextInput, View } from 'react-native';
+import { COLORS, profileStyles as styles } from "@/styles/modal/profile.styles";
+import { Ionicons } from "@expo/vector-icons";
+import React from "react";
+import { ActivityIndicator, Pressable, Text, TextInput, View, } from "react-native";
 
 interface SignUpFormProps {
     name: string;
@@ -11,6 +10,7 @@ interface SignUpFormProps {
     confirmPassword: string;
     username: string;
     phone: string;
+    errors: Record<string, string>;
     loading: boolean;
     focusedAuth: string | null;
     onNameChange: (text: string) => void;
@@ -35,6 +35,7 @@ export function SignUpForm({
     confirmPassword,
     username,
     phone,
+    errors,
     loading,
     focusedAuth,
     onNameChange,
@@ -49,223 +50,191 @@ export function SignUpForm({
     onSwitchToSignIn,
     primaryButtonPressed,
     onPrimaryPressIn,
-    onPrimaryPressOut
+    onPrimaryPressOut,
 }: SignUpFormProps) {
-    return (
-        <>
-            <View style={styles.formContainer}>
-                <View style={styles.inputContainer}>
-                    <View style={styles.inputLabelRow}>
-                        <Text style={styles.inputLabel}>Name*</Text>
-                    </View>
-                    <View
-                        style={[
-                            styles.inputFieldContainer,
-                            { borderColor: focusedAuth === 'name' ? COLORS.accent : COLORS.inputBorder },
-                        ]}
-                    >
-                        <Ionicons
-                            name="person"
-                            size={16}
-                            color={COLORS.subText}
-                            style={styles.inputFieldIcon}
-                        />
-                        <TextInput
-                            editable={true}
-                            style={styles.inputField}
-                            value={name}
-                            onChangeText={onNameChange}
-                            autoCapitalize="words"
-                            onFocus={() => onFocus('name')}
-                            onBlur={onBlur}
-                            placeholder="Enter your name"
-                            placeholderTextColor={COLORS.subText}
-                        />
-                    </View>
-                </View>
-
-                <View style={styles.inputContainer}>
-                    <View style={styles.inputLabelRow}>
-                        <Text style={styles.inputLabel}>Username</Text>
-                    </View>
-                    <View
-                        style={[
-                            styles.inputFieldContainer,
-                            { borderColor: focusedAuth === 'username' ? COLORS.accent : COLORS.inputBorder },
-                        ]}
-                    >
-                        <Ionicons
-                            name="at"
-                            size={16}
-                            color={COLORS.subText}
-                            style={styles.inputFieldIcon}
-                        />
-                        <TextInput
-                            editable={true}
-                            style={styles.inputField}
-                            value={username}
-                            onChangeText={onUsernameChange}
-                            autoCapitalize="none"
-                            onFocus={() => onFocus('username')}
-                            onBlur={onBlur}
-                            placeholder="Choose a username"
-                            placeholderTextColor={COLORS.subText}
-                        />
-                    </View>
-                </View>
-
-                <View style={styles.inputContainer}>
-                    <View style={styles.inputLabelRow}>
-                        <Text style={styles.inputLabel}>Phone</Text>
-                    </View>
-                    <View
-                        style={[
-                            styles.inputFieldContainer,
-                            { borderColor: focusedAuth === 'phone' ? COLORS.accent : COLORS.inputBorder },
-                        ]}
-                    >
-                        <Ionicons
-                            name="call"
-                            size={16}
-                            color={COLORS.subText}
-                            style={styles.inputFieldIcon}
-                        />
-                        <TextInput
-                            editable={true}
-                            style={styles.inputField}
-                            value={phone}
-                            onChangeText={onPhoneChange}
-                            keyboardType="phone-pad"
-                            onFocus={() => onFocus('phone')}
-                            onBlur={onBlur}
-                            placeholder="Enter phone number"
-                            placeholderTextColor={COLORS.subText}
-                        />
-                    </View>
-                </View>
-
-                <View style={styles.inputContainer}>
-                    <View style={styles.inputLabelRow}>
-                        <Text style={styles.inputLabel}>Email*</Text>
-                    </View>
-                    <View
-                        style={[
-                            styles.inputFieldContainer,
-                            { borderColor: focusedAuth === 'email' ? COLORS.accent : COLORS.inputBorder },
-                        ]}
-                    >
-                        <Ionicons
-                            name="mail"
-                            size={16}
-                            color={COLORS.subText}
-                            style={styles.inputFieldIcon}
-                        />
-                        <TextInput
-                            editable={true}
-                            style={styles.inputField}
-                            value={email}
-                            onChangeText={onEmailChange}
-                            autoCapitalize="none"
-                            keyboardType="email-address"
-                            onFocus={() => onFocus('email')}
-                            onBlur={onBlur}
-                            placeholder="Enter your email"
-                            placeholderTextColor={COLORS.subText}
-                        />
-                    </View>
-                </View>
-
-                <View style={styles.inputContainer}>
-                    <View style={styles.inputLabelRow}>
-                        <Text style={styles.inputLabel}>Password*</Text>
-                    </View>
-                    <View
-                        style={[
-                            styles.inputFieldContainer,
-                            { borderColor: focusedAuth === 'password' ? COLORS.accent : COLORS.inputBorder },
-                        ]}
-                    >
-                        <Ionicons
-                            name="lock-closed"
-                            size={16}
-                            color={COLORS.subText}
-                            style={styles.inputFieldIcon}
-                        />
-                        <TextInput
-                            editable={true}
-                            style={styles.inputField}
-                            secureTextEntry
-                            value={password}
-                            onChangeText={onPasswordChange}
-                            onFocus={() => onFocus('password')}
-                            onBlur={onBlur}
-                            placeholder="Create a password"
-                            placeholderTextColor={COLORS.subText}
-                        />
-                    </View>
-                </View>
-
-                <View style={styles.inputContainer}>
-                    <View style={styles.inputLabelRow}>
-                        <Text style={styles.inputLabel}>Confirm Password*</Text>
-                    </View>
-                    <View
-                        style={[
-                            styles.inputFieldContainer,
-                            { borderColor: focusedAuth === 'confirmPassword' ? COLORS.accent : COLORS.inputBorder },
-                        ]}
-                    >
-                        <Ionicons
-                            name="lock-closed"
-                            size={16}
-                            color={COLORS.subText}
-                            style={styles.inputFieldIcon}
-                        />
-                        <TextInput
-                            editable={true}
-                            style={styles.inputField}
-                            secureTextEntry
-                            value={confirmPassword}
-                            onChangeText={onConfirmPasswordChange}
-                            onFocus={() => onFocus('confirmPassword')}
-                            onBlur={onBlur}
-                            placeholder="Confirm your password"
-                            placeholderTextColor={COLORS.subText}
-                        />
-                    </View>
-                </View>
-
-                <Pressable
-                    onPressIn={onPrimaryPressIn}
-                    onPressOut={onPrimaryPressOut}
-                    onPress={onSubmit}
-                    disabled={loading}
-                    style={styles.primaryButtonContainer}
-                >
-                    <View
-                        style={[
-                            styles.primaryButton,
-                            primaryButtonPressed && styles.btnPressed,
-                            loading && styles.buttonDisabled,
-                        ]}
-                    >
-                        {loading ? (
-                            <ActivityIndicator color="#141414" size="small" />
-                        ) : (
-                            <Text style={styles.primaryButtonText}>Create Account</Text>
-                        )}
-                    </View>
-                </Pressable>
-
-                <View style={styles.modeSwitchContainer}>
-                    <Text style={styles.modeSwitchText}>
-                        Already have an account?
-                    </Text>
-                    <Pressable onPress={onSwitchToSignIn}>
-                        <Text style={styles.modeSwitchLink}>Sign in</Text>
-                    </Pressable>
-                </View>
+    const renderError = (field: string) =>
+        errors[field] && (
+            <View style={styles.errorRow}>
+                <View style={styles.errorDot} />
+                <Text style={styles.errorText}>{errors[field]}</Text>
             </View>
-        </>
+        );
+
+    return (
+        <View style={styles.formContainer}>
+            {/* NAME */}
+            <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Name*</Text>
+                <View
+                    style={[
+                        styles.inputFieldContainer,
+                        {
+                            borderColor: errors.name
+                                ? COLORS.danger
+                                : focusedAuth === "name"
+                                    ? COLORS.accent
+                                    : COLORS.inputBorder,
+                        },
+                    ]}
+                >
+                    <Ionicons
+                        name="person"
+                        size={16}
+                        color={COLORS.subText}
+                        style={styles.inputFieldIcon}
+                    />
+                    <TextInput
+                        style={styles.inputField}
+                        value={name}
+                        onChangeText={onNameChange}
+                        onFocus={() => onFocus("name")}
+                        onBlur={onBlur}
+                        placeholder="Enter your name"
+                        placeholderTextColor={COLORS.subText}
+                    />
+                </View>
+                {renderError("name")}
+            </View>
+
+            {/* EMAIL */}
+            <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Email*</Text>
+                <View
+                    style={[
+                        styles.inputFieldContainer,
+                        {
+                            borderColor: errors.email
+                                ? COLORS.danger
+                                : focusedAuth === "email"
+                                    ? COLORS.accent
+                                    : COLORS.inputBorder,
+                        },
+                    ]}
+                >
+                    <Ionicons
+                        name="mail"
+                        size={16}
+                        color={COLORS.subText}
+                        style={styles.inputFieldIcon}
+                    />
+                    <TextInput
+                        style={styles.inputField}
+                        value={email}
+                        onChangeText={onEmailChange}
+                        autoCapitalize="none"
+                        keyboardType="email-address"
+                        onFocus={() => onFocus("email")}
+                        onBlur={onBlur}
+                        placeholder="Enter your email"
+                        placeholderTextColor={COLORS.subText}
+                    />
+                </View>
+                {renderError("email")}
+            </View>
+
+            {/* PASSWORD */}
+            <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Password*</Text>
+                <View
+                    style={[
+                        styles.inputFieldContainer,
+                        {
+                            borderColor: errors.password
+                                ? COLORS.danger
+                                : focusedAuth === "password"
+                                    ? COLORS.accent
+                                    : COLORS.inputBorder,
+                        },
+                    ]}
+                >
+                    <Ionicons
+                        name="lock-closed"
+                        size={16}
+                        color={COLORS.subText}
+                        style={styles.inputFieldIcon}
+                    />
+                    <TextInput
+                        style={styles.inputField}
+                        secureTextEntry
+                        value={password}
+                        onChangeText={onPasswordChange}
+                        onFocus={() => onFocus("password")}
+                        onBlur={onBlur}
+                        placeholder="Create a password"
+                        placeholderTextColor={COLORS.subText}
+                    />
+                </View>
+                {renderError("password")}
+            </View>
+
+            {/* CONFIRM PASSWORD */}
+            <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Confirm Password*</Text>
+                <View
+                    style={[
+                        styles.inputFieldContainer,
+                        {
+                            borderColor: errors.confirmPassword
+                                ? COLORS.danger
+                                : focusedAuth === "confirmPassword"
+                                    ? COLORS.accent
+                                    : COLORS.inputBorder,
+                        },
+                    ]}
+                >
+                    <Ionicons
+                        name="lock-closed"
+                        size={16}
+                        color={COLORS.subText}
+                        style={styles.inputFieldIcon}
+                    />
+                    <TextInput
+                        style={styles.inputField}
+                        secureTextEntry
+                        value={confirmPassword}
+                        onChangeText={onConfirmPasswordChange}
+                        onFocus={() => onFocus("confirmPassword")}
+                        onBlur={onBlur}
+                        placeholder="Confirm your password"
+                        placeholderTextColor={COLORS.subText}
+                    />
+                </View>
+                {renderError("confirmPassword")}
+            </View>
+
+            {/* SUBMIT */}
+            <Pressable
+                onPressIn={onPrimaryPressIn}
+                onPressOut={onPrimaryPressOut}
+                onPress={onSubmit}
+                disabled={loading}
+                style={styles.primaryButtonContainer}
+            >
+                <View
+                    style={[
+                        styles.primaryButton,
+                        primaryButtonPressed && styles.btnPressed,
+                        loading && styles.buttonDisabled,
+                    ]}
+                >
+                    {loading ? (
+                        <ActivityIndicator color="#141414" />
+                    ) : (
+                        <Text style={styles.primaryButtonText}>
+                            Create Account
+                        </Text>
+                    )}
+                </View>
+            </Pressable>
+
+            <View style={styles.modeSwitchContainer}>
+                <Text style={styles.modeSwitchText}>
+                    Already have an account?
+                </Text>
+                <Pressable onPress={onSwitchToSignIn}>
+                    <Text style={styles.modeSwitchLink}>Sign in</Text>
+                </Pressable>
+            </View>
+        </View>
     );
 }
