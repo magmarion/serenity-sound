@@ -181,7 +181,8 @@ export default function PlayerSheet() {
 
         const loadSound = async () => {
             try {
-                console.log("Loading sound from:", soundUrl);
+                setProgress(0);
+                setTrackDuration(0);
 
                 await Audio.setAudioModeAsync({
                     allowsRecordingIOS: false,
@@ -200,6 +201,7 @@ export default function PlayerSheet() {
                     { shouldPlay: true }
                 );
 
+
                 if (!mounted) {
                     await loadedSound.unloadAsync();
                     return;
@@ -212,12 +214,18 @@ export default function PlayerSheet() {
                     if (!mounted || !status.isLoaded) return;
 
                     setProgress(status.positionMillis / 1000);
+
+                    if (status.durationMillis) {
+                        setTrackDuration(status.durationMillis / 1000);
+                    }
+
                     setIsPlaying(status.isPlaying);
 
                     if (status.didJustFinish) {
                         handleNextTrackRef.current?.();
                     }
                 });
+
             } catch (err) {
                 console.error("Error loading sound:", err);
             }
