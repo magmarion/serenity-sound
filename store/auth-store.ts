@@ -1,4 +1,3 @@
-// store/auth-store.ts
 import { create } from "zustand";
 import { auth, db } from "@/services/firebase";
 import {
@@ -7,6 +6,9 @@ import {
     onAuthStateChanged,
     signInWithEmailAndPassword,
     createUserWithEmailAndPassword,
+    EmailAuthProvider,
+    reauthenticateWithCredential,
+    updatePassword,
 } from "firebase/auth";
 import { doc, setDoc, getDoc, updateDoc } from "firebase/firestore";
 
@@ -33,6 +35,12 @@ interface AuthStore {
     signOut: () => Promise<void>;
     updateProfile: (data: Partial<UserProfile>) => Promise<void>;
     loadProfile: (uid: string) => Promise<void>;
+
+    // ✅ NEW
+    changePassword: (
+        currentPassword: string,
+        newPassword: string
+    ) => Promise<void>;
 }
 
 export const useAuthStore = create<AuthStore>((set, get) => ({
@@ -130,5 +138,25 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         if (snap.exists()) {
             set({ profile: snap.data() as UserProfile });
         }
+    },
+
+    // ✅ NEW: Change password (secure flow)
+    changePassword: async (currentPassword, newPassword) => {
+        const user = auth.currentUser;
+
+        if (!user || !user.email) {
+            throw new Error("Not authenticated");
+        }
+
+        const credential = EmailAuthProvider.credential(
+            user.email,
+            currentPassword
+        );
+
+        // Required by Firebase before sensitive operations
+        await reauthenticateWithCredential(user, credential);
+
+        // Update password
+        await updatePassword(user, newPassword);
     },
 }));
