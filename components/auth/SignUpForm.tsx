@@ -1,7 +1,13 @@
 import { COLORS, profileStyles as styles } from "@/styles/modal/profile.styles";
 import { Ionicons } from "@expo/vector-icons";
-import React from "react";
-import { ActivityIndicator, Pressable, Text, TextInput, View, } from "react-native";
+import React, { useState } from "react";
+import {
+    ActivityIndicator,
+    Pressable,
+    Text,
+    TextInput,
+    View,
+} from "react-native";
 
 interface SignUpFormProps {
     name: string;
@@ -52,6 +58,9 @@ export function SignUpForm({
     onPrimaryPressIn,
     onPrimaryPressOut,
 }: SignUpFormProps) {
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
     const renderError = (field: string) =>
         errors[field] && (
             <View style={styles.errorRow}>
@@ -153,9 +162,10 @@ export function SignUpForm({
                         color={COLORS.subText}
                         style={styles.inputFieldIcon}
                     />
+
                     <TextInput
                         style={styles.inputField}
-                        secureTextEntry
+                        secureTextEntry={!showPassword}
                         value={password}
                         onChangeText={onPasswordChange}
                         onFocus={() => onFocus("password")}
@@ -163,6 +173,21 @@ export function SignUpForm({
                         placeholder="Create a password"
                         placeholderTextColor={COLORS.subText}
                     />
+
+                    <Pressable
+                        onPress={() => setShowPassword((prev) => !prev)}
+                        hitSlop={10}
+                        accessibilityRole="button"
+                        accessibilityLabel={
+                            showPassword ? "Hide password" : "Show password"
+                        }
+                    >
+                        <Ionicons
+                            name={showPassword ? "eye-off" : "eye"}
+                            size={18}
+                            color={COLORS.subText}
+                        />
+                    </Pressable>
                 </View>
                 {renderError("password")}
             </View>
@@ -188,9 +213,10 @@ export function SignUpForm({
                         color={COLORS.subText}
                         style={styles.inputFieldIcon}
                     />
+
                     <TextInput
                         style={styles.inputField}
-                        secureTextEntry
+                        secureTextEntry={!showConfirmPassword}
                         value={confirmPassword}
                         onChangeText={onConfirmPasswordChange}
                         onFocus={() => onFocus("confirmPassword")}
@@ -198,6 +224,27 @@ export function SignUpForm({
                         placeholder="Confirm your password"
                         placeholderTextColor={COLORS.subText}
                     />
+
+                    <Pressable
+                        onPress={() =>
+                            setShowConfirmPassword((prev) => !prev)
+                        }
+                        hitSlop={10}
+                        accessibilityRole="button"
+                        accessibilityLabel={
+                            showConfirmPassword
+                                ? "Hide password"
+                                : "Show password"
+                        }
+                    >
+                        <Ionicons
+                            name={
+                                showConfirmPassword ? "eye-off" : "eye"
+                            }
+                            size={18}
+                            color={COLORS.subText}
+                        />
+                    </Pressable>
                 </View>
                 {renderError("confirmPassword")}
             </View>
