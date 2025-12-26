@@ -1,6 +1,6 @@
 import { COLORS, profileStyles as styles } from "@/styles/modal/profile.styles";
 import { Ionicons } from "@expo/vector-icons";
-import React from "react";
+import React, { useState } from "react";
 import {
     ActivityIndicator,
     Pressable,
@@ -42,6 +42,8 @@ export function SignInForm({
     onPrimaryPressIn,
     onPrimaryPressOut,
 }: SignInFormProps) {
+    const [showPassword, setShowPassword] = useState(false);
+
     return (
         <View style={styles.formContainer}>
             {/* EMAIL */}
@@ -54,8 +56,8 @@ export function SignInForm({
                             borderColor: errors.email
                                 ? COLORS.danger
                                 : focusedAuth === "email"
-                                    ? COLORS.accent
-                                    : COLORS.inputBorder,
+                                ? COLORS.accent
+                                : COLORS.inputBorder,
                         },
                     ]}
                 >
@@ -95,8 +97,8 @@ export function SignInForm({
                             borderColor: errors.password
                                 ? COLORS.danger
                                 : focusedAuth === "password"
-                                    ? COLORS.accent
-                                    : COLORS.inputBorder,
+                                ? COLORS.accent
+                                : COLORS.inputBorder,
                         },
                     ]}
                 >
@@ -106,9 +108,10 @@ export function SignInForm({
                         color={COLORS.subText}
                         style={styles.inputFieldIcon}
                     />
+
                     <TextInput
                         style={styles.inputField}
-                        secureTextEntry
+                        secureTextEntry={!showPassword}
                         value={password}
                         onChangeText={onPasswordChange}
                         onFocus={() => onFocus("password")}
@@ -116,7 +119,23 @@ export function SignInForm({
                         placeholder="Enter your password"
                         placeholderTextColor={COLORS.subText}
                     />
+
+                    <Pressable
+                        onPress={() => setShowPassword((prev) => !prev)}
+                        hitSlop={10}
+                        accessibilityRole="button"
+                        accessibilityLabel={
+                            showPassword ? "Hide password" : "Show password"
+                        }
+                    >
+                        <Ionicons
+                            name={showPassword ? "eye-off" : "eye"}
+                            size={18}
+                            color={COLORS.subText}
+                        />
+                    </Pressable>
                 </View>
+
                 {errors.password && (
                     <View style={styles.errorRow}>
                         <View style={styles.errorDot} />
