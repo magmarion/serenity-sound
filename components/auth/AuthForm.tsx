@@ -40,9 +40,17 @@ export function AuthForm({
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [touched, setTouched] = useState<Record<string, boolean>>({});
 
+    /* RESET FORM WHEN MODE CHANGES */
     useEffect(() => {
+        setEmail("");
+        setPassword("");
+        setConfirmPassword("");
+        setName("");
+        setUsername("");
+        setPhone("");
         setErrors({});
         setTouched({});
+        setFocusedAuth(null);
     }, [mode]);
 
     const validate = useCallback(
@@ -85,17 +93,16 @@ export function AuthForm({
 
         if (!result.success) {
             const submitErrors: Record<string, string> = {};
+            const submitTouched: Record<string, boolean> = {};
+
             for (const issue of result.error.issues) {
                 const field = issue.path[0] as string;
                 submitErrors[field] = issue.message;
+                submitTouched[field] = true;
             }
+
             setErrors(submitErrors);
-            setTouched(
-                Object.keys(submitErrors).reduce((acc, key) => {
-                    acc[key] = true;
-                    return acc;
-                }, {} as Record<string, boolean>)
-            );
+            setTouched(submitTouched);
             return;
         }
 
