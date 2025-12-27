@@ -237,15 +237,28 @@ export const profileStyles = StyleSheet.create({
         marginTop: 6,
         marginLeft: 4,
     },
-    errorDot: {
-        width: 4,
-        height: 4,
-        borderRadius: 2,
-        backgroundColor: COLORS.danger,
+    errorAsterisk: {
+        color: COLORS.danger,
+        fontSize: 14,
+        fontWeight: "700",
+        lineHeight: 14,
+        marginTop: 1,
     },
     errorText: {
         color: COLORS.danger,
         fontSize: 11,
+    },
+    authErrorContainer: {
+        marginTop: 20,
+        alignItems: "center",
+        justifyContent: "center",
+    },
+
+    authErrorText: {
+        color: COLORS.danger,
+        fontSize: 13,
+        textAlign: "center",
+        lineHeight: 18,
     },
     fieldGap: {
         height: 10,

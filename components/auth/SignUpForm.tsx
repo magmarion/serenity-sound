@@ -64,7 +64,7 @@ export function SignUpForm({
     const renderError = (field: string) =>
         errors[field] && (
             <View style={styles.errorRow}>
-                <View style={styles.errorDot} />
+                <Text style={styles.errorAsterisk}>*</Text>
                 <Text style={styles.errorText}>{errors[field]}</Text>
             </View>
         );
