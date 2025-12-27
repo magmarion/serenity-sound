@@ -491,6 +491,11 @@ function ProfileScreen() {
                                 />
                             </View>
                         </Pressable>
+                        <Pressable onPress={() => router.push("/delete-account")}>
+                            <Text style={{ color: COLORS.danger, fontWeight: "600" }}>
+                                Delete account
+                            </Text>
+                        </Pressable>
                     </LinearGradient>
 
                     {(hasChanges || saveSuccess) && (

@@ -1,16 +1,17 @@
-import { create } from "zustand";
 import { auth, db } from "@/services/firebase";
 import {
-    User,
-    signOut,
-    onAuthStateChanged,
-    signInWithEmailAndPassword,
     createUserWithEmailAndPassword,
+    deleteUser,
     EmailAuthProvider,
+    onAuthStateChanged,
     reauthenticateWithCredential,
+    signInWithEmailAndPassword,
+    signOut,
     updatePassword,
+    User,
 } from "firebase/auth";
-import { doc, setDoc, getDoc, updateDoc } from "firebase/firestore";
+import { deleteDoc, doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
+import { create } from "zustand";
 
 export interface UserProfile {
     uid: string;
@@ -36,11 +37,12 @@ interface AuthStore {
     updateProfile: (data: Partial<UserProfile>) => Promise<void>;
     loadProfile: (uid: string) => Promise<void>;
 
-    // ✅ NEW
     changePassword: (
         currentPassword: string,
         newPassword: string
     ) => Promise<void>;
+
+    deleteAccount: (currentPassword: string) => Promise<void>;
 }
 
 export const useAuthStore = create<AuthStore>((set, get) => ({
@@ -140,7 +142,6 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         }
     },
 
-    // ✅ NEW: Change password (secure flow)
     changePassword: async (currentPassword, newPassword) => {
         const user = auth.currentUser;
 
@@ -159,4 +160,34 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         // Update password
         await updatePassword(user, newPassword);
     },
+
+    deleteAccount: async (currentPassword) => {
+        const user = auth.currentUser;
+
+        if (!user || !user.email) {
+            throw new Error("Not authenticated");
+        }
+
+        const credential = EmailAuthProvider.credential(
+            user.email,
+            currentPassword
+        );
+
+        // Reauthenticate first
+        await reauthenticateWithCredential(user, credential);
+
+        // Delete Firestore profile
+        await deleteDoc(doc(db, "users", user.uid));
+
+        // Delete auth account
+        await deleteUser(user);
+
+        // Clear local state
+        set({
+            user: null,
+            profile: null,
+            isAuthenticated: false,
+        });
+    },
+
 }));
