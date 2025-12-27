@@ -56,8 +56,8 @@ export function SignInForm({
                             borderColor: errors.email
                                 ? COLORS.danger
                                 : focusedAuth === "email"
-                                ? COLORS.accent
-                                : COLORS.inputBorder,
+                                    ? COLORS.accent
+                                    : COLORS.inputBorder,
                         },
                     ]}
                 >
@@ -81,7 +81,7 @@ export function SignInForm({
                 </View>
                 {errors.email && (
                     <View style={styles.errorRow}>
-                        <View style={styles.errorDot} />
+                        <Text style={styles.errorAsterisk}>*</Text>
                         <Text style={styles.errorText}>{errors.email}</Text>
                     </View>
                 )}
@@ -97,8 +97,8 @@ export function SignInForm({
                             borderColor: errors.password
                                 ? COLORS.danger
                                 : focusedAuth === "password"
-                                ? COLORS.accent
-                                : COLORS.inputBorder,
+                                    ? COLORS.accent
+                                    : COLORS.inputBorder,
                         },
                     ]}
                 >
@@ -138,7 +138,7 @@ export function SignInForm({
 
                 {errors.password && (
                     <View style={styles.errorRow}>
-                        <View style={styles.errorDot} />
+                        <Text style={styles.errorAsterisk}>*</Text>
                         <Text style={styles.errorText}>{errors.password}</Text>
                     </View>
                 )}

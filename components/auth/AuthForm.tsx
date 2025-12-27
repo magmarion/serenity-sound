@@ -1,5 +1,5 @@
 import { BackButton } from "@/components/BackButton";
-import { COLORS } from "@/styles/modal/profile.styles";
+import { COLORS, profileStyles as styles } from "@/styles/modal/profile.styles";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useCallback, useEffect, useState } from "react";
 import {
@@ -18,6 +18,8 @@ import { signInSchema, signUpSchema } from "./auth.schema";
 interface AuthFormProps {
     mode: "signin" | "signup";
     onSubmit: (mode: "signin" | "signup", data: any) => Promise<void>;
+    authError?: string | null;
+    onModeChange?: () => void;
     onBack?: () => void;
     showBackButton?: boolean;
     isInModal?: boolean;
@@ -26,6 +28,8 @@ interface AuthFormProps {
 export function AuthForm({
     mode: initialMode,
     onSubmit,
+    authError,
+    onModeChange,
     onBack,
     showBackButton = false,
     isInModal = false,
@@ -59,6 +63,16 @@ export function AuthForm({
         setFocusedAuth(null);
     }, [mode]);
 
+    const switchToSignUp = () => {
+        setMode("signup");
+        onModeChange?.();
+    };
+
+    const switchToSignIn = () => {
+        setMode("signin");
+        onModeChange?.();
+    };
+
     const validateInline = useCallback(
         (values: any, touchedSnapshot = touched) => {
             const schema = mode === "signin" ? signInSchema : signUpSchema;
@@ -81,8 +95,10 @@ export function AuthForm({
                     if (value.length === 0) continue;
                     if (value.includes("@")) continue;
                 }
+
                 nextErrors[field] = issue.message;
             }
+
             setErrors(nextErrors);
         },
         [mode, touched]
@@ -142,15 +158,18 @@ export function AuthForm({
                 const nextTouched = { ...touched, [field]: true };
                 setTouched(nextTouched);
 
-                validateInline({
-                    email,
-                    password,
-                    confirmPassword,
-                    name,
-                    username,
-                    phone,
-                    [field]: value,
-                }, nextTouched);
+                validateInline(
+                    {
+                        email,
+                        password,
+                        confirmPassword,
+                        name,
+                        username,
+                        phone,
+                        [field]: value,
+                    },
+                    nextTouched
+                );
             };
 
     return (
@@ -190,6 +209,7 @@ export function AuthForm({
                                 : insets.top + (isInModal ? 60 : 40),
                         },
                     ]}
+                    keyboardShouldPersistTaps="handled"
                     showsVerticalScrollIndicator={false}
                 >
                     <Text style={localStyles.authTitle}>
@@ -214,7 +234,7 @@ export function AuthForm({
                             onFocus={setFocusedAuth}
                             onBlur={() => setFocusedAuth(null)}
                             onSubmit={handleSubmit}
-                            onSwitchToSignUp={() => setMode("signup")}
+                            onSwitchToSignUp={switchToSignUp}
                             primaryButtonPressed={primaryButtonPressed}
                             onPrimaryPressIn={() =>
                                 setPrimaryButtonPressed(true)
@@ -249,7 +269,7 @@ export function AuthForm({
                             onFocus={setFocusedAuth}
                             onBlur={() => setFocusedAuth(null)}
                             onSubmit={handleSubmit}
-                            onSwitchToSignIn={() => setMode("signin")}
+                            onSwitchToSignIn={switchToSignIn}
                             primaryButtonPressed={primaryButtonPressed}
                             onPrimaryPressIn={() =>
                                 setPrimaryButtonPressed(true)
@@ -258,6 +278,12 @@ export function AuthForm({
                                 setPrimaryButtonPressed(false)
                             }
                         />
+                    )}
+
+                    {authError && (
+                        <View style={styles.authErrorContainer}>
+                            <Text style={styles.authErrorText}>{authError}</Text>
+                        </View>
                     )}
                 </ScrollView>
             </KeyboardAvoidingView>
