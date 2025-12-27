@@ -1,7 +1,8 @@
-// app/store/favoritesStore.ts
-import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { create } from "zustand";
+import { persist, createJSONStorage } from "zustand/middleware";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useAuthStore } from "@/store/auth-store";
+import { favoritesService } from "@/services/favorites-service";
 
 export type Session = {
     id: string;
@@ -16,10 +17,14 @@ export type Session = {
 
 type FavoritesStore = {
     favorites: Session[];
+
     isFavorite: (id: string) => boolean;
-    toggleFavorite: (session: Session) => void;
-    addFavorite: (session: Session) => void;
-    removeFavorite: (id: string) => void;
+
+    toggleFavorite: (session: Session) => Promise<void>;
+    addFavorite: (session: Session) => Promise<void>;
+    removeFavorite: (id: string) => Promise<void>;
+
+    loadFavoritesFromDb: () => Promise<void>;
     clearFavorites: () => void;
 };
 
@@ -29,37 +34,64 @@ export const useFavoritesStore = create<FavoritesStore>()(
             favorites: [],
 
             isFavorite: (id: string) => {
-                return get().favorites.some(fav => fav.id === id);
+                return get().favorites.some((fav) => fav.id === id);
             },
 
-            toggleFavorite: (session: Session) => {
-                set((state) => {
-                    const exists = state.favorites.some(fav => fav.id === session.id);
+            toggleFavorite: async (session: Session) => {
+                const uid = useAuthStore.getState().user?.uid;
+                if (!uid) return;
 
-                    if (exists) {
-                        return {
-                            favorites: state.favorites.filter(fav => fav.id !== session.id)
-                        };
-                    } else {
-                        return {
-                            favorites: [...state.favorites, session]
-                        };
-                    }
-                });
-            },
+                const exists = get().isFavorite(session.id);
 
-            addFavorite: (session: Session) => {
-                if (!get().isFavorite(session.id)) {
-                    set((state) => ({
-                        favorites: [...state.favorites, session]
-                    }));
+                // Optimistic UI update
+                set((state) => ({
+                    favorites: exists
+                        ? state.favorites.filter(
+                            (fav) => fav.id !== session.id
+                        )
+                        : [...state.favorites, session],
+                }));
+
+                // Sync with Firestore
+                if (exists) {
+                    await favoritesService.removeFavorite(uid, session.id);
+                } else {
+                    await favoritesService.addFavorite(uid, session);
                 }
             },
 
-            removeFavorite: (id: string) => {
+            addFavorite: async (session: Session) => {
+                const uid = useAuthStore.getState().user?.uid;
+                if (!uid) return;
+
+                if (!get().isFavorite(session.id)) {
+                    set((state) => ({
+                        favorites: [...state.favorites, session],
+                    }));
+
+                    await favoritesService.addFavorite(uid, session);
+                }
+            },
+
+            removeFavorite: async (id: string) => {
+                const uid = useAuthStore.getState().user?.uid;
+                if (!uid) return;
+
                 set((state) => ({
-                    favorites: state.favorites.filter(fav => fav.id !== id)
+                    favorites: state.favorites.filter(
+                        (fav) => fav.id !== id
+                    ),
                 }));
+
+                await favoritesService.removeFavorite(uid, id);
+            },
+
+            loadFavoritesFromDb: async () => {
+                const uid = useAuthStore.getState().user?.uid;
+                if (!uid) return;
+
+                const data = await favoritesService.getFavorites(uid);
+                set({ favorites: data });
             },
 
             clearFavorites: () => {
@@ -67,7 +99,7 @@ export const useFavoritesStore = create<FavoritesStore>()(
             },
         }),
         {
-            name: 'favorites-storage',
+            name: "favorites-storage",
             storage: createJSONStorage(() => AsyncStorage),
         }
     )
