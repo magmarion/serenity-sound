@@ -23,6 +23,7 @@ interface AuthFormProps {
     onBack?: () => void;
     showBackButton?: boolean;
     isInModal?: boolean;
+    onUserInput?: () => void;
 }
 
 export function AuthForm({
@@ -30,6 +31,7 @@ export function AuthForm({
     onSubmit,
     authError,
     onModeChange,
+    onUserInput,
     onBack,
     showBackButton = false,
     isInModal = false,
@@ -154,7 +156,7 @@ export function AuthForm({
         (field: string, setter: (v: string) => void) =>
             (value: string) => {
                 setter(value);
-
+                onUserInput?.();
                 const nextTouched = { ...touched, [field]: true };
                 setTouched(nextTouched);
 

@@ -88,6 +88,7 @@ export default function SignInScreen() {
                 onSubmit={handleSubmit}
                 authError={authError}
                 onModeChange={() => setAuthError(null)}
+                onUserInput={() => setAuthError(null)}
                 onBack={handleBack}
                 showBackButton={true}
                 isInModal={false}
