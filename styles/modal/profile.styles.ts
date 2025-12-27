@@ -233,16 +233,15 @@ export const profileStyles = StyleSheet.create({
     errorRow: {
         flexDirection: "row",
         alignItems: "center",
-        gap: 6,
+        gap: 4,
         marginTop: 6,
-        marginLeft: 4,
     },
     errorAsterisk: {
         color: COLORS.danger,
         fontSize: 14,
         fontWeight: "700",
         lineHeight: 14,
-        marginTop: 1,
+        marginTop: 2,
     },
     errorText: {
         color: COLORS.danger,
