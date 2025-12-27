@@ -136,12 +136,14 @@ export function SignUpForm({
                         onBlur={onBlur}
                         placeholder="Enter your email"
                         placeholderTextColor={COLORS.subText}
+                        textContentType="emailAddress"
+                        autoComplete="email"
                     />
                 </View>
                 {renderError("email")}
             </View>
 
-            {/* PASSWORD */}
+            {/* PASSWORD (NEW PASSWORD) */}
             <View style={styles.inputContainer}>
                 <Text style={styles.inputLabel}>Password*</Text>
                 <View
@@ -172,6 +174,9 @@ export function SignUpForm({
                         onBlur={onBlur}
                         placeholder="Create a password"
                         placeholderTextColor={COLORS.subText}
+                        textContentType="newPassword"
+                        autoComplete="password-new"
+                        passwordRules="minlength: 6;"
                     />
 
                     <Pressable
@@ -223,6 +228,8 @@ export function SignUpForm({
                         onBlur={onBlur}
                         placeholder="Confirm your password"
                         placeholderTextColor={COLORS.subText}
+                        textContentType="password"
+                        autoComplete="password"
                     />
 
                     <Pressable
