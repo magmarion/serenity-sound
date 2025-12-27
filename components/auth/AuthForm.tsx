@@ -84,7 +84,6 @@ export function AuthForm({
                 setErrors({});
                 return;
             }
-
             const nextErrors: Record<string, string> = {};
 
             for (const issue of result.error.issues) {
@@ -92,15 +91,19 @@ export function AuthForm({
 
                 if (!touchedSnapshot[field]) continue;
 
+                const value = values[field];
+
+                if (typeof value === "string" && value.length === 0) {
+                    continue;
+                }
+
                 if (field === "email") {
                     const value = values.email as string;
                     if (value.length === 0) continue;
                     if (value.includes("@")) continue;
                 }
-
                 nextErrors[field] = issue.message;
             }
-
             setErrors(nextErrors);
         },
         [mode, touched]
