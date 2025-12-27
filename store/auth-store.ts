@@ -12,6 +12,7 @@ import {
 } from "firebase/auth";
 import { deleteDoc, doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import { create } from "zustand";
+import { useFavoritesStore } from "@/store/favorites-store"; // ✅ ADD
 
 export interface UserProfile {
     uid: string;
@@ -61,6 +62,11 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
                 });
 
                 await get().loadProfile(user.uid);
+
+                // ✅ LOAD FAVORITES FOR AUTHENTICATED USER
+                await useFavoritesStore
+                    .getState()
+                    .loadFavoritesFromDb();
             } else {
                 set({
                     user: null,
@@ -68,6 +74,9 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
                     isAuthenticated: false,
                     isLoading: false,
                 });
+
+                // ✅ CLEAR FAVORITES ON LOGOUT
+                useFavoritesStore.getState().clearFavorites();
             }
         });
 
@@ -89,10 +98,19 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         if (snap.exists()) {
             set({ profile: snap.data() as UserProfile });
         }
+
+        // ✅ LOAD FAVORITES AFTER SIGN IN
+        await useFavoritesStore
+            .getState()
+            .loadFavoritesFromDb();
     },
 
     signUpWithEmail: async (email, password) => {
-        const result = await createUserWithEmailAndPassword(auth, email, password);
+        const result = await createUserWithEmailAndPassword(
+            auth,
+            email,
+            password
+        );
         const user = result.user;
 
         const profile: UserProfile = {
@@ -109,10 +127,16 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
             profile,
             isAuthenticated: true,
         });
+
+        // ✅ NEW USER → EMPTY FAVORITES
+        useFavoritesStore.getState().clearFavorites();
     },
 
     signOut: async () => {
         await signOut(auth);
+
+        // ✅ CLEAR FAVORITES ON SIGN OUT
+        useFavoritesStore.getState().clearFavorites();
 
         set({
             user: null,
@@ -154,10 +178,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
             currentPassword
         );
 
-        // Required by Firebase before sensitive operations
         await reauthenticateWithCredential(user, credential);
-
-        // Update password
         await updatePassword(user, newPassword);
     },
 
@@ -173,21 +194,18 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
             currentPassword
         );
 
-        // Reauthenticate first
         await reauthenticateWithCredential(user, credential);
 
-        // Delete Firestore profile
         await deleteDoc(doc(db, "users", user.uid));
-
-        // Delete auth account
         await deleteUser(user);
 
-        // Clear local state
+        // ✅ CLEAR FAVORITES AFTER ACCOUNT DELETION
+        useFavoritesStore.getState().clearFavorites();
+
         set({
             user: null,
             profile: null,
             isAuthenticated: false,
         });
     },
-
 }));
