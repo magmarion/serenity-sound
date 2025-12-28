@@ -1,7 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from "react";
 import { Audio } from "expo-av";
+import { useCallback, useEffect, useRef, useState } from "react";
 
-export function useAudioPlayer(soundUrl: string) {
+export function useAudioPlayer(
+    soundUrl: string,
+    onTrackEndRef?: { current: (() => void) | null }
+) {
     const soundRef = useRef<Audio.Sound | null>(null);
 
     const [sound, setSound] = useState<Audio.Sound | null>(null);
@@ -44,7 +47,6 @@ export function useAudioPlayer(soundUrl: string) {
 
                 loadedSound.setOnPlaybackStatusUpdate(status => {
                     if (!mounted || !status.isLoaded) return;
-
                     setProgress(status.positionMillis / 1000);
 
                     if (status.durationMillis) {
@@ -52,6 +54,9 @@ export function useAudioPlayer(soundUrl: string) {
                     }
 
                     setIsPlaying(status.isPlaying);
+                    if (status.didJustFinish && onTrackEndRef?.current) {
+                        onTrackEndRef.current();
+                    }
                 });
 
             } catch (error) {
@@ -69,7 +74,7 @@ export function useAudioPlayer(soundUrl: string) {
                 soundRef.current = null;
             }
         };
-    }, [soundUrl]);
+    }, [soundUrl, onTrackEndRef]);
 
     const togglePlay = useCallback(async () => {
         if (!sound) return;

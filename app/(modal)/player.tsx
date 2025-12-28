@@ -72,25 +72,9 @@ export default function PlayerSheet() {
     // State for the slider
     const [sliderWidth, setSliderWidth] = useState(0);
 
-    // Use the audio player
-    const { sound, isPlaying, progress, trackDuration, togglePlay, } = useAudioPlayer(soundUrl);
-
+    const onTrackEndRef = useRef<(() => void) | null>(null);
+    const { sound, isPlaying, progress, trackDuration, togglePlay, } = useAudioPlayer(soundUrl, onTrackEndRef);
     // Use the sleep timer
-    const {
-        sleepTimerActive,
-        sleepTimerRemaining,
-        showSleepTimerOptions,
-        showCustomTimerInput,
-        customMinutes,
-        setCustomMinutes,
-        setShowSleepTimerOptions,
-        setShowCustomTimerInput,
-        handleSleepPress,
-        selectSleepTimerDuration,
-        submitCustomTimer,
-        getSleepTimerButtonText,
-        clearSleepTimer,
-    } = useSleepTimer(sound);
 
     // Use the playlist navigation
     const {
@@ -113,6 +97,27 @@ export default function PlayerSheet() {
         session,
         sound
     );
+
+    useEffect(() => {
+        onTrackEndRef.current = handleNextTrack;
+    }, [handleNextTrack]);
+
+    const {
+        sleepTimerActive,
+        sleepTimerRemaining,
+        showSleepTimerOptions,
+        showCustomTimerInput,
+        customMinutes,
+        setCustomMinutes,
+        setShowSleepTimerOptions,
+        setShowCustomTimerInput,
+        handleSleepPress,
+        selectSleepTimerDuration,
+        submitCustomTimer,
+        getSleepTimerButtonText,
+        clearSleepTimer,
+    } = useSleepTimer(sound);
+    // Use the audio player
 
     const sheetRef = useRef<BottomSheet>(null);
     const snapPoints = useMemo(() => [SCREEN_HEIGHT * 0.92], []);
