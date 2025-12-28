@@ -1,8 +1,10 @@
 // app/(modal)/player.tsx
-import { formatTime } from "@/utils/formatTime";
-import { useAudioPlayer } from "@/hooks/useAudioPlayer";
 import Colors from "@/constants/colors";
+import { useAudioPlayer } from "@/hooks/useAudioPlayer";
+import { useSleepTimer } from "@/hooks/useSleepTimer";
 import { useFavoritesStore } from '@/store/favorites-store';
+import { playerStyles as styles } from "@/styles/modal/player.styles";
+import { formatTime } from "@/utils/formatTime";
 import { Fontisto, Ionicons, MaterialIcons } from '@expo/vector-icons';
 import BottomSheet, { BottomSheetBackdrop, BottomSheetView } from "@gorhom/bottom-sheet";
 import * as Haptics from "expo-haptics";
@@ -11,7 +13,6 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Animated, Dimensions, PanResponder, Pressable, Text, TextInput, View } from "react-native";
-import { playerStyles as styles } from "@/styles/modal/player.styles";
 
 
 const ART_URL = "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80";
@@ -90,20 +91,31 @@ export default function PlayerSheet() {
 
     // Check if this session is already a favorite
     const sessionIsFavorite = isFavorite(sessionId);
-    const [sleepTimerActive, setSleepTimerActive] = useState(false);
-    const [sleepTimerDuration, setSleepTimerDuration] = useState<number | null>(null);
-    const [sleepTimerRemaining, setSleepTimerRemaining] = useState<number>(0);
-    const [showSleepTimerOptions, setShowSleepTimerOptions] = useState(false);
-    const [showCustomTimerInput, setShowCustomTimerInput] = useState(false);
-    const [customMinutes, setCustomMinutes] = useState("");
+
+    // State for the slider
     const [sliderWidth, setSliderWidth] = useState(0);
 
+    // Use the audio player
     const { sound, isPlaying, progress, trackDuration, togglePlay, } = useAudioPlayer(soundUrl);
 
+    // Use the sleep timer
+    const {
+        sleepTimerActive,
+        sleepTimerRemaining,
+        showSleepTimerOptions,
+        showCustomTimerInput,
+        customMinutes,
+        setCustomMinutes,
+        setShowSleepTimerOptions,
+        setShowCustomTimerInput,
+        handleSleepPress,
+        selectSleepTimerDuration,
+        submitCustomTimer,
+        getSleepTimerButtonText,
+        clearSleepTimer,
+    } = useSleepTimer(sound);
 
     // Refs for timers - using NodeJS.Timeout for Node.js or number for browser
-    const sleepTimerRef = useRef<NodeJS.Timeout | null>(null);
-    const countdownTimerRef = useRef<NodeJS.Timeout | null>(null);
     const handleNextTrackRef = useRef<() => Promise<void>>(() => Promise.resolve());
 
     // Setup playlist from params or fetch based on mood
@@ -164,92 +176,6 @@ export default function PlayerSheet() {
         }
     }, [originalPlaylist]);
 
-    const clearSleepTimer = useCallback(() => {
-        if (sleepTimerRef.current) {
-            clearTimeout(sleepTimerRef.current);
-            sleepTimerRef.current = null;
-        }
-        if (countdownTimerRef.current) {
-            clearInterval(countdownTimerRef.current);
-            countdownTimerRef.current = null;
-        }
-        setSleepTimerActive(false);
-        setSleepTimerDuration(null);
-        setSleepTimerRemaining(0);
-        setShowSleepTimerOptions(false);
-        setShowCustomTimerInput(false);
-        setCustomMinutes("");
-    }, []);
-
-    // Sleep timer countdown
-    useEffect(() => {
-        if (!sleepTimerActive || sleepTimerDuration === null) {
-            if (countdownTimerRef.current) {
-                clearInterval(countdownTimerRef.current);
-                countdownTimerRef.current = null;
-            }
-            setSleepTimerRemaining(0);
-            return;
-        }
-
-        // Set initial remaining time
-        setSleepTimerRemaining(sleepTimerDuration * 60);
-
-        // Start countdown timer
-        countdownTimerRef.current = setInterval(() => {
-            setSleepTimerRemaining(prev => {
-                if (prev <= 1) {
-                    // Time's up - stop audio
-                    if (sound) {
-                        sound.pauseAsync();
-
-                    }
-                    clearSleepTimer();
-                    return 0;
-                }
-                return prev - 1;
-            });
-        }, 1000) as unknown as NodeJS.Timeout;
-
-        return () => {
-            if (countdownTimerRef.current) {
-                clearInterval(countdownTimerRef.current);
-            }
-        };
-    }, [sleepTimerActive, sleepTimerDuration, sound, clearSleepTimer]);
-
-    // Main sleep timer function
-    useEffect(() => {
-        if (!sleepTimerActive || sleepTimerDuration === null) {
-            if (sleepTimerRef.current) {
-                clearTimeout(sleepTimerRef.current);
-                sleepTimerRef.current = null;
-            }
-            return;
-        }
-
-        // Clear any existing timer
-        if (sleepTimerRef.current) {
-            clearTimeout(sleepTimerRef.current);
-        }
-
-        // Set new timer
-        const durationMs = sleepTimerDuration * 60 * 1000;
-        sleepTimerRef.current = setTimeout(() => {
-            if (sound) {
-                sound.pauseAsync();
-
-            }
-            clearSleepTimer();
-        }, durationMs) as unknown as NodeJS.Timeout;
-
-        return () => {
-            if (sleepTimerRef.current) {
-                clearTimeout(sleepTimerRef.current);
-            }
-        };
-    }, [sleepTimerActive, sleepTimerDuration, sound, clearSleepTimer]);
-
     const sheetRef = useRef<BottomSheet>(null);
     const snapPoints = useMemo(() => [SCREEN_HEIGHT * 0.92], []);
 
@@ -298,40 +224,8 @@ export default function PlayerSheet() {
 
     const handleSleep = useCallback(async () => {
         await Haptics.selectionAsync();
-
-        if (sleepTimerActive) {
-            clearSleepTimer();
-        } else {
-            setShowSleepTimerOptions(true);
-        }
-    }, [sleepTimerActive, clearSleepTimer]);
-
-    const selectSleepTimerDuration = useCallback(async (minutes: number) => {
-        await Haptics.selectionAsync();
-
-        setSleepTimerDuration(minutes);
-        setSleepTimerActive(true);
-        setShowSleepTimerOptions(false);
-        setShowCustomTimerInput(false);
-
-        // Start countdown immediately
-        setSleepTimerRemaining(minutes * 60);
-    }, []);
-
-    const handleCustomTimerSubmit = useCallback(async () => {
-        await Haptics.selectionAsync();
-
-        const minutes = parseInt(customMinutes);
-        if (minutes > 0 && minutes <= 240) { // Max 4 hours
-            setSleepTimerDuration(minutes);
-            setSleepTimerActive(true);
-            setShowSleepTimerOptions(false);
-            setShowCustomTimerInput(false);
-            setCustomMinutes("");
-
-            setSleepTimerRemaining(minutes * 60);
-        }
-    }, [customMinutes]);
+        handleSleepPress();
+    }, [handleSleepPress]);
 
     const handleScrubFromLocation = useCallback(
         async (locationX: number) => {
@@ -513,25 +407,6 @@ export default function PlayerSheet() {
         await handleNextTrack();
     }, [handleNextTrack]);
 
-    // Format time for sleep timer display
-    const formatSleepTimerTime = useCallback((seconds: number) => {
-        const minutes = Math.floor(seconds / 60);
-        const secs = seconds % 60;
-
-        if (minutes > 0) {
-            return `${minutes}:${secs.toString().padStart(2, '0')}`;
-        }
-        return `${secs}s`;
-    }, []);
-
-    // Get sleep timer button text based on state
-    const getSleepTimerButtonText = useCallback(() => {
-        if (!sleepTimerActive || sleepTimerRemaining <= 0) {
-            return "Sleep timer";
-        }
-        return formatSleepTimerTime(sleepTimerRemaining);
-    }, [sleepTimerActive, sleepTimerRemaining, formatSleepTimerTime]);
-
     const getRepeatIcon = useMemo<RepeatIcon>(() => {
         if (repeatMode === 'one') {
             return { type: 'material', name: 'repeat-one' };
@@ -684,7 +559,7 @@ export default function PlayerSheet() {
                                             {/* Add this container to align the buttons properly */}
                                             <View style={styles.customTimerButtonsContainer}>
                                                 <Pressable
-                                                    onPress={handleCustomTimerSubmit}
+                                                    onPress={submitCustomTimer}
                                                     style={({ pressed }) => [
                                                         styles.sleepTimerOption,
                                                         styles.sleepTimerCustomSubmit,
