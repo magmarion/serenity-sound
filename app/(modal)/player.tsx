@@ -11,6 +11,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Animated, Dimensions, PanResponder, Pressable, Text, TextInput, View } from "react-native";
 import { playerStyles as styles } from "@/styles/modal/player.styles";
+import { formatTime } from "@/utils/formatTime";
 
 const ART_URL = "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80";
 const DEFAULT_SOUND_URL = "https://orangefreesounds.com/wp-content/uploads/2022/08/Rain-and-thunder-with-ocean-waves-sound-effect.mp3";
@@ -364,25 +365,6 @@ export default function PlayerSheet() {
             }).start();
         }
     }, [progress, trackDuration, progressAnim]);
-
-    useEffect(() => {
-        const configureAudioForSilentMode = async () => {
-            try {
-                await Audio.setAudioModeAsync({
-                    allowsRecordingIOS: false,
-                    playsInSilentModeIOS: true,
-                    shouldDuckAndroid: true,
-                    playThroughEarpieceAndroid: false,
-                });
-
-                console.log('Audio configured for silent mode playback');
-            } catch (error) {
-                console.error('Audio setup failed:', error);
-            }
-        };
-
-        configureAudioForSilentMode();
-    }, []);
 
     const handlePlayToggle = useCallback(async () => {
         await Haptics.selectionAsync();
@@ -1054,14 +1036,4 @@ export default function PlayerSheet() {
             </BottomSheet>
         </View>
     );
-}
-
-function formatTime(totalSeconds: number) {
-    const minutes = Math.floor(totalSeconds / 60)
-        .toString()
-        .padStart(2, "0");
-    const seconds = Math.floor(totalSeconds % 60)
-        .toString()
-        .padStart(2, "0");
-    return `${minutes}:${seconds}`;
 }
