@@ -110,7 +110,7 @@ export default function DeleteAccountModal() {
 
                         {error && (
                             <View style={styles.errorRow}>
-                                <View style={styles.errorDot} />
+                                <View style={styles.errorAsterisk} />
                                 <Text style={styles.errorText}>{error}</Text>
                             </View>
                         )}
