@@ -4,7 +4,7 @@ import Colors from "@/constants/colors";
 import { fetchSoundEffects, Session } from "@/services/api";
 import { useFavoritesStore } from "@/store/favorites-store";
 import { categoryDetailStyles as styles } from '@/styles/category/id.styles';
-import { Ionicons } from '@expo/vector-icons';
+import { Fontisto, Ionicons } from '@expo/vector-icons';
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
@@ -147,7 +147,7 @@ export default function CategoryDetailScreen() {
             setError(null);
             console.log(`📡 Loading sounds for category: ${categoryId}`);
             const categorySessions = await fetchSoundEffects(categoryId);
-            console.log(`✅ Loaded ${categorySessions.length} sounds for ${categoryId}`);
+            console.log(`Loaded ${categorySessions.length} sounds for ${categoryId}`);
 
             if (categorySessions.length > 0) {
                 setSessions(categorySessions);
@@ -315,12 +315,12 @@ export default function CategoryDetailScreen() {
                                     >
                                         {({ pressed }) => (
                                             <View style={[
-                                                styles.sessionHeartButton,
-                                                sessionIsFavorite && styles.sessionHeartButtonFavorited,
+                                                styles.sessionFavoriteButton,
+                                                sessionIsFavorite && styles.sessionFavoriteButtonFavorited,
                                                 pressed && { transform: [{ scale: 0.9 }], opacity: 0.8 }
                                             ]}>
-                                                <Ionicons
-                                                    name={sessionIsFavorite ? "heart" : "heart-outline"}
+                                                <Fontisto
+                                                    name={sessionIsFavorite ? "favorite" : "favorite"}
                                                     color={sessionIsFavorite ? Colors.light.favorited : Colors.palette.muted}
                                                     size={24}
                                                 />
