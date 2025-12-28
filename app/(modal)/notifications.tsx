@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useState } from 'react';
 import { Animated, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface NotificationItemProps {
     icon: React.ReactNode;
@@ -58,6 +58,7 @@ const NotificationItem = ({ icon, title, description, isEnabled, onToggle }: Not
 };
 
 export default function NotificationsScreen() {
+    const insets = useSafeAreaInsets();
     const [settings, setSettings] = useState({
         pushNotifications: true,
         emailAlerts: false,
@@ -81,8 +82,9 @@ export default function NotificationsScreen() {
                 colors={["#0B0A2A", "#05060A"]}
                 style={StyleSheet.absoluteFill}
             />
-            <SafeAreaView style={styles.container} edges={['top']}>
-                <View style={styles.header}>
+            
+            <View style={styles.container}>
+                <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
                     <BackButton
                         accessibilityLabel="Go back to settings"
                     />
@@ -168,7 +170,7 @@ export default function NotificationsScreen() {
                         Changes to notification settings may take a few minutes to apply across all your devices.
                     </Text>
                 </ScrollView>
-            </SafeAreaView>
+            </View>
         </View>
     );
 }
