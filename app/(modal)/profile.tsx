@@ -441,7 +441,7 @@ function ProfileScreen() {
 
                                     {showError && (
                                         <View style={styles.errorRow} testID={`profile/error/${config.key}`}>
-                                            <View style={styles.errorDot} />
+                                            <View style={styles.errorAsterisk} />
                                             <Text style={styles.errorText}>{"Error message"}</Text>
                                         </View>
                                     )}
