@@ -2,6 +2,7 @@
 import Colors from "@/constants/colors";
 import { useAudioPlayer } from "@/hooks/useAudioPlayer";
 import { useSleepTimer } from "@/hooks/useSleepTimer";
+import { usePlaylistNavigation } from "@/hooks/usePlaylistNavigation";
 import { useFavoritesStore } from '@/store/favorites-store';
 import { playerStyles as styles } from "@/styles/modal/player.styles";
 import { formatTime } from "@/utils/formatTime";
@@ -22,23 +23,6 @@ const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 const SLEEP_TIMER_OPTIONS = [5, 10, 15, 30];
 
-type RepeatMode = 'off' | 'all' | 'one';
-
-type RepeatIcon =
-    | { type: 'material'; name: 'repeat-one' }
-    | { type: 'ion'; name: 'repeat' | 'repeat-outline' };
-
-interface Session {
-    id: string;
-    title: string;
-    durationLabel: string;
-    duration: number;
-    moodId: string;
-    category: string;
-    soundUrl: string;
-    artworkUrl?: string;
-}
-
 export default function PlayerSheet() {
     const params = useLocalSearchParams();
 
@@ -54,13 +38,6 @@ export default function PlayerSheet() {
     // Parse playlist from params if available
     const playlistParam = params.playlist as string;
     const initialIndex = params.currentIndex ? parseInt(params.currentIndex as string) : 0;
-
-    // State for playlist navigation
-    const [currentTrackIndex, setCurrentTrackIndex] = useState<number>(initialIndex);
-    const [shuffledPlaylist, setShuffledPlaylist] = useState<Session[]>([]);
-    const [isShuffled, setIsShuffled] = useState(false);
-    const [repeatMode, setRepeatMode] = useState<RepeatMode>('off');
-    const [originalPlaylist, setOriginalPlaylist] = useState<Session[]>([]);
 
     // Use the favorites store
     const { isFavorite, toggleFavorite } = useFavoritesStore();
@@ -115,66 +92,27 @@ export default function PlayerSheet() {
         clearSleepTimer,
     } = useSleepTimer(sound);
 
-    // Refs for timers - using NodeJS.Timeout for Node.js or number for browser
-    const handleNextTrackRef = useRef<() => Promise<void>>(() => Promise.resolve());
-
-    // Setup playlist from params or fetch based on mood
-    useEffect(() => {
-        const setupPlaylist = async () => {
-            try {
-                if (playlistParam) {
-                    // If playlist was passed as a parameter
-                    const parsedPlaylist = JSON.parse(playlistParam);
-                    setOriginalPlaylist(parsedPlaylist);
-
-                    // Find the current track in the playlist
-                    const index = parsedPlaylist.findIndex((track: Session) => track.id === sessionId);
-                    if (index !== -1) {
-                        setCurrentTrackIndex(index);
-                    }
-                } else {
-                    // Try to fetch playlist based on mood
-                    const { fetchSoundEffects } = await import('@/services/api');
-                    const playlist = await fetchSoundEffects(moodId);
-
-                    // Find current track index in the playlist
-                    const currentIndex = playlist.findIndex(track => track.id === sessionId);
-
-                    // If current track is found in playlist, use that playlist
-                    if (currentIndex !== -1) {
-                        setOriginalPlaylist(playlist);
-                        setCurrentTrackIndex(currentIndex);
-                    } else {
-                        // If current track not in playlist, create a playlist with just this track
-                        const newPlaylist = [session];
-                        setOriginalPlaylist(newPlaylist);
-                        setCurrentTrackIndex(0);
-                    }
-                }
-            } catch (error) {
-                console.error('Error setting up playlist:', error);
-                // Fallback: use just the current session
-                const newPlaylist = [session];
-                setOriginalPlaylist(newPlaylist);
-                setCurrentTrackIndex(0);
-            }
-        };
-
-        setupPlaylist();
-    }, [playlistParam, sessionId, moodId, session]);
-
-    // Create shuffled playlist when original playlist changes
-    useEffect(() => {
-        if (originalPlaylist.length > 0) {
-            // Create a shuffled copy of the original playlist
-            const shuffled = [...originalPlaylist];
-            for (let i = shuffled.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-            }
-            setShuffledPlaylist(shuffled);
-        }
-    }, [originalPlaylist]);
+    // Use the playlist navigation
+    const {
+        activePlaylist,
+        currentTrackIndex,
+        repeatMode,
+        isShuffled,
+        handleShuffle,
+        handleRepeat,
+        handleNextTrack,
+        handleSkipBack,
+        getRepeatIcon,
+        getRepeatColor,
+        getShuffleColor,
+    } = usePlaylistNavigation(
+        initialIndex,
+        sessionId,
+        playlistParam,
+        moodId,
+        session,
+        sound
+    );
 
     const sheetRef = useRef<BottomSheet>(null);
     const snapPoints = useMemo(() => [SCREEN_HEIGHT * 0.92], []);
@@ -253,187 +191,6 @@ export default function PlayerSheet() {
         if (sliderWidth <= 0 || trackDuration <= 0) return 0;
         return (progress / trackDuration) * sliderWidth;
     }, [progress, sliderWidth, trackDuration]);
-
-    const handleShuffle = useCallback(async () => {
-        await Haptics.selectionAsync();
-
-        if (originalPlaylist.length <= 1) return;
-
-        setIsShuffled(prev => !prev);
-    }, [originalPlaylist.length]);
-
-    // Handle repeat toggle
-    const handleRepeat = useCallback(async () => {
-        await Haptics.selectionAsync();
-
-        if (repeatMode === 'off') {
-            setRepeatMode('all');
-        } else if (repeatMode === 'all') {
-            setRepeatMode('one');
-        } else {
-            setRepeatMode('off');
-        }
-    }, [repeatMode]);
-
-    // Get the active playlist based on shuffle state
-    const activePlaylist = useMemo(() => {
-        return isShuffled ? shuffledPlaylist : originalPlaylist;
-    }, [isShuffled, shuffledPlaylist, originalPlaylist]);
-
-    const handleNextTrack = useCallback(async () => {
-        await Haptics.selectionAsync();
-
-        if (activePlaylist.length === 0) return;
-
-        // Handle repeat one mode
-        if (repeatMode === 'one') {
-            // Restart current track
-            if (sound) {
-                await sound.setPositionAsync(0);
-                await sound.playAsync();
-            }
-            return;
-        }
-
-        // Calculate next track index
-        let nextIndex = currentTrackIndex + 1;
-
-        // Handle end of playlist
-        if (nextIndex >= activePlaylist.length) {
-            if (repeatMode === 'all') {
-                // Loop back to beginning
-                nextIndex = 0;
-            } else {
-                // Stop playback at the end
-                if (sound) {
-                    await sound.pauseAsync();
-                }
-                return;
-            }
-        }
-
-        // Don't navigate if it's the same track (only one in playlist)
-        if (nextIndex === currentTrackIndex && activePlaylist.length > 1) {
-            return;
-        }
-
-        const nextTrack = activePlaylist[nextIndex];
-
-        // Stop current playback
-        if (sound) {
-            await sound.stopAsync();
-            await sound.unloadAsync();
-        }
-
-        router.setParams({
-            id: nextTrack.id,
-            title: nextTrack.title,
-            subtitle: nextTrack.durationLabel,
-            soundUrl: nextTrack.soundUrl,
-            artworkUrl: nextTrack.artworkUrl || ART_URL,
-            moodId: nextTrack.moodId,
-            category: nextTrack.category,
-            ...(playlistParam && { playlist: playlistParam }),
-            ...(playlistParam && { currentIndex: nextIndex.toString() }),
-        });
-
-        setCurrentTrackIndex(nextIndex);
-    }, [activePlaylist, currentTrackIndex, sound, playlistParam, repeatMode]);
-
-    const handlePreviousTrack = useCallback(async () => {
-        await Haptics.selectionAsync();
-
-        if (activePlaylist.length === 0) return;
-
-        // Calculate previous track index
-        let prevIndex = currentTrackIndex - 1;
-
-        // Handle beginning of playlist
-        if (prevIndex < 0) {
-            if (repeatMode === 'all') {
-                // Loop to the end
-                prevIndex = activePlaylist.length - 1;
-            } else {
-                // Go to beginning of current track
-                if (sound) {
-                    await sound.setPositionAsync(0);
-                }
-                return;
-            }
-        }
-
-        const prevTrack = activePlaylist[prevIndex];
-
-        // Stop current playback
-        if (sound) {
-            await sound.stopAsync();
-            await sound.unloadAsync();
-
-        }
-
-        router.setParams({
-            id: prevTrack.id,
-            title: prevTrack.title,
-            subtitle: prevTrack.durationLabel,
-            soundUrl: prevTrack.soundUrl,
-            artworkUrl: prevTrack.artworkUrl || ART_URL,
-            moodId: prevTrack.moodId,
-            category: prevTrack.category,
-            ...(playlistParam && { playlist: playlistParam }),
-            ...(playlistParam && { currentIndex: prevIndex.toString() }),
-        });
-
-        setCurrentTrackIndex(prevIndex);
-    }, [activePlaylist, currentTrackIndex, sound, playlistParam, repeatMode]);
-
-    // Update the next track handler ref
-    useEffect(() => {
-        handleNextTrackRef.current = handleNextTrack;
-    }, [handleNextTrack]);
-
-    const handleSkipBack = useCallback(async () => {
-        if (!sound) return;
-        // If we're more than 3 seconds into the track, go to beginning
-        // Otherwise, go to previous track
-        if (progress > 3) {
-            await sound.setPositionAsync(0);
-        } else {
-            await handlePreviousTrack();
-        }
-    }, [progress, sound, handlePreviousTrack]);
-
-    const handleSkipForward = useCallback(async () => {
-        // Go to next track
-        await handleNextTrack();
-    }, [handleNextTrack]);
-
-    const getRepeatIcon = useMemo<RepeatIcon>(() => {
-        if (repeatMode === 'one') {
-            return { type: 'material', name: 'repeat-one' };
-        }
-
-        if (repeatMode === 'all') {
-            return { type: 'ion', name: 'repeat' };
-        }
-
-        return { type: 'ion', name: 'repeat-outline' };
-    }, [repeatMode]);
-
-    const getRepeatColor = useMemo(() => {
-        switch (repeatMode) {
-            case 'all':
-                return Colors.light.accent;
-            case 'one':
-                return Colors.light.accent;
-            default:
-                return Colors.light.tabIconDefault;
-        }
-    }, [repeatMode]);
-
-    // Get shuffle button color based on state
-    const getShuffleColor = useMemo(() => {
-        return isShuffled ? Colors.light.accent : Colors.light.tabIconDefault;
-    }, [isShuffled]);
 
     return (
         <View style={styles.container}>
@@ -623,13 +380,15 @@ export default function PlayerSheet() {
                                                 styles.iconButton,
                                                 pressed && styles.iconButtonPressed
                                             ]}>
-                                                {getRepeatIcon.type === 'material' ? (
+                                                {getRepeatIcon.type === "material" && (
                                                     <MaterialIcons
-                                                        name={getRepeatIcon.name}
+                                                        name="repeat-one"
                                                         size={24}
                                                         color={getRepeatColor}
                                                     />
-                                                ) : (
+                                                )}
+
+                                                {getRepeatIcon.type === "ion" && (
                                                     <Ionicons
                                                         name={getRepeatIcon.name}
                                                         size={24}
@@ -650,7 +409,7 @@ export default function PlayerSheet() {
                                     </Pressable>
 
                                     <Pressable
-                                        onPress={handleSkipBack}
+                                        onPress={() => handleSkipBack(progress)}
                                         accessibilityRole="button"
                                         accessibilityLabel="Previous track"
                                         accessibilityHint="Plays the previous sound"
@@ -686,7 +445,7 @@ export default function PlayerSheet() {
                                     </Pressable>
 
                                     <Pressable
-                                        onPress={handleSkipForward}
+                                        onPress={handleNextTrack}
                                         accessibilityRole="button"
                                         accessibilityLabel="Next track"
                                         accessibilityHint="Plays the next sound"
