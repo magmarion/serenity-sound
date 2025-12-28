@@ -1,9 +1,10 @@
 // app/(modal)/player.tsx
+import { formatTime } from "@/utils/formatTime";
+import { useAudioPlayer } from "@/hooks/useAudioPlayer";
 import Colors from "@/constants/colors";
 import { useFavoritesStore } from '@/store/favorites-store';
 import { Fontisto, Ionicons, MaterialIcons } from '@expo/vector-icons';
 import BottomSheet, { BottomSheetBackdrop, BottomSheetView } from "@gorhom/bottom-sheet";
-import { Audio } from "expo-av";
 import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
@@ -11,7 +12,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Animated, Dimensions, PanResponder, Pressable, Text, TextInput, View } from "react-native";
 import { playerStyles as styles } from "@/styles/modal/player.styles";
-import { formatTime } from "@/utils/formatTime";
+
 
 const ART_URL = "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80";
 const DEFAULT_SOUND_URL = "https://orangefreesounds.com/wp-content/uploads/2022/08/Rain-and-thunder-with-ocean-waves-sound-effect.mp3";
@@ -89,33 +90,21 @@ export default function PlayerSheet() {
 
     // Check if this session is already a favorite
     const sessionIsFavorite = isFavorite(sessionId);
-
-    const [isPlaying, setIsPlaying] = useState(true);
     const [sleepTimerActive, setSleepTimerActive] = useState(false);
     const [sleepTimerDuration, setSleepTimerDuration] = useState<number | null>(null);
     const [sleepTimerRemaining, setSleepTimerRemaining] = useState<number>(0);
     const [showSleepTimerOptions, setShowSleepTimerOptions] = useState(false);
     const [showCustomTimerInput, setShowCustomTimerInput] = useState(false);
     const [customMinutes, setCustomMinutes] = useState("");
-    const [progress, setProgress] = useState(0);
-    const [trackDuration, setTrackDuration] = useState(197);
     const [sliderWidth, setSliderWidth] = useState(0);
-    const [sound, setSound] = useState<Audio.Sound | null>(null);
+
+    const { sound, isPlaying, progress, trackDuration, togglePlay, } = useAudioPlayer(soundUrl);
+
 
     // Refs for timers - using NodeJS.Timeout for Node.js or number for browser
     const sleepTimerRef = useRef<NodeJS.Timeout | null>(null);
     const countdownTimerRef = useRef<NodeJS.Timeout | null>(null);
     const handleNextTrackRef = useRef<() => Promise<void>>(() => Promise.resolve());
-
-    useEffect(() => {
-        const match = subtitle.match(/(\d+)\s*min/);
-        if (match) {
-            const minutes = parseInt(match[1]);
-            const secondsMatch = subtitle.match(/(\d+)\s*sec/);
-            const seconds = secondsMatch ? parseInt(secondsMatch[1]) : 0;
-            setTrackDuration(minutes * 60 + seconds);
-        }
-    }, [subtitle]);
 
     // Setup playlist from params or fetch based on mood
     useEffect(() => {
@@ -175,76 +164,6 @@ export default function PlayerSheet() {
         }
     }, [originalPlaylist]);
 
-    const soundRef = useRef<Audio.Sound | null>(null);
-
-    useEffect(() => {
-        let mounted = true;
-
-        const loadSound = async () => {
-            try {
-                setProgress(0);
-                setTrackDuration(0);
-
-                await Audio.setAudioModeAsync({
-                    allowsRecordingIOS: false,
-                    playsInSilentModeIOS: true,
-                    shouldDuckAndroid: true,
-                    playThroughEarpieceAndroid: false,
-                });
-
-                if (soundRef.current) {
-                    await soundRef.current.unloadAsync();
-                    soundRef.current = null;
-                }
-
-                const { sound: loadedSound } = await Audio.Sound.createAsync(
-                    { uri: soundUrl },
-                    { shouldPlay: true }
-                );
-
-
-                if (!mounted) {
-                    await loadedSound.unloadAsync();
-                    return;
-                }
-
-                soundRef.current = loadedSound;
-                setSound(loadedSound);
-
-                loadedSound.setOnPlaybackStatusUpdate((status) => {
-                    if (!mounted || !status.isLoaded) return;
-
-                    setProgress(status.positionMillis / 1000);
-
-                    if (status.durationMillis) {
-                        setTrackDuration(status.durationMillis / 1000);
-                    }
-
-                    setIsPlaying(status.isPlaying);
-
-                    if (status.didJustFinish) {
-                        handleNextTrackRef.current?.();
-                    }
-                });
-
-            } catch (err) {
-                console.error("Error loading sound:", err);
-            }
-        };
-
-        loadSound();
-
-        return () => {
-            mounted = false;
-            if (soundRef.current) {
-                soundRef.current.setOnPlaybackStatusUpdate(null);
-                soundRef.current.unloadAsync();
-                soundRef.current = null;
-            }
-        };
-    }, [soundUrl]);
-
-
     const clearSleepTimer = useCallback(() => {
         if (sleepTimerRef.current) {
             clearTimeout(sleepTimerRef.current);
@@ -283,7 +202,7 @@ export default function PlayerSheet() {
                     // Time's up - stop audio
                     if (sound) {
                         sound.pauseAsync();
-                        setIsPlaying(false);
+
                     }
                     clearSleepTimer();
                     return 0;
@@ -319,7 +238,7 @@ export default function PlayerSheet() {
         sleepTimerRef.current = setTimeout(() => {
             if (sound) {
                 sound.pauseAsync();
-                setIsPlaying(false);
+
             }
             clearSleepTimer();
         }, durationMs) as unknown as NodeJS.Timeout;
@@ -368,21 +287,9 @@ export default function PlayerSheet() {
 
     const handlePlayToggle = useCallback(async () => {
         await Haptics.selectionAsync();
-        if (!sound) return;
+        await togglePlay();
+    }, [togglePlay]);
 
-        try {
-            const status = await sound.getStatusAsync();
-            if (!status.isLoaded) return;
-
-            if (status.isPlaying) {
-                await sound.pauseAsync();
-            } else {
-                await sound.playAsync();
-            }
-        } catch (error) {
-            console.error("Error toggling playback:", error);
-        }
-    }, [sound]);
 
     const handleFavorite = useCallback(async () => {
         await Haptics.selectionAsync();
@@ -427,16 +334,16 @@ export default function PlayerSheet() {
     }, [customMinutes]);
 
     const handleScrubFromLocation = useCallback(
-        (locationX: number) => {
+        async (locationX: number) => {
             if (!sound || sliderWidth <= 0 || trackDuration <= 0) return;
 
             const ratio = Math.max(0, Math.min(locationX / sliderWidth, 1));
             const newPosition = ratio * trackDuration * 1000;
-            sound.setPositionAsync(newPosition);
-            setProgress(ratio * trackDuration);
+            await sound.setPositionAsync(newPosition);
         },
         [sliderWidth, sound, trackDuration]
     );
+
 
     const panResponder = useMemo(
         () =>
@@ -489,7 +396,6 @@ export default function PlayerSheet() {
             // Restart current track
             if (sound) {
                 await sound.setPositionAsync(0);
-                setProgress(0);
                 await sound.playAsync();
             }
             return;
@@ -507,7 +413,6 @@ export default function PlayerSheet() {
                 // Stop playback at the end
                 if (sound) {
                     await sound.pauseAsync();
-                    setIsPlaying(false);
                 }
                 return;
             }
@@ -524,7 +429,6 @@ export default function PlayerSheet() {
         if (sound) {
             await sound.stopAsync();
             await sound.unloadAsync();
-            setSound(null);
         }
 
         router.setParams({
@@ -559,7 +463,6 @@ export default function PlayerSheet() {
                 // Go to beginning of current track
                 if (sound) {
                     await sound.setPositionAsync(0);
-                    setProgress(0);
                 }
                 return;
             }
@@ -571,7 +474,7 @@ export default function PlayerSheet() {
         if (sound) {
             await sound.stopAsync();
             await sound.unloadAsync();
-            setSound(null);
+
         }
 
         router.setParams({
@@ -596,15 +499,11 @@ export default function PlayerSheet() {
 
     const handleSkipBack = useCallback(async () => {
         if (!sound) return;
-
         // If we're more than 3 seconds into the track, go to beginning
         // Otherwise, go to previous track
         if (progress > 3) {
-            // Skip to beginning of current track
             await sound.setPositionAsync(0);
-            setProgress(0);
         } else {
-            // Go to previous track
             await handlePreviousTrack();
         }
     }, [progress, sound, handlePreviousTrack]);
