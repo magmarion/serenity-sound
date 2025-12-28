@@ -5,7 +5,7 @@ import { fetchSoundEffects, Session } from "@/services/api";
 import { useAuthStore } from "@/store/auth-store";
 import { useFavoritesStore } from "@/store/favorites-store";
 import { createPlaylist, findSessionIndex } from "@/utils/playlistHelper";
-import { Ionicons } from '@expo/vector-icons';
+import { Fontisto, Ionicons } from '@expo/vector-icons';
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
@@ -369,12 +369,12 @@ function HomeContent() {
                                     >
                                         {({ pressed }) => (
                                             <View style={[
-                                                styles.sessionHeartButton,
-                                                sessionIsFavorite && styles.sessionHeartButtonFavorited,
+                                                styles.sessionFavoriteButton,
+                                                sessionIsFavorite && styles.sessionFavoriteButtonFavorited,
                                                 pressed && { transform: [{ scale: 0.9 }], opacity: 0.8 }
                                             ]}>
-                                                <Ionicons
-                                                    name={sessionIsFavorite ? "heart" : "heart-outline"}
+                                                <Fontisto
+                                                    name={sessionIsFavorite ? "favorite" : "favorite"}
                                                     color={sessionIsFavorite ? Colors.light.favorited : Colors.palette.muted}
                                                     size={24}
                                                 />

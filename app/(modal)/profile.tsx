@@ -84,7 +84,8 @@ function ProfileScreen() {
 
     const [secondaryButtonPressed, setSecondaryButtonPressed] = useState(false);
     const [saveButtonPressed, setSaveButtonPressed] = useState(false);
-    const [securityRowPressed, setSecurityRowPressed] = useState(false);
+    const [passwordPressed, setPasswordPressed] = useState(false);
+    const [deletePressed, setDeletePressed] = useState(false);
     const [saveSuccess, setSaveSuccess] = useState(false);
     const saveButtonOpacity = useRef(new Animated.Value(0)).current;
     const [signOutLoading, setSignOutLoading] = useState(false);
@@ -396,10 +397,6 @@ function ProfileScreen() {
 
                         {fieldConfigs.map((config, idx) => {
                             const showError = false;
-                            const borderColor = showError
-                                ? COLORS.danger
-                                : COLORS.inputBorder;
-
                             return (
                                 <View key={config.key} style={styles.fieldBlock}>
                                     <Text
@@ -409,47 +406,43 @@ function ProfileScreen() {
                                         {config.label}
                                     </Text>
 
-                                    <View
-                                        style={[styles.inputFieldContainer, { borderColor }]}
-                                        testID={`profile/inputRow/${config.key}`}
-                                    >
-                                        <Ionicons
-                                            name={config.icon}
-                                            color={showError ? COLORS.danger : COLORS.subText}
-                                            size={16}
-                                            style={styles.inputFieldIcon}
-                                        />
-                                        <TextInput
-                                            editable={true}
-                                            style={styles.inputField}
-                                            value={localFields[config.key]}
-                                            keyboardType={config.keyboardType}
-                                            onChangeText={(text) => {
-                                                setLocalFields((prev) => ({
-                                                    ...prev,
-                                                    [config.key]: text,
-                                                }));
-                                                setHasChanges(true);
-                                            }}
-                                            testID={`profile/input/${config.key}`}
-                                            autoCorrect={false}
-                                            autoCapitalize="none"
-                                            autoComplete="off"
-                                            importantForAutofill="no"
-                                        />
+                                    <View style={styles.securityRow}>
+                                        <View style={styles.securityLeft}>
+                                            <View style={styles.securityIconWrap}>
+                                                <Ionicons
+                                                    name={config.icon}
+                                                    size={16}
+                                                    color={COLORS.subText}
+                                                />
+                                            </View>
+
+                                            <TextInput
+                                                style={styles.editableRow}
+                                                value={localFields[config.key]}
+                                                keyboardType={config.keyboardType}
+                                                placeholder={`Enter ${config.label}`}
+                                                placeholderTextColor={COLORS.subText}
+                                                onChangeText={(text) => {
+                                                    setLocalFields((prev) => ({
+                                                        ...prev,
+                                                        [config.key]: text,
+                                                    }));
+                                                    setHasChanges(true);
+                                                }}
+                                                autoCorrect={false}
+                                                autoCapitalize="none"
+                                            />
+                                        </View>
                                     </View>
 
                                     {showError && (
-                                        <View style={styles.errorRow} testID={`profile/error/${config.key}`}>
+                                        <View style={styles.errorRow}>
                                             <View style={styles.errorAsterisk} />
-                                            <Text style={styles.errorText}>{"Error message"}</Text>
+                                            <Text style={styles.errorText}>Error message</Text>
                                         </View>
                                     )}
-
-                                    {idx < fieldConfigs.length - 1 && (
-                                        <View style={styles.fieldGap} />
-                                    )}
                                 </View>
+
                             );
                         })}
                     </LinearGradient>
@@ -463,8 +456,8 @@ function ProfileScreen() {
                         style={[styles.card, styles.securityCard]}
                     >
                         <Pressable
-                            onPressIn={() => setSecurityRowPressed(true)}
-                            onPressOut={() => setSecurityRowPressed(false)}
+                            onPressIn={() => setPasswordPressed(true)}
+                            onPressOut={() => setPasswordPressed(false)}
                             onPress={() => router.push("/change-password")}
                             style={styles.securityRowContainer}
                             testID="profile/changePassword"
@@ -475,7 +468,7 @@ function ProfileScreen() {
                             <View
                                 style={[
                                     styles.securityRow,
-                                    securityRowPressed && styles.btnPressed,
+                                    passwordPressed && styles.btnPressed,
                                 ]}
                             >
                                 <View style={styles.securityLeft}>
@@ -491,11 +484,51 @@ function ProfileScreen() {
                                 />
                             </View>
                         </Pressable>
-                        <Pressable onPress={() => router.push("/delete-account")}>
-                            <Text style={{ color: COLORS.danger, fontWeight: "600" }}>
-                                Delete account
-                            </Text>
+                        <Pressable
+                            onPressIn={() => setDeletePressed(true)}
+                            onPressOut={() => setDeletePressed(false)}
+                            onPress={() => router.push("/delete-account")}
+                            accessibilityRole="button"
+                            accessibilityLabel="Delete account"
+                            accessibilityHint="Permanently deletes your account"
+                        >
+                            <View
+                                style={[
+                                    styles.securityRow,
+                                    styles.securityRowSpacer,
+                                    deletePressed && styles.btnPressed,
+                                ]}
+                            >
+                                <View style={styles.securityLeft}>
+                                    <View
+                                        style={[
+                                            styles.securityIconWrap,
+                                            { backgroundColor: COLORS.dangerSoft },
+                                        ]}
+                                    >
+                                        <Ionicons
+                                            name="trash-outline"
+                                            color={COLORS.danger}
+                                            size={16}
+                                        />
+                                    </View>
+                                    <Text
+                                        style={[
+                                            styles.securityText,
+                                            { color: COLORS.danger },
+                                        ]}
+                                    >
+                                        Delete account
+                                    </Text>
+                                </View>
+                                <Ionicons
+                                    name="chevron-forward"
+                                    color="rgba(255,255,255,0.35)"
+                                    size={18}
+                                />
+                            </View>
                         </Pressable>
+
                     </LinearGradient>
 
                     {(hasChanges || saveSuccess) && (

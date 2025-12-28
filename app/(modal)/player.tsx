@@ -1,7 +1,7 @@
 // app/(modal)/player.tsx
 import Colors from "@/constants/colors";
 import { useFavoritesStore } from '@/store/favorites-store';
-import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import { Fontisto, Ionicons, MaterialIcons } from '@expo/vector-icons';
 import BottomSheet, { BottomSheetBackdrop, BottomSheetView } from "@gorhom/bottom-sheet";
 import { Audio } from "expo-av";
 import * as Haptics from "expo-haptics";
@@ -992,9 +992,9 @@ export default function PlayerSheet() {
                                                 pressed && styles.actionButtonPressed,
                                                 sessionIsFavorite && styles.actionButtonActive
                                             ]}>
-                                                <Ionicons
-                                                    name={sessionIsFavorite ? "heart" : "heart-outline"}
-                                                    color={sessionIsFavorite ? Colors.light.favorited2 : Colors.light.text}
+                                                <Fontisto
+                                                    name={sessionIsFavorite ? "favorite" : "favorite"}
+                                                    color={sessionIsFavorite ? Colors.light.favorited : Colors.light.text}
                                                     size={18}
                                                 />
                                                 <Text style={[

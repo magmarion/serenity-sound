@@ -69,7 +69,14 @@ export const profileStyles = StyleSheet.create({
     editProfileButton: {
         marginTop: 12,
     },
-
+    editableRow: {
+        flex: 1,
+        height: 44,
+        color: COLORS.text,
+        fontSize: 14,
+        paddingVertical: 0,
+        paddingHorizontal: 0,
+    },
     editProfileButtonInner: {
         paddingVertical: 8,
         paddingHorizontal: 18,
@@ -187,7 +194,7 @@ export const profileStyles = StyleSheet.create({
     },
     fieldBlock: {
         width: "100%",
-        marginBottom: 40,
+        marginBottom: 24,
     },
     fieldLabel: {
         color: "rgba(255,255,255,0.55)",
@@ -259,15 +266,15 @@ export const profileStyles = StyleSheet.create({
         textAlign: "center",
         lineHeight: 18,
     },
-    fieldGap: {
-        height: 10,
-    },
     securityCard: {
         paddingVertical: 8,
         paddingHorizontal: 12,
     },
     securityRowContainer: {
         width: '100%',
+    },
+    securityRowSpacer: {
+        marginTop: 10,
     },
     securityRow: {
         height: 44,

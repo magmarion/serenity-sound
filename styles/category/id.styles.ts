@@ -129,7 +129,7 @@ export const categoryDetailStyles = StyleSheet.create({
         fontSize: 13,
         marginTop: 2,
     },
-    sessionHeartButton: {
+    sessionFavoriteButton: {
         minWidth: 44,
         minHeight: 44,
         padding: 10,
@@ -138,7 +138,7 @@ export const categoryDetailStyles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
     },
-    sessionHeartButtonFavorited: {
+    sessionFavoriteButtonFavorited: {
         shadowColor: Colors.light.favorited,
         shadowOffset: { width: 0, height: 0 },
         shadowOpacity: 0.6,
