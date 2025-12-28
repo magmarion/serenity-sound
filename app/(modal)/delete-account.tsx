@@ -13,6 +13,7 @@ import {
     Text,
     TextInput,
     View,
+    Alert,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -27,22 +28,36 @@ export default function DeleteAccountModal() {
     const [error, setError] = useState<string | null>(null);
 
     const canDelete =
-        password.length > 0 && confirmation.trim().toUpperCase() === "DELETE";
+        password.length > 0 && confirmation.trim() === "DELETE";
 
-    const handleDelete = async () => {
-        setError(null);
+    const handleDelete = () => {
+        if (!canDelete || loading) return;
 
-        if (!canDelete) return;
-
-        try {
-            setLoading(true);
-            await deleteAccount(password);
-            router.replace("/sign-in");
-        } catch (err: any) {
-            setError(err.message || "Failed to delete account");
-        } finally {
-            setLoading(false);
-        }
+        Alert.alert(
+            "Delete account",
+            "Your account and all associated data will be permanently deleted and cannot be recovered.",
+            [
+                {
+                    text: "Cancel",
+                    style: "cancel",
+                },
+                {
+                    text: "Delete",
+                    style: "destructive",
+                    onPress: async () => {
+                        try {
+                            setLoading(true);
+                            await deleteAccount(password);
+                            router.replace("/sign-in");
+                        } catch (err: any) {
+                            setError(err.message || "Failed to delete account");
+                        } finally {
+                            setLoading(false);
+                        }
+                    },
+                },
+            ]
+        );
     };
 
     return (
