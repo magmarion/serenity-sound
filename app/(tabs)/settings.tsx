@@ -40,7 +40,7 @@ function SettingsScreen() {
             iconName: "person",
             iconBg: "rgba(255,140,84,0.18)",
             iconSet: "Ionicons",
-            onPress: () => { router.push('/(modal)/profile'); },
+            onPress: () => { router.push('/profile'); },
           },
           {
             id: "subscription",

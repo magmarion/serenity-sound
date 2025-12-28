@@ -131,6 +131,7 @@ export const profileStyles = StyleSheet.create({
         height: 52,
         borderRadius: 14,
         borderWidth: 1,
+        borderColor: COLORS.inputBorder,
         backgroundColor: COLORS.inputBg,
         flexDirection: "row",
         alignItems: "center",
@@ -318,7 +319,6 @@ export const profileStyles = StyleSheet.create({
         shadowColor: COLORS.accent,
         shadowOpacity: 0.30,
         shadowRadius: 16,
-        shadowOffset: { width: 0, height: 10 },
         elevation: 8,
     },
     primaryButtonText: {

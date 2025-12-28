@@ -82,9 +82,7 @@ export default function ChangePasswordModal() {
                     <View style={styles.formContainer}>
                         {/* CURRENT PASSWORD */}
                         <View style={styles.inputContainer}>
-                            <Text style={styles.inputLabel}>
-                                Current Password
-                            </Text>
+                            <Text style={styles.inputLabel}>Current Password</Text>
                             <View style={styles.inputFieldContainer}>
                                 <Ionicons
                                     name="lock-closed"
@@ -97,7 +95,6 @@ export default function ChangePasswordModal() {
                                     secureTextEntry={!showCurrentPassword}
                                     value={currentPassword}
                                     onChangeText={setCurrentPassword}
-                                    placeholder="Current password"
                                     placeholderTextColor={COLORS.subText}
                                 />
                                 <Pressable
@@ -134,7 +131,6 @@ export default function ChangePasswordModal() {
                                     secureTextEntry={!showNewPassword}
                                     value={newPassword}
                                     onChangeText={setNewPassword}
-                                    placeholder="New password"
                                     placeholderTextColor={COLORS.subText}
                                 />
                                 <Pressable
@@ -173,7 +169,6 @@ export default function ChangePasswordModal() {
                                     secureTextEntry={!showConfirmPassword}
                                     value={confirmPassword}
                                     onChangeText={setConfirmPassword}
-                                    placeholder="Confirm new password"
                                     placeholderTextColor={COLORS.subText}
                                 />
                                 <Pressable
