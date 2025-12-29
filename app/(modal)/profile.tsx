@@ -204,13 +204,46 @@ function ProfileScreen() {
                 style={StyleSheet.absoluteFill}
             />
             <View
-                style={[styles.header, { paddingTop: insets.top + 10 }]}
+                style={[
+                    styles.header,
+                    {
+                        paddingTop: insets.top + 10,
+                        flexDirection: "row",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                    },
+                ]}
                 testID="profile/header"
             >
                 <BackButton
                     onPress={() => router.back()}
                     accessibilityLabel="Go back to settings"
                 />
+
+                <Pressable
+                    onPress={handleChangeAvatar}
+                    accessibilityRole="button"
+                    accessibilityLabel="Edit profile"
+                    testID="profile/edit"
+                    hitSlop={12}
+                >
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                        <Ionicons
+                            name="create-outline"
+                            size={18}
+                            color={COLORS.accent}
+                        />
+                        <Text
+                            style={{
+                                color: COLORS.accent,
+                                fontSize: 15,
+                                fontWeight: "600",
+                            }}
+                        >
+                            Edit
+                        </Text>
+                    </View>
+                </Pressable>
             </View>
 
             <KeyboardAvoidingView
@@ -246,24 +279,6 @@ function ProfileScreen() {
                             </View>
                         </Pressable>
 
-                        {/* Edit button BELOW the image */}
-                        <Pressable
-                            onPress={handleChangeAvatar}
-                            accessibilityRole="button"
-                            accessibilityLabel="Edit profile"
-                            accessibilityHint="Change profile photo and personal information"
-                            style={styles.editProfileButton}
-                            testID="profile/edit"
-                        >
-                            <View style={styles.editProfileButtonInner}>
-                                <Ionicons
-                                    name="create-outline"
-                                    size={14}
-                                    color={COLORS.accent}
-                                />
-                                <Text style={styles.editProfileButtonText}>Edit profile</Text>
-                            </View>
-                        </Pressable>
                     </View>
 
                     <UserInfo
