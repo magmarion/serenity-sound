@@ -238,7 +238,7 @@ function HomeContent() {
                                 borderWidth={1}
                                 borderColor="rgba(255,255,255,0.15)"
                                 fallbackType="gradient"
-                                borderRadius="circle"
+                                borderRadius={20}
                                 showContainer={false} // No container for home screen
                                 testID="home-avatar"
                             />
