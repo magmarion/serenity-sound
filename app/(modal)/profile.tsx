@@ -1,5 +1,6 @@
 import { AuthForm } from "@/components/auth";
 import { BackButton } from "@/components/BackButton";
+import { useProfileForm } from "@/hooks/useProfileForm";
 import { useAuthStore } from "@/store/auth-store";
 import { profileStyles as styles } from "@/styles/modal/profile.styles";
 import { Ionicons } from "@expo/vector-icons";
@@ -7,7 +8,7 @@ import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import React, { memo, useEffect, useRef, useState } from "react";
+import React, { memo, useState } from "react";
 import {
     ActivityIndicator,
     Alert,
@@ -22,8 +23,6 @@ import {
     View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-
-type FieldKey = "name" | "email" | "phone" | "username";
 
 const COLORS = {
     bgTop: "#05070B",
@@ -82,101 +81,22 @@ function ProfileScreen() {
         updateProfile,
     } = useAuthStore();
 
+    const {
+        localFields,
+        setLocalFields,
+        hasChanges,
+        setHasChanges,
+        saveSuccess,
+        saveButtonOpacity,
+        fieldConfigs,
+        handleSaveChanges,
+    } = useProfileForm(profile, updateProfile);
+
     const [secondaryButtonPressed, setSecondaryButtonPressed] = useState(false);
     const [saveButtonPressed, setSaveButtonPressed] = useState(false);
     const [passwordPressed, setPasswordPressed] = useState(false);
     const [deletePressed, setDeletePressed] = useState(false);
-    const [saveSuccess, setSaveSuccess] = useState(false);
-    const saveButtonOpacity = useRef(new Animated.Value(0)).current;
     const [signOutLoading, setSignOutLoading] = useState(false);
-    const [hasChanges, setHasChanges] = useState(false);
-
-    // Local state for field values
-    const [localFields, setLocalFields] = useState({
-        name: "",
-        email: "",
-        phone: "",
-        username: "",
-    });
-
-    React.useEffect(() => {
-        if (profile) {
-            setLocalFields({
-                name: profile.name || "",
-                email: profile.email || "",
-                phone: profile.phone || "",
-                username: profile.username || "",
-            });
-        }
-    }, [profile]);
-
-    useEffect(() => {
-        if (hasChanges) {
-            Animated.timing(saveButtonOpacity, {
-                toValue: 1,
-                duration: 200,
-                useNativeDriver: true,
-            }).start();
-        }
-    }, [hasChanges, saveButtonOpacity]);
-
-    // Field configurations (static, doesn't depend on values)
-    const fieldConfigs = React.useMemo(
-        () => [
-            {
-                key: "name" as FieldKey,
-                label: "Name",
-                icon: "person" as const,
-                keyboardType: "default" as const,
-            },
-            {
-                key: "email" as FieldKey,
-                label: "Email*",
-                icon: "mail" as const,
-                keyboardType: "email-address" as const,
-            },
-            {
-                key: "phone" as FieldKey,
-                label: "Phone",
-                icon: "call" as const,
-                keyboardType: "phone-pad" as const,
-            },
-            {
-                key: "username" as FieldKey,
-                label: "Username",
-                icon: "at" as const,
-                keyboardType: "default" as const,
-            },
-        ],
-        []
-    );
-
-    const handleSaveChanges = async () => {
-        if (!profile) return;
-
-        try {
-            const updatedProfile = {
-                ...profile,
-                ...localFields,
-            };
-            const { uid, createdAt, updatedAt, ...changes } = updatedProfile;
-            await updateProfile(changes);
-            setSaveSuccess(true);
-
-            setTimeout(() => {
-                Animated.timing(saveButtonOpacity, {
-                    toValue: 0,
-                    duration: 250,
-                    useNativeDriver: true,
-                }).start(() => {
-                    setSaveSuccess(false);
-                    setHasChanges(false);
-                });
-            }, 1200);
-        } catch (error) {
-            console.error("Failed to save profile", error);
-        }
-    };
 
     const handleAuthSubmit = async (
         mode: "signin" | "signup",
