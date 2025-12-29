@@ -3,6 +3,7 @@ import { BackButton } from "@/components/BackButton";
 import { ProfileActions } from "@/components/profile/ProfileActions";
 import { ProfileSecurity } from "@/components/profile/Security";
 import { UserInfo } from "@/components/profile/UserInfo";
+import { useProfileActions } from "@/hooks/useProfileActions";
 import { useProfileForm } from "@/hooks/useProfileForm";
 import { useAuthStore } from "@/store/auth-store";
 import { profileStyles as styles } from "@/styles/modal/profile.styles";
@@ -11,7 +12,7 @@ import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import React, { memo, useState } from "react";
+import React, { memo } from "react";
 import {
     ActivityIndicator,
     Alert,
@@ -93,39 +94,16 @@ function ProfileScreen() {
         handleSaveChanges,
     } = useProfileForm(profile, updateProfile);
 
-    const [signOutLoading, setSignOutLoading] = useState(false);
-
-    const handleAuthSubmit = async (
-        mode: "signin" | "signup",
-        data: {
-            email: string;
-            password: string;
-            name?: string;
-            username?: string;
-            phone?: string;
-            confirmPassword?: string;
-        }
-    ) => {
-        if (mode === "signin") {
-            await signInWithEmail(data.email, data.password);
-            // Don't navigate away - user stays in modal, will see authenticated view
-        } else {
-            // Sign up flow
-            await signUpWithEmail(data.email, data.password);
-
-            // Update profile with additional info
-            if (data.name || data.username || data.phone) {
-                await updateProfile({
-                    name: data.name || "",
-                    username:
-                        data.username ||
-                        (data.name ? `@${data.name.toLowerCase().replace(/\s/g, "")}` : ""),
-                    phone: data.phone || "",
-                });
-            }
-            // Don't navigate away - user stays in modal, will see authenticated view
-        }
-    };
+    const {
+        handleAuthSubmit,
+        handleSignOut,
+        signOutLoading,
+    } = useProfileActions({
+        signInWithEmail,
+        signUpWithEmail,
+        updateProfile,
+        signOut,
+    });
 
     const handleChangeAvatar = () => {
         Alert.alert(
@@ -139,19 +117,6 @@ function ProfileScreen() {
         );
     };
 
-    // Add this function after your other handlers (like handleSaveChanges, handleAuthSubmit, etc.)
-    const handleSignOut = async () => {
-        setSignOutLoading(true);
-        try {
-            await signOut();
-            // Dismiss all modals and go to landing
-            router.dismissAll();
-            router.replace("/");
-        } catch (error) {
-            console.error("Sign out error:", error);
-            setSignOutLoading(false);
-        }
-    };
 
     const openCamera = async () => {
         const permission = await ImagePicker.requestCameraPermissionsAsync();
@@ -190,7 +155,7 @@ function ProfileScreen() {
     };
 
     /*
-       NOT AUTHENTICATED - USING REUSABLE AuthForm
+       NOT AUTHENTICATED
      */
     if (!isAuthenticated) {
         return (
@@ -220,9 +185,8 @@ function ProfileScreen() {
             </View>
         );
     }
-
     /*
-      AUTHENTICATED PROFILE UI - UNCHANGED
+      AUTHENTICATED PROFILE UI
     */
     return (
         <View style={styles.root} testID="profile/root">
