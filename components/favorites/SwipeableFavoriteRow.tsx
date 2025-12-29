@@ -51,7 +51,7 @@ export const SwipeableFavoriteRow = memo(function SwipeableFavoriteRow({
         setTimeout(() => {
             onToggleFavorite(session);
         }, 400);
-    }, [session, onToggleFavorite]);
+    }, [session, onToggleFavorite, translateX, scale, opacity, rowHeight]);
 
     const panGesture = Gesture.Pan()
         .activeOffsetX([-10, 10])
@@ -153,7 +153,7 @@ export const SwipeableFavoriteRow = memo(function SwipeableFavoriteRow({
                             Remove from Favorites
                         </Text>
                         <Text style={styles.confirmationMessage}>
-                            Are you sure you want to remove '{session.title}'?
+                            {`Are you sure you want to remove '${session.title}'?`}
                         </Text>
 
                         <View style={styles.confirmationButtons}>
