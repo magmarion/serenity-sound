@@ -48,7 +48,7 @@ function SettingsScreen() {
             iconName: "crown",
             iconBg: "rgba(255,180,80,0.18)",
             iconSet: "FontAwesome",
-            onPress: () => onRowPress("subscription"),
+            onPress: () => { router.push('/subscription'); },
           },
           {
             id: "notifications",
@@ -56,7 +56,7 @@ function SettingsScreen() {
             iconName: "notifications",
             iconBg: "rgba(255,140,84,0.18)",
             iconSet: "Ionicons",
-            onPress: () => { router.push('/(modal)/notifications'); },
+            onPress: () => { router.push('/notifications'); },
           },
         ],
       },
