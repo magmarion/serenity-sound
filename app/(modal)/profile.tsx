@@ -1,5 +1,6 @@
 import { AuthForm } from "@/components/auth";
 import { BackButton } from "@/components/BackButton";
+import { UserInfo } from "@/components/profile/UserInfo";
 import { useProfileForm } from "@/hooks/useProfileForm";
 import { useAuthStore } from "@/store/auth-store";
 import { profileStyles as styles } from "@/styles/modal/profile.styles";
@@ -19,8 +20,7 @@ import {
     ScrollView,
     StyleSheet,
     Text,
-    TextInput,
-    View,
+    View
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -305,67 +305,17 @@ function ProfileScreen() {
                         </Pressable>
                     </View>
 
-                    <Text style={styles.sectionTitle} testID="profile/personalInfoTitle">
-                        Personal Information
-                    </Text>
-
-                    <LinearGradient
-                        colors={[COLORS.cardTop, COLORS.cardBottom]}
-                        style={styles.card}
-                    >
-                        <View style={styles.cardTopHighlight} />
-
-                        {fieldConfigs.map((config, idx) => {
-                            const showError = false;
-                            return (
-                                <View key={config.key} style={styles.fieldBlock}>
-                                    <Text
-                                        style={styles.fieldLabel}
-                                        testID={`profile/fieldLabel/${config.key}`}
-                                    >
-                                        {config.label}
-                                    </Text>
-
-                                    <View style={styles.securityRow}>
-                                        <View style={styles.securityLeft}>
-                                            <View style={styles.securityIconWrap}>
-                                                <Ionicons
-                                                    name={config.icon}
-                                                    size={16}
-                                                    color={COLORS.subText}
-                                                />
-                                            </View>
-
-                                            <TextInput
-                                                style={styles.editableRow}
-                                                value={localFields[config.key]}
-                                                keyboardType={config.keyboardType}
-                                                placeholder={`Enter ${config.label}`}
-                                                placeholderTextColor={COLORS.subText}
-                                                onChangeText={(text) => {
-                                                    setLocalFields((prev) => ({
-                                                        ...prev,
-                                                        [config.key]: text,
-                                                    }));
-                                                    setHasChanges(true);
-                                                }}
-                                                autoCorrect={false}
-                                                autoCapitalize="none"
-                                            />
-                                        </View>
-                                    </View>
-
-                                    {showError && (
-                                        <View style={styles.errorRow}>
-                                            <View style={styles.errorAsterisk} />
-                                            <Text style={styles.errorText}>Error message</Text>
-                                        </View>
-                                    )}
-                                </View>
-
-                            );
-                        })}
-                    </LinearGradient>
+                    <UserInfo
+                        localFields={localFields}
+                        fieldConfigs={fieldConfigs}
+                        onChangeField={(key, value) => {
+                            setLocalFields((prev) => ({
+                                ...prev,
+                                [key]: value,
+                            }));
+                            setHasChanges(true);
+                        }}
+                    />
 
                     <Text style={styles.sectionTitle} testID="profile/securityTitle">
                         Security
