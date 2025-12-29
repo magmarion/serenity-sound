@@ -1,16 +1,10 @@
-import { profileStyles as styles } from "@/styles/modal/profile.styles";
+import { COLORS, profileStyles as styles } from "@/styles/modal/profile.styles";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
 import { Text, TextInput, View } from "react-native";
 
 type FieldKey = "name" | "email" | "phone" | "username";
-
-const COLORS = {
-    cardTop: "rgba(255,255,255,0.07)",
-    cardBottom: "rgba(255,255,255,0.03)",
-    subText: "rgba(255,255,255,0.55)",
-};
 
 type Props = {
     localFields: Record<FieldKey, string>;

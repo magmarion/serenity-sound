@@ -1,5 +1,6 @@
 import { AuthForm } from "@/components/auth";
 import { BackButton } from "@/components/BackButton";
+import { ProfileSecurity } from "@/components/profile/Security";
 import { UserInfo } from "@/components/profile/UserInfo";
 import { useProfileForm } from "@/hooks/useProfileForm";
 import { useAuthStore } from "@/store/auth-store";
@@ -94,8 +95,6 @@ function ProfileScreen() {
 
     const [secondaryButtonPressed, setSecondaryButtonPressed] = useState(false);
     const [saveButtonPressed, setSaveButtonPressed] = useState(false);
-    const [passwordPressed, setPasswordPressed] = useState(false);
-    const [deletePressed, setDeletePressed] = useState(false);
     const [signOutLoading, setSignOutLoading] = useState(false);
 
     const handleAuthSubmit = async (
@@ -317,89 +316,10 @@ function ProfileScreen() {
                         }}
                     />
 
-                    <Text style={styles.sectionTitle} testID="profile/securityTitle">
-                        Security
-                    </Text>
-
-                    <LinearGradient
-                        colors={[COLORS.cardTop, COLORS.cardBottom]}
-                        style={[styles.card, styles.securityCard]}
-                    >
-                        <Pressable
-                            onPressIn={() => setPasswordPressed(true)}
-                            onPressOut={() => setPasswordPressed(false)}
-                            onPress={() => router.push("/change-password")}
-                            style={styles.securityRowContainer}
-                            testID="profile/changePassword"
-                            accessibilityRole="button"
-                            accessibilityLabel="Change password"
-                            accessibilityHint="Opens password change screen"
-                        >
-                            <View
-                                style={[
-                                    styles.securityRow,
-                                    passwordPressed && styles.btnPressed,
-                                ]}
-                            >
-                                <View style={styles.securityLeft}>
-                                    <View style={styles.securityIconWrap}>
-                                        <Ionicons name="lock-closed" color={COLORS.accent} size={16} />
-                                    </View>
-                                    <Text style={styles.securityText}>Change Password</Text>
-                                </View>
-                                <Ionicons
-                                    name="chevron-forward"
-                                    color="rgba(255,255,255,0.45)"
-                                    size={18}
-                                />
-                            </View>
-                        </Pressable>
-                        <Pressable
-                            onPressIn={() => setDeletePressed(true)}
-                            onPressOut={() => setDeletePressed(false)}
-                            onPress={() => router.push("/delete-account")}
-                            accessibilityRole="button"
-                            accessibilityLabel="Delete account"
-                            accessibilityHint="Permanently deletes your account"
-                        >
-                            <View
-                                style={[
-                                    styles.securityRow,
-                                    styles.securityRowSpacer,
-                                    deletePressed && styles.btnPressed,
-                                ]}
-                            >
-                                <View style={styles.securityLeft}>
-                                    <View
-                                        style={[
-                                            styles.securityIconWrap,
-                                            { backgroundColor: COLORS.dangerSoft },
-                                        ]}
-                                    >
-                                        <Ionicons
-                                            name="trash-outline"
-                                            color={COLORS.danger}
-                                            size={16}
-                                        />
-                                    </View>
-                                    <Text
-                                        style={[
-                                            styles.securityText,
-                                            { color: COLORS.danger },
-                                        ]}
-                                    >
-                                        Delete account
-                                    </Text>
-                                </View>
-                                <Ionicons
-                                    name="chevron-forward"
-                                    color="rgba(255,255,255,0.35)"
-                                    size={18}
-                                />
-                            </View>
-                        </Pressable>
-
-                    </LinearGradient>
+                    <ProfileSecurity
+                        onChangePassword={() => router.push("/change-password")}
+                        onDeleteAccount={() => router.push("/delete-account")}
+                    />
 
                     {(hasChanges || saveSuccess) && (
                         <Animated.View
