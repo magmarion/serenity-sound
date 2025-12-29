@@ -1,5 +1,10 @@
 import { AuthForm } from "@/components/auth";
 import { BackButton } from "@/components/BackButton";
+import { ProfileActions } from "@/components/profile/ProfileActions";
+import { ProfileSecurity } from "@/components/profile/Security";
+import { UserInfo } from "@/components/profile/UserInfo";
+import { useProfileActions } from "@/hooks/useProfileActions";
+import { useProfileForm } from "@/hooks/useProfileForm";
 import { useAuthStore } from "@/store/auth-store";
 import { profileStyles as styles } from "@/styles/modal/profile.styles";
 import { Ionicons } from "@expo/vector-icons";
@@ -7,23 +12,19 @@ import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import React, { memo, useEffect, useRef, useState } from "react";
+import React, { memo } from "react";
 import {
     ActivityIndicator,
     Alert,
-    Animated,
     KeyboardAvoidingView,
     Platform,
     Pressable,
     ScrollView,
     StyleSheet,
     Text,
-    TextInput,
-    View,
+    View
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-
-type FieldKey = "name" | "email" | "phone" | "username";
 
 const COLORS = {
     bgTop: "#05070B",
@@ -82,133 +83,27 @@ function ProfileScreen() {
         updateProfile,
     } = useAuthStore();
 
-    const [secondaryButtonPressed, setSecondaryButtonPressed] = useState(false);
-    const [saveButtonPressed, setSaveButtonPressed] = useState(false);
-    const [passwordPressed, setPasswordPressed] = useState(false);
-    const [deletePressed, setDeletePressed] = useState(false);
-    const [saveSuccess, setSaveSuccess] = useState(false);
-    const saveButtonOpacity = useRef(new Animated.Value(0)).current;
-    const [signOutLoading, setSignOutLoading] = useState(false);
-    const [hasChanges, setHasChanges] = useState(false);
+    const {
+        localFields,
+        setLocalFields,
+        hasChanges,
+        setHasChanges,
+        saveSuccess,
+        saveButtonOpacity,
+        fieldConfigs,
+        handleSaveChanges,
+    } = useProfileForm(profile, updateProfile);
 
-    // Local state for field values
-    const [localFields, setLocalFields] = useState({
-        name: "",
-        email: "",
-        phone: "",
-        username: "",
+    const {
+        handleAuthSubmit,
+        handleSignOut,
+        signOutLoading,
+    } = useProfileActions({
+        signInWithEmail,
+        signUpWithEmail,
+        updateProfile,
+        signOut,
     });
-
-    React.useEffect(() => {
-        if (profile) {
-            setLocalFields({
-                name: profile.name || "",
-                email: profile.email || "",
-                phone: profile.phone || "",
-                username: profile.username || "",
-            });
-        }
-    }, [profile]);
-
-    useEffect(() => {
-        if (hasChanges) {
-            Animated.timing(saveButtonOpacity, {
-                toValue: 1,
-                duration: 200,
-                useNativeDriver: true,
-            }).start();
-        }
-    }, [hasChanges, saveButtonOpacity]);
-
-    // Field configurations (static, doesn't depend on values)
-    const fieldConfigs = React.useMemo(
-        () => [
-            {
-                key: "name" as FieldKey,
-                label: "Name",
-                icon: "person" as const,
-                keyboardType: "default" as const,
-            },
-            {
-                key: "email" as FieldKey,
-                label: "Email*",
-                icon: "mail" as const,
-                keyboardType: "email-address" as const,
-            },
-            {
-                key: "phone" as FieldKey,
-                label: "Phone",
-                icon: "call" as const,
-                keyboardType: "phone-pad" as const,
-            },
-            {
-                key: "username" as FieldKey,
-                label: "Username",
-                icon: "at" as const,
-                keyboardType: "default" as const,
-            },
-        ],
-        []
-    );
-
-    const handleSaveChanges = async () => {
-        if (!profile) return;
-
-        try {
-            const updatedProfile = {
-                ...profile,
-                ...localFields,
-            };
-            const { uid, createdAt, updatedAt, ...changes } = updatedProfile;
-            await updateProfile(changes);
-            setSaveSuccess(true);
-
-            setTimeout(() => {
-                Animated.timing(saveButtonOpacity, {
-                    toValue: 0,
-                    duration: 250,
-                    useNativeDriver: true,
-                }).start(() => {
-                    setSaveSuccess(false);
-                    setHasChanges(false);
-                });
-            }, 1200);
-        } catch (error) {
-            console.error("Failed to save profile", error);
-        }
-    };
-
-    const handleAuthSubmit = async (
-        mode: "signin" | "signup",
-        data: {
-            email: string;
-            password: string;
-            name?: string;
-            username?: string;
-            phone?: string;
-            confirmPassword?: string;
-        }
-    ) => {
-        if (mode === "signin") {
-            await signInWithEmail(data.email, data.password);
-            // Don't navigate away - user stays in modal, will see authenticated view
-        } else {
-            // Sign up flow
-            await signUpWithEmail(data.email, data.password);
-
-            // Update profile with additional info
-            if (data.name || data.username || data.phone) {
-                await updateProfile({
-                    name: data.name || "",
-                    username:
-                        data.username ||
-                        (data.name ? `@${data.name.toLowerCase().replace(/\s/g, "")}` : ""),
-                    phone: data.phone || "",
-                });
-            }
-            // Don't navigate away - user stays in modal, will see authenticated view
-        }
-    };
 
     const handleChangeAvatar = () => {
         Alert.alert(
@@ -222,19 +117,6 @@ function ProfileScreen() {
         );
     };
 
-    // Add this function after your other handlers (like handleSaveChanges, handleAuthSubmit, etc.)
-    const handleSignOut = async () => {
-        setSignOutLoading(true);
-        try {
-            await signOut();
-            // Dismiss all modals and go to landing
-            router.dismissAll();
-            router.replace("/");
-        } catch (error) {
-            console.error("Sign out error:", error);
-            setSignOutLoading(false);
-        }
-    };
 
     const openCamera = async () => {
         const permission = await ImagePicker.requestCameraPermissionsAsync();
@@ -273,7 +155,7 @@ function ProfileScreen() {
     };
 
     /*
-       NOT AUTHENTICATED - USING REUSABLE AuthForm
+       NOT AUTHENTICATED
      */
     if (!isAuthenticated) {
         return (
@@ -303,9 +185,8 @@ function ProfileScreen() {
             </View>
         );
     }
-
     /*
-      AUTHENTICATED PROFILE UI - UNCHANGED
+      AUTHENTICATED PROFILE UI
     */
     return (
         <View style={styles.root} testID="profile/root">
@@ -323,13 +204,46 @@ function ProfileScreen() {
                 style={StyleSheet.absoluteFill}
             />
             <View
-                style={[styles.header, { paddingTop: insets.top + 10 }]}
+                style={[
+                    styles.header,
+                    {
+                        paddingTop: insets.top + 10,
+                        flexDirection: "row",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                    },
+                ]}
                 testID="profile/header"
             >
                 <BackButton
                     onPress={() => router.back()}
                     accessibilityLabel="Go back to settings"
                 />
+
+                <Pressable
+                    onPress={handleChangeAvatar}
+                    accessibilityRole="button"
+                    accessibilityLabel="Edit profile"
+                    testID="profile/edit"
+                    hitSlop={12}
+                >
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                        <Ionicons
+                            name="create-outline"
+                            size={18}
+                            color={COLORS.accent}
+                        />
+                        <Text
+                            style={{
+                                color: COLORS.accent,
+                                fontSize: 15,
+                                fontWeight: "600",
+                            }}
+                        >
+                            Edit
+                        </Text>
+                    </View>
+                </Pressable>
             </View>
 
             <KeyboardAvoidingView
@@ -365,233 +279,32 @@ function ProfileScreen() {
                             </View>
                         </Pressable>
 
-                        {/* Edit button BELOW the image */}
-                        <Pressable
-                            onPress={handleChangeAvatar}
-                            accessibilityRole="button"
-                            accessibilityLabel="Edit profile"
-                            accessibilityHint="Change profile photo and personal information"
-                            style={styles.editProfileButton}
-                            testID="profile/edit"
-                        >
-                            <View style={styles.editProfileButtonInner}>
-                                <Ionicons
-                                    name="create-outline"
-                                    size={14}
-                                    color={COLORS.accent}
-                                />
-                                <Text style={styles.editProfileButtonText}>Edit profile</Text>
-                            </View>
-                        </Pressable>
                     </View>
 
-                    <Text style={styles.sectionTitle} testID="profile/personalInfoTitle">
-                        Personal Information
-                    </Text>
+                    <UserInfo
+                        localFields={localFields}
+                        fieldConfigs={fieldConfigs}
+                        onChangeField={(key, value) => {
+                            setLocalFields((prev) => ({
+                                ...prev,
+                                [key]: value,
+                            }));
+                            setHasChanges(true);
+                        }}
+                    />
 
-                    <LinearGradient
-                        colors={[COLORS.cardTop, COLORS.cardBottom]}
-                        style={styles.card}
-                    >
-                        <View style={styles.cardTopHighlight} />
-
-                        {fieldConfigs.map((config, idx) => {
-                            const showError = false;
-                            return (
-                                <View key={config.key} style={styles.fieldBlock}>
-                                    <Text
-                                        style={styles.fieldLabel}
-                                        testID={`profile/fieldLabel/${config.key}`}
-                                    >
-                                        {config.label}
-                                    </Text>
-
-                                    <View style={styles.securityRow}>
-                                        <View style={styles.securityLeft}>
-                                            <View style={styles.securityIconWrap}>
-                                                <Ionicons
-                                                    name={config.icon}
-                                                    size={16}
-                                                    color={COLORS.subText}
-                                                />
-                                            </View>
-
-                                            <TextInput
-                                                style={styles.editableRow}
-                                                value={localFields[config.key]}
-                                                keyboardType={config.keyboardType}
-                                                placeholder={`Enter ${config.label}`}
-                                                placeholderTextColor={COLORS.subText}
-                                                onChangeText={(text) => {
-                                                    setLocalFields((prev) => ({
-                                                        ...prev,
-                                                        [config.key]: text,
-                                                    }));
-                                                    setHasChanges(true);
-                                                }}
-                                                autoCorrect={false}
-                                                autoCapitalize="none"
-                                            />
-                                        </View>
-                                    </View>
-
-                                    {showError && (
-                                        <View style={styles.errorRow}>
-                                            <View style={styles.errorAsterisk} />
-                                            <Text style={styles.errorText}>Error message</Text>
-                                        </View>
-                                    )}
-                                </View>
-
-                            );
-                        })}
-                    </LinearGradient>
-
-                    <Text style={styles.sectionTitle} testID="profile/securityTitle">
-                        Security
-                    </Text>
-
-                    <LinearGradient
-                        colors={[COLORS.cardTop, COLORS.cardBottom]}
-                        style={[styles.card, styles.securityCard]}
-                    >
-                        <Pressable
-                            onPressIn={() => setPasswordPressed(true)}
-                            onPressOut={() => setPasswordPressed(false)}
-                            onPress={() => router.push("/change-password")}
-                            style={styles.securityRowContainer}
-                            testID="profile/changePassword"
-                            accessibilityRole="button"
-                            accessibilityLabel="Change password"
-                            accessibilityHint="Opens password change screen"
-                        >
-                            <View
-                                style={[
-                                    styles.securityRow,
-                                    passwordPressed && styles.btnPressed,
-                                ]}
-                            >
-                                <View style={styles.securityLeft}>
-                                    <View style={styles.securityIconWrap}>
-                                        <Ionicons name="lock-closed" color={COLORS.accent} size={16} />
-                                    </View>
-                                    <Text style={styles.securityText}>Change Password</Text>
-                                </View>
-                                <Ionicons
-                                    name="chevron-forward"
-                                    color="rgba(255,255,255,0.45)"
-                                    size={18}
-                                />
-                            </View>
-                        </Pressable>
-                        <Pressable
-                            onPressIn={() => setDeletePressed(true)}
-                            onPressOut={() => setDeletePressed(false)}
-                            onPress={() => router.push("/delete-account")}
-                            accessibilityRole="button"
-                            accessibilityLabel="Delete account"
-                            accessibilityHint="Permanently deletes your account"
-                        >
-                            <View
-                                style={[
-                                    styles.securityRow,
-                                    styles.securityRowSpacer,
-                                    deletePressed && styles.btnPressed,
-                                ]}
-                            >
-                                <View style={styles.securityLeft}>
-                                    <View
-                                        style={[
-                                            styles.securityIconWrap,
-                                            { backgroundColor: COLORS.dangerSoft },
-                                        ]}
-                                    >
-                                        <Ionicons
-                                            name="trash-outline"
-                                            color={COLORS.danger}
-                                            size={16}
-                                        />
-                                    </View>
-                                    <Text
-                                        style={[
-                                            styles.securityText,
-                                            { color: COLORS.danger },
-                                        ]}
-                                    >
-                                        Delete account
-                                    </Text>
-                                </View>
-                                <Ionicons
-                                    name="chevron-forward"
-                                    color="rgba(255,255,255,0.35)"
-                                    size={18}
-                                />
-                            </View>
-                        </Pressable>
-
-                    </LinearGradient>
-
-                    {(hasChanges || saveSuccess) && (
-                        <Animated.View
-                            style={{
-                                opacity: saveButtonOpacity,
-                                transform: [
-                                    {
-                                        translateY: saveButtonOpacity.interpolate({
-                                            inputRange: [0, 1],
-                                            outputRange: [8, 0],
-                                        }),
-                                    },
-                                ],
-                            }}
-                        >
-                            <Pressable
-                                onPressIn={() => setSaveButtonPressed(true)}
-                                onPressOut={() => setSaveButtonPressed(false)}
-                                onPress={handleSaveChanges}
-                                style={styles.primaryButtonContainer}
-                                accessibilityRole="button"
-                                accessibilityLabel="Save profile changes"
-                            >
-                                <View
-                                    style={[
-                                        styles.primaryButton,
-                                        saveButtonPressed && styles.btnPressed,
-                                    ]}
-                                >
-                                    <Text style={styles.primaryButtonText}>
-                                        {saveSuccess ? "Changes saved" : "Save changes"}
-                                    </Text>
-                                </View>
-                            </Pressable>
-                        </Animated.View>
-                    )}
-
-                    <Pressable
-                        onPressIn={() => setSecondaryButtonPressed(true)}
-                        onPressOut={() => setSecondaryButtonPressed(false)}
-                        onPress={handleSignOut}
-                        disabled={signOutLoading}
-                        style={styles.secondaryButtonContainer}
-                        testID="profile/signout"
-                        accessibilityRole="button"
-                        accessibilityLabel="Sign out"
-                        accessibilityHint="Logs you out of your account"
-                    >
-                        <View
-                            style={[
-                                styles.secondaryButton,
-                                secondaryButtonPressed && styles.btnPressed,
-                                signOutLoading && styles.buttonDisabled,
-                            ]}
-                        >
-                            {signOutLoading ? (
-                                <ActivityIndicator color={COLORS.accent} size="small" />
-                            ) : (
-                                <Text style={styles.secondaryButtonText}>Sign Out</Text>
-                            )}
-                        </View>
-                    </Pressable>
+                    <ProfileSecurity
+                        onChangePassword={() => router.push("/change-password")}
+                        onDeleteAccount={() => router.push("/delete-account")}
+                    />
+                    <ProfileActions
+                        hasChanges={hasChanges}
+                        saveSuccess={saveSuccess}
+                        saveButtonOpacity={saveButtonOpacity}
+                        onSave={handleSaveChanges}
+                        onSignOut={handleSignOut}
+                        signOutLoading={signOutLoading}
+                    />
 
                     <View style={styles.bottomSpacer} />
                 </ScrollView>
