@@ -45,6 +45,9 @@ export function SleepTimerModal({
                                 <Pressable
                                     key={minutes}
                                     onPress={() => onSelectDuration(minutes)}
+                                    accessibilityRole="button"
+                                    accessibilityLabel={`Set sleep timer for ${minutes} minutes`}
+                                    accessibilityHint="Stops playback after the selected time"
                                     style={({ pressed }) => [
                                         styles.sleepTimerOption,
                                         pressed && styles.sleepTimerOptionPressed,
@@ -60,6 +63,9 @@ export function SleepTimerModal({
                         <View style={styles.sleepTimerBottomRow}>
                             <Pressable
                                 onPress={onShowCustom}
+                                accessibilityRole="button"
+                                accessibilityLabel="Set custom sleep timer"
+                                accessibilityHint="Enter a custom duration for the sleep timer"
                                 style={({ pressed }) => [
                                     styles.sleepTimerOption,
                                     styles.sleepTimerCustomOption,
@@ -79,10 +85,16 @@ export function SleepTimerModal({
                                 </View>
                             </Pressable>
 
-                            <Pressable onPress={onHideOptions}>
-                                <Text style={styles.sleepTimerCancelText}>
-                                    Cancel
-                                </Text>
+                            <Pressable onPress={onHideOptions}
+                                accessibilityRole="button"
+                                accessibilityLabel="Cancel sleep timer"
+                                accessibilityHint="Closes the sleep timer menu without setting a timer"
+                            >
+                                <View style={styles.sleepTimerCancelRight}>
+                                    <Text style={styles.sleepTimerCancelText}>
+                                        Cancel
+                                    </Text>
+                                </View>
                             </Pressable>
                         </View>
                     </>
@@ -107,30 +119,28 @@ export function SleepTimerModal({
                         <View style={styles.customTimerButtonsContainer}>
                             <Pressable
                                 onPress={onSubmitCustom}
-                                disabled={
-                                    !customMinutes ||
-                                    parseInt(customMinutes) <= 0 ||
-                                    parseInt(customMinutes) > 240
-                                }
-                                style={({ pressed }) => [
-                                    styles.sleepTimerOption,
-                                    styles.sleepTimerCustomSubmit,
-                                    pressed && styles.sleepTimerOptionPressed,
-                                    (!customMinutes ||
-                                        parseInt(customMinutes) <= 0 ||
-                                        parseInt(customMinutes) > 240) &&
-                                    styles.sleepTimerCustomSubmitDisabled,
-                                ]}
+                                accessibilityRole="button"
+                                accessibilityLabel="Set sleep timer"
+                                accessibilityHint="Starts the sleep timer with the selected duration"
                             >
-                                <Text style={styles.sleepTimerOptionText}>
-                                    Set Timer
-                                </Text>
+                                <View style={styles.sleepTimerCancelRight}>
+                                    <Text style={styles.sleepTimerOptionText}>
+                                        Set Timer
+                                    </Text>
+                                </View>
                             </Pressable>
 
-                            <Pressable onPress={onHideCustom}>
-                                <Text style={styles.sleepTimerCancelText}>
-                                    Back
-                                </Text>
+                            <Pressable
+                                onPress={onHideCustom}
+                                accessibilityRole="button"
+                                accessibilityLabel="Go back"
+                                accessibilityHint="Returns to sleep timer options"
+                            >
+                                <View style={styles.sleepTimerCancelRight}>
+                                    <Text style={styles.sleepTimerCancelText}>
+                                        Back
+                                    </Text>
+                                </View>
                             </Pressable>
                         </View>
                     </>

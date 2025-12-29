@@ -315,10 +315,10 @@ export const playerStyles = StyleSheet.create({
     },
     customTimerButtonsContainer: {
         flexDirection: 'row',
+        justifyContent: 'space-between',
         alignItems: 'center',
-        justifyContent: 'center',
-        gap: 46,
         width: '100%',
+        marginTop: 20,
     },
     customTimerInputContainer: {
         flexDirection: 'row',
