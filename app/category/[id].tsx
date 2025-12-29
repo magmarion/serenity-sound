@@ -1,11 +1,11 @@
-// app/category/[id].tsx
-import { BackButton } from '@/components/BackButton'; // Add this import
+import { BackButton } from '@/components/BackButton';
+import { CategorySessionRow } from '@/components/category/CategorySessionRow';
 import Colors from "@/constants/colors";
 import { fetchSoundEffects, Session } from "@/services/api";
 import { useFavoritesStore } from "@/store/favorites-store";
 import { categoryDetailStyles as styles } from '@/styles/category/id.styles';
 import { CATEGORY_CONFIG, getCategoryDescription } from '@/utils/categoryConfig';
-import { Fontisto, Ionicons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
@@ -158,67 +158,19 @@ export default function CategoryDetailScreen() {
                     </View>
                 ) : (
                     <View style={styles.sessionList}>
-                        {sessions.map((session) => {
-                            const sessionIsFavorite = isFavorite(session.id);
-
-                            return (
-                                <View key={session.id} style={styles.sessionRow}>
-                                    <Pressable
-                                        onPress={() => openPlayerForSession(session)}
-                                        accessibilityRole="button"
-                                        accessibilityLabel={`Play ${session.title}`}
-                                        accessibilityHint="Opens the sound player"
-                                    >
-                                        {({ pressed }) => (
-                                            <View style={[
-                                                styles.sessionIconWrap,
-                                                { backgroundColor: categoryConfig.gradient[0] },
-                                                pressed && { opacity: 0.8 }
-                                            ]}>
-                                                <Ionicons
-                                                    name="play"
-                                                    color={categoryConfig.accent}
-                                                    size={18}
-                                                />
-                                            </View>
-                                        )}
-                                    </Pressable>
-
-                                    <View style={styles.sessionText}>
-                                        <Text style={styles.sessionTitle}>{session.title}</Text>
-                                        <Text style={styles.sessionMeta}>
-                                            {session.durationLabel}
-                                        </Text>
-                                    </View>
-
-                                    <Pressable
-                                        onPress={() => handleToggleFavorite(session)}
-                                        accessibilityRole="button"
-                                        accessibilityLabel={
-                                            sessionIsFavorite
-                                                ? `Remove ${session.title} from favorites`
-                                                : `Add ${session.title} to favorites`
-                                        }
-                                        accessibilityHint="Toggles favorite status"
-                                        accessibilityState={{ selected: sessionIsFavorite }}
-                                    >
-                                        {({ pressed }) => (
-                                            <View style={[
-                                                styles.sessionFavoriteButton,
-                                                sessionIsFavorite && styles.sessionFavoriteButtonFavorited,
-                                                pressed && { transform: [{ scale: 0.9 }], opacity: 0.8 }
-                                            ]}>
-                                                <Fontisto
-                                                    name={sessionIsFavorite ? "favorite" : "favorite"}
-                                                    color={sessionIsFavorite ? Colors.light.favorited : Colors.palette.muted}
-                                                    size={24}
-                                                />
-                                            </View>
-                                        )}
-                                    </Pressable>
-                                </View>
-                            );
-                        })}
+                        <View style={styles.sessionList}>
+                            {sessions.map((session) => (
+                                <CategorySessionRow
+                                    key={session.id}
+                                    session={session}
+                                    accentColor={categoryConfig.accent}
+                                    backgroundColor={categoryConfig.gradient[0]}
+                                    isFavorite={isFavorite(session.id)}
+                                    onPlay={openPlayerForSession}
+                                    onToggleFavorite={handleToggleFavorite}
+                                />
+                            ))}
+                        </View>
                     </View>
                 )}
             </ScrollView>
