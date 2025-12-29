@@ -41,8 +41,6 @@ export default function FavoritesScreen() {
 
     const onPlay = useCallback(
         async (session: any) => {
-            await haptics("success");
-
             const soundUrl = session.soundUrl || DEFAULT_SOUND_URL;
             const artworkUrl = session.artworkUrl || ART_URL;
 
@@ -60,7 +58,7 @@ export default function FavoritesScreen() {
             });
 
         },
-        [haptics, favorites]
+        [favorites]
     );
 
     return (
