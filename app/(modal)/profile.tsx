@@ -1,5 +1,6 @@
 import { AuthForm } from "@/components/auth";
 import { BackButton } from "@/components/BackButton";
+import { ProfileActions } from "@/components/profile/ProfileActions";
 import { ProfileSecurity } from "@/components/profile/Security";
 import { UserInfo } from "@/components/profile/UserInfo";
 import { useProfileForm } from "@/hooks/useProfileForm";
@@ -14,7 +15,6 @@ import React, { memo, useState } from "react";
 import {
     ActivityIndicator,
     Alert,
-    Animated,
     KeyboardAvoidingView,
     Platform,
     Pressable,
@@ -93,8 +93,6 @@ function ProfileScreen() {
         handleSaveChanges,
     } = useProfileForm(profile, updateProfile);
 
-    const [secondaryButtonPressed, setSecondaryButtonPressed] = useState(false);
-    const [saveButtonPressed, setSaveButtonPressed] = useState(false);
     const [signOutLoading, setSignOutLoading] = useState(false);
 
     const handleAuthSubmit = async (
@@ -320,68 +318,14 @@ function ProfileScreen() {
                         onChangePassword={() => router.push("/change-password")}
                         onDeleteAccount={() => router.push("/delete-account")}
                     />
-
-                    {(hasChanges || saveSuccess) && (
-                        <Animated.View
-                            style={{
-                                opacity: saveButtonOpacity,
-                                transform: [
-                                    {
-                                        translateY: saveButtonOpacity.interpolate({
-                                            inputRange: [0, 1],
-                                            outputRange: [8, 0],
-                                        }),
-                                    },
-                                ],
-                            }}
-                        >
-                            <Pressable
-                                onPressIn={() => setSaveButtonPressed(true)}
-                                onPressOut={() => setSaveButtonPressed(false)}
-                                onPress={handleSaveChanges}
-                                style={styles.primaryButtonContainer}
-                                accessibilityRole="button"
-                                accessibilityLabel="Save profile changes"
-                            >
-                                <View
-                                    style={[
-                                        styles.primaryButton,
-                                        saveButtonPressed && styles.btnPressed,
-                                    ]}
-                                >
-                                    <Text style={styles.primaryButtonText}>
-                                        {saveSuccess ? "Changes saved" : "Save changes"}
-                                    </Text>
-                                </View>
-                            </Pressable>
-                        </Animated.View>
-                    )}
-
-                    <Pressable
-                        onPressIn={() => setSecondaryButtonPressed(true)}
-                        onPressOut={() => setSecondaryButtonPressed(false)}
-                        onPress={handleSignOut}
-                        disabled={signOutLoading}
-                        style={styles.secondaryButtonContainer}
-                        testID="profile/signout"
-                        accessibilityRole="button"
-                        accessibilityLabel="Sign out"
-                        accessibilityHint="Logs you out of your account"
-                    >
-                        <View
-                            style={[
-                                styles.secondaryButton,
-                                secondaryButtonPressed && styles.btnPressed,
-                                signOutLoading && styles.buttonDisabled,
-                            ]}
-                        >
-                            {signOutLoading ? (
-                                <ActivityIndicator color={COLORS.accent} size="small" />
-                            ) : (
-                                <Text style={styles.secondaryButtonText}>Sign Out</Text>
-                            )}
-                        </View>
-                    </Pressable>
+                    <ProfileActions
+                        hasChanges={hasChanges}
+                        saveSuccess={saveSuccess}
+                        saveButtonOpacity={saveButtonOpacity}
+                        onSave={handleSaveChanges}
+                        onSignOut={handleSignOut}
+                        signOutLoading={signOutLoading}
+                    />
 
                     <View style={styles.bottomSpacer} />
                 </ScrollView>
