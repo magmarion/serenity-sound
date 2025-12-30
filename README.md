@@ -75,8 +75,8 @@ Teknisk Implementation
    - Update via redigering av profil
    - Delete hanterat och dokumenterat
 
-- [?!] Återanvändning av komponenter och gemensamma UI-mönster
-- [?!] Fullt responsiv inom mobil och surfplatta spannet
+- [x] Återanvändning av komponenter
+- [ ] Fullt responsiv inom mobil och surfplatta spannet
 
 Kvalitet och process
 - [x] Feature branches och pull requests används
