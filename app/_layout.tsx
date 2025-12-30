@@ -1,4 +1,3 @@
-// app/_layout.tsx - UPDATED
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack, useSegments, useRootNavigationState, router } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
@@ -7,6 +6,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { View, ActivityIndicator } from "react-native";
 import { useAuthStore } from "@/store/auth-store";
+import { ToastProvider } from "@/components/ToastContext";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -40,7 +40,6 @@ export default function RootLayout() {
         const currentSegment = segments[0];
         console.log("Auth check:", { isAuthenticated, currentSegment, segments });
 
-        // Define public routes that don't require authentication
         const publicRoutes = ["index", "sign-in"]; // Landing page and sign-in
         const modalRoutes = ["(modal)"]; // Modal routes are special
 
@@ -53,7 +52,6 @@ export default function RootLayout() {
         }
         // If user IS authenticated and trying to access auth routes
         else if (isAuthenticated) {
-            // Use type assertion to fix the TypeScript error
             const segment = currentSegment as string;
             if (segment === "index" || segment === "sign-in") {
                 console.log("Redirecting to home (authenticated)");
@@ -71,28 +69,30 @@ export default function RootLayout() {
     }
 
     return (
-        <QueryClientProvider client={queryClient}>
-            <SafeAreaProvider>
-                <GestureHandlerRootView style={{ flex: 1 }}>
-                    <Stack
-                        screenOptions={{
-                            headerShown: false,
-                            contentStyle: { backgroundColor: "transparent" },
-                        }}
-                    >
-                        <Stack.Screen name="index" /> {/* Landing page */}
-                        <Stack.Screen name="sign-in" /> {/* Sign in page */}
-                        <Stack.Screen name="(tabs)" /> {/* Main app tabs */}
-                        <Stack.Screen
-                            name="(modal)"
-                            options={{
-                                presentation: "transparentModal",
-                                animation: "none",
+        <ToastProvider>
+            <QueryClientProvider client={queryClient}>
+                <SafeAreaProvider>
+                    <GestureHandlerRootView style={{ flex: 1 }}>
+                        <Stack
+                            screenOptions={{
+                                headerShown: false,
+                                contentStyle: { backgroundColor: "transparent" },
                             }}
-                        />
-                    </Stack>
-                </GestureHandlerRootView>
-            </SafeAreaProvider>
-        </QueryClientProvider>
+                        >
+                            <Stack.Screen name="index" /> {/* Landing page */}
+                            <Stack.Screen name="sign-in" /> {/* Sign in page */}
+                            <Stack.Screen name="(tabs)" /> {/* Main app tabs */}
+                            <Stack.Screen
+                                name="(modal)"
+                                options={{
+                                    presentation: "transparentModal",
+                                    animation: "none",
+                                }}
+                            />
+                        </Stack>
+                    </GestureHandlerRootView>
+                </SafeAreaProvider>
+            </QueryClientProvider>
+        </ToastProvider>
     );
 }

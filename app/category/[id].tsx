@@ -2,6 +2,7 @@ import { BackButton } from '@/components/BackButton';
 import { CategorySessionRow } from '@/components/category/CategorySessionRow';
 import Colors from "@/constants/colors";
 import { fetchSoundEffects, Session } from "@/services/api";
+import { toast } from '@/services/toast';
 import { useFavoritesStore } from "@/store/favorites-store";
 import { categoryDetailStyles as styles } from '@/styles/category/id.styles';
 import { CATEGORY_CONFIG, getCategoryDescription } from '@/utils/categoryConfig';
@@ -28,7 +29,6 @@ export default function CategoryDetailScreen() {
 
     // Use Zustand store
     const { isFavorite, toggleFavorite } = useFavoritesStore();
-
 
     const loadCategorySounds = useCallback(async () => {
         try {
@@ -79,7 +79,16 @@ export default function CategoryDetailScreen() {
 
     const handleToggleFavorite = async (session: Session) => {
         await Haptics.selectionAsync();
-        toggleFavorite(session);
+
+        const result = await toggleFavorite(session);
+
+        if (result === "added") {
+            toast("Added to favorites");
+        }
+
+        if (result === "removed") {
+            toast("Removed from favorites");
+        }
     };
 
     const handleInfoPress = () => {

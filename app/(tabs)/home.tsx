@@ -2,8 +2,10 @@
 import { Avatar } from "@/components/Avatar";
 import Colors from "@/constants/colors";
 import { fetchSoundEffects, Session } from "@/services/api";
+import { toast } from "@/services/toast";
 import { useAuthStore } from "@/store/auth-store";
 import { useFavoritesStore } from "@/store/favorites-store";
+import { homeStyles as styles } from '@/styles/tabs/home.styles';
 import { createPlaylist, findSessionIndex } from "@/utils/playlistHelper";
 import { Fontisto, Ionicons } from '@expo/vector-icons';
 import * as Haptics from "expo-haptics";
@@ -12,7 +14,6 @@ import { router } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View, } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { homeStyles as styles } from '@/styles/tabs/home.styles';
 
 const ART_URL = "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80";
 const DEFAULT_SOUND_URL = "https://orangefreesounds.com/wp-content/uploads/2022/08/Rain-and-thunder-with-ocean-waves-sound-effect.mp3";
@@ -186,7 +187,16 @@ function HomeContent() {
 
     const handleToggleFavorite = async (session: Session) => {
         await Haptics.selectionAsync();
-        toggleFavorite(session);
+
+        const result = await toggleFavorite(session);
+
+        if (result === "added") {
+            toast("Added to favorites");
+        }
+
+        if (result === "removed") {
+            toast("Removed from favorites");
+        }
     };
 
     const getGreeting = () => {

@@ -1,8 +1,9 @@
-import { create } from "zustand";
-import { persist, createJSONStorage } from "zustand/middleware";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useAuthStore } from "@/store/auth-store";
 import { favoritesService } from "@/services/favorites-service";
+import { useAuthStore } from "@/store/auth-store";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { create } from "zustand";
+import { createJSONStorage, persist } from "zustand/middleware";
+
 
 export type Session = {
     id: string;
@@ -20,7 +21,10 @@ type FavoritesStore = {
 
     isFavorite: (id: string) => boolean;
 
-    toggleFavorite: (session: Session) => Promise<void>;
+    toggleFavorite: (
+        session: Session
+    ) => Promise<"added" | "removed" | null>;
+
     addFavorite: (session: Session) => Promise<void>;
     removeFavorite: (id: string) => Promise<void>;
 
@@ -37,28 +41,27 @@ export const useFavoritesStore = create<FavoritesStore>()(
                 return get().favorites.some((fav) => fav.id === id);
             },
 
-            toggleFavorite: async (session: Session) => {
+            toggleFavorite: async (session: Session): Promise<"added" | "removed" | null> => {
                 const uid = useAuthStore.getState().user?.uid;
-                if (!uid) return;
+                if (!uid) return null;
 
                 const exists = get().isFavorite(session.id);
 
-                // Optimistic UI update
                 set((state) => ({
                     favorites: exists
-                        ? state.favorites.filter(
-                            (fav) => fav.id !== session.id
-                        )
+                        ? state.favorites.filter((fav) => fav.id !== session.id)
                         : [...state.favorites, session],
                 }));
 
-                // Sync with Firestore
                 if (exists) {
                     await favoritesService.removeFavorite(uid, session.id);
+                    return "removed";
                 } else {
                     await favoritesService.addFavorite(uid, session);
+                    return "added";
                 }
             },
+
 
             addFavorite: async (session: Session) => {
                 const uid = useAuthStore.getState().user?.uid;
