@@ -57,7 +57,6 @@ export default function CategoryDetailScreen() {
     useEffect(() => {
         loadCategorySounds();
     }, [loadCategorySounds]); // Now it's stable
-
     const openPlayerForSession = (session: Session) => {
         const soundUrl = session.soundUrl || DEFAULT_SOUND_URL;
         const artworkUrl = session.artworkUrl || ART_URL;
@@ -65,7 +64,6 @@ export default function CategoryDetailScreen() {
         router.push({
             pathname: '/(modal)/player',
             params: {
-                // ADD THESE:
                 id: session.id,
                 moodId: session.moodId,
                 category: session.category,

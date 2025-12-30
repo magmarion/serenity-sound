@@ -85,7 +85,6 @@ class HomeErrorBoundary extends React.Component<
         return this.props.children;
     }
 }
-
 export default function HomeScreen() {
     return (
         <HomeErrorBoundary>
@@ -104,14 +103,12 @@ function HomeContent() {
     const [sessions, setSessions] = useState<Session[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-
     const { isFavorite } = useFavoritesStore();
     const { user, profile } = useAuthStore();
 
     useEffect(() => {
         loadSessions();
     }, []);
-
     const loadSessions = async () => {
         try {
             setLoading(true);
@@ -128,7 +125,6 @@ function HomeContent() {
             setLoading(false);
         }
     };
-
     const handleMoodPress = (moodId: string) => {
         console.log(`Opening category: ${moodId}`);
 
@@ -137,7 +133,6 @@ function HomeContent() {
             params: { id: moodId }
         });
     };
-
     const openPlayerForSession = (session: Session) => {
         const soundUrl = session.soundUrl;
         const artworkUrl = session.artworkUrl;
@@ -192,7 +187,6 @@ function HomeContent() {
         if (hour < 18) return "Good afternoon";
         return "Good evening";
     };
-
     const getUserName = () => {
         if (profile?.name) return profile.name;
         if (user?.displayName) return user.displayName;
@@ -207,54 +201,56 @@ function HomeContent() {
                 colors={["#0B0A2A", "#05060A"]}
                 style={StyleSheet.absoluteFill}
             />
-            {/* EXTRA GRADIENT ABOVE HEADER */}
-            <LinearGradient
-                colors={["#591A1B", "#591A1B"]}
-                style={styles.topGradientExtension}
-            />
-            {/* HEADER */}
-            <SafeAreaView style={styles.safeArea} edges={["top"]}>
+            
+            {/* SINGLE HEADER CONTAINER WITH GRADIENT */}
+            <View style={styles.headerContainer}>
+                {/* Background gradient for entire header area */}
                 <LinearGradient
                     colors={["#591A1B", "#0F172B", "#0B0E14"]}
                     locations={[0, 0.4, 1]}
-                    style={styles.topBar}
-                    testID="home-top-bar"
-                >
-                    <View style={styles.headerRow}>
-                        <Pressable
-                            onPress={() => router.push('/(modal)/profile')}
-                            style={styles.profileRow}
-                            accessibilityRole="button"
-                            accessibilityLabel="Open profile"
-                            accessibilityHint="Navigates to your profile screen"
-
-                        >
-                            <Avatar
-                                size={52}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.headerGradientBackground}
+                />
+                
+                {/* Safe area for content only */}
+                <SafeAreaView style={styles.safeArea} edges={["top"]}>
+                    <View style={styles.topBar} testID="home-top-bar">
+                        <View style={styles.headerRow}>
+                            <Pressable
                                 onPress={() => router.push('/(modal)/profile')}
-                                borderWidth={1}
-                                borderColor="rgba(255,255,255,0.15)"
-                                fallbackType="gradient"
-                                borderRadius={20}
-                                showContainer={false} // No container for home screen
-                                testID="home-avatar"
-                            />
-                            <View>
-                                <Text style={styles.greetingLabel}>
-                                    {getGreeting()},
-                                </Text>
-                                <Text style={styles.greetingName}>
-                                    {getUserName()}
-                                </Text>
-                            </View>
-                        </Pressable>
-                    </View>
+                                style={styles.profileRow}
+                                accessibilityRole="button"
+                                accessibilityLabel="Open profile"
+                                accessibilityHint="Navigates to your profile screen"
+                            >
+                                <Avatar
+                                    size={52}
+                                    onPress={() => router.push('/(modal)/profile')}
+                                    borderWidth={1}
+                                    borderColor="rgba(255,255,255,0.15)"
+                                    fallbackType="gradient"
+                                    borderRadius={20}
+                                    showContainer={false}
+                                    testID="home-avatar"
+                                />
+                                <View>
+                                    <Text style={styles.greetingLabel}>
+                                        {getGreeting()},
+                                    </Text>
+                                    <Text style={styles.greetingName}>
+                                        {getUserName()}
+                                    </Text>
+                                </View>
+                            </Pressable>
+                        </View>
 
-                    <Text style={styles.topPrompt}>
-                        How do you want <Text style={styles.titlePrompt}>to feel today?</Text>
-                    </Text>
-                </LinearGradient>
-            </SafeAreaView>
+                        <Text style={styles.topPrompt}>
+                            How do you want <Text style={styles.titlePrompt}>to feel today?</Text>
+                        </Text>
+                    </View>
+                </SafeAreaView>
+            </View>
 
             {/* SCROLL AREA */}
             <ScrollView

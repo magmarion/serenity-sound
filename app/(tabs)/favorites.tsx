@@ -1,4 +1,3 @@
-// app/(tabs)/favorites.tsx
 import { SwipeableFavoriteRow } from '@/components/favorites/SwipeableFavoriteRow';
 import { useFavoritesStore } from '@/store/favorites-store';
 import { favoritesStyles as styles } from '@/styles/tabs/favorites.styles';
@@ -26,7 +25,6 @@ function useHaptics() {
         }
     }, []);
 }
-
 export default function FavoritesScreen() {
     const { favorites, removeFavorite } = useFavoritesStore();
     const haptics = useHaptics();
