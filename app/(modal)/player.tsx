@@ -1,4 +1,3 @@
-// app/(modal)/player.tsx
 import { ActionButtons } from "@/components/player/ActionButtons";
 import { ArtworkSection } from "@/components/player/ArtworkSection";
 import { PlaybackControls } from "@/components/player/PlaybackControls";
