@@ -1,3 +1,4 @@
+// home.styles.ts
 import { StyleSheet } from "react-native";
 import Colors from "@/constants/colors";
 
@@ -5,39 +6,46 @@ export const homeStyles = StyleSheet.create({
     container: {
         flex: 1,
     },
-
-    topGradientExtension: {
+    
+    // Header container that holds both gradient and content
+    headerContainer: {
+        position: 'relative',
+        zIndex: 2,
+    },
+    
+    // Gradient that fills the entire header area
+    headerGradientBackground: {
         position: 'absolute',
         top: 0,
         left: 0,
         right: 0,
-        height: 100,
-        zIndex: 1,
-    },
-
-    safeArea: {
-        zIndex: 2,
-    },
-
-    topBar: {
-        paddingTop: 10,
-        paddingHorizontal: 20,
-        paddingBottom: 24,
+        bottom: 0,
         borderBottomLeftRadius: 32,
         borderBottomRightRadius: 32,
-        gap: 16,
         shadowColor: "#000",
         shadowOpacity: 0.25,
         shadowRadius: 24,
         shadowOffset: { width: 0, height: 18 },
         elevation: 24,
     },
-
+    
+    safeArea: {
+        // Safe area manages content positioning
+    },
+    
+    topBar: {
+        paddingTop: 10,
+        paddingHorizontal: 20,
+        paddingBottom: 24,
+        gap: 16,
+    },
+    
     scrollArea: {
         flex: 1,
         marginTop: 0,
+        zIndex: 1, // Ensure it's below header
     },
-
+    
     headerRow: {
         flexDirection: "row",
         justifyContent: "space-between",
@@ -57,7 +65,7 @@ export const homeStyles = StyleSheet.create({
         fontSize: 18,
         fontWeight: "700",
     },
-
+    
     topPrompt: {
         color: Colors.light.text,
         fontSize: 28,
@@ -68,14 +76,14 @@ export const homeStyles = StyleSheet.create({
     titlePrompt: {
         color: Colors.palette.accent,
     },
-
+    
     scrollContent: {
         paddingHorizontal: 20,
         paddingBottom: 120,
         paddingTop: 20,
         gap: 20,
     },
-
+    
     /* MOODS SECTION */
     sectionTitle: {
         color: Colors.light.text,
@@ -115,7 +123,7 @@ export const homeStyles = StyleSheet.create({
         color: Colors.palette.under_text,
         fontSize: 13,
     },
-
+    
     /* SESSION LIST */
     sessionList: {
         gap: 12,
@@ -182,7 +190,7 @@ export const homeStyles = StyleSheet.create({
         fontSize: 16,
         textAlign: "center",
     },
-
+    
     loadingContainer: {
         padding: 20,
         alignItems: 'center',

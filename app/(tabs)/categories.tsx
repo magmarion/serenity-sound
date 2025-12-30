@@ -233,7 +233,7 @@ function CategoryCard({
                     isPressed && { opacity: 0.9 }
                 ]}
             >
-                {/* Icon with circular background pill - matching home screen */}
+                {/* Icon with circular background pill */}
                 <View style={styles.moodIconWrap}>
                     {item.moodIcon ? (
                         <Ionicons name={item.moodIcon} color={item.accent} size={20} />
