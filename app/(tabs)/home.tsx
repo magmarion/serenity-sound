@@ -1,14 +1,13 @@
 // app/(tabs)/index.tsx
 import { Avatar } from "@/components/Avatar";
 import Colors from "@/constants/colors";
+import { useToggleFavorite } from "@/hooks/useToggleFavorite";
 import { fetchSoundEffects, Session } from "@/services/api";
-import { toast } from "@/services/toast";
 import { useAuthStore } from "@/store/auth-store";
 import { useFavoritesStore } from "@/store/favorites-store";
 import { homeStyles as styles } from '@/styles/tabs/home.styles';
 import { createPlaylist, findSessionIndex } from "@/utils/playlistHelper";
 import { Fontisto, Ionicons } from '@expo/vector-icons';
-import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
@@ -106,7 +105,7 @@ function HomeContent() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    const { isFavorite, toggleFavorite } = useFavoritesStore();
+    const { isFavorite } = useFavoritesStore();
     const { user, profile } = useAuthStore();
 
     useEffect(() => {
@@ -185,19 +184,7 @@ function HomeContent() {
         });
     };
 
-    const handleToggleFavorite = async (session: Session) => {
-        await Haptics.selectionAsync();
-
-        const result = await toggleFavorite(session);
-
-        if (result === "added") {
-            toast("Added to favorites");
-        }
-
-        if (result === "removed") {
-            toast("Removed from favorites");
-        }
-    };
+    const { handleToggleFavorite } = useToggleFavorite();
 
     const getGreeting = () => {
         const hour = new Date().getHours();
