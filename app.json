@@ -4,7 +4,7 @@
     "slug": "serenity-sound",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/serenity-icon.png",
     "scheme": "serenity",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
