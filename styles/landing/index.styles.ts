@@ -33,6 +33,28 @@ export const landingStyles = StyleSheet.create({
         alignItems: "center",
         paddingTop: 80,
     },
+
+    logoShadowWrap: {
+        width: 96,
+        height: 96,
+        borderRadius: 16,
+        alignItems: "center",
+        justifyContent: "center",
+
+        shadowColor: COLORS.orange,
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.7,
+        shadowRadius: 28,
+
+        elevation: 18,
+    },
+
+    logo: {
+        width: 96,
+        height: 96,
+        borderRadius: 16,
+    },
+
     buttonsSection: {
         flex: 0.8,
         justifyContent: "center",

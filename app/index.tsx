@@ -1,9 +1,10 @@
+import logo from "@/assets/images/serenity-icon.png";
 import { COLORS, landingStyles as styles } from "@/styles/landing/index.styles";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, Stack } from "expo-router";
 import { UserRound, Wand2 } from "lucide-react-native";
-import React, { useCallback, useMemo, useRef, useState } from "react";
-import { Animated, Pressable, StyleSheet, Text, View } from "react-native";
+import React, { useCallback, useRef, useState } from "react";
+import { Animated, Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function LandingScreen() {
@@ -57,19 +58,6 @@ export default function LandingScreen() {
         router.push("/sign-in?mode=signup");
     }, []);
 
-    const icon = useMemo(() => {
-        const barHeights = [20, 40, 60, 40, 20];
-        return (
-            <View style={styles.iconInner} testID="serenityLogo">
-                <View style={styles.barsRow}>
-                    {barHeights.map((h, i) => (
-                        <View key={`bar-${i}`} style={[styles.bar, { height: h }]} />
-                    ))}
-                </View>
-            </View>
-        );
-    }, []);
-
     return (
         <View style={styles.root} testID="landingRoot">
             <Stack.Screen options={{ headerShown: false }} />
@@ -77,18 +65,25 @@ export default function LandingScreen() {
                 colors={[COLORS.bgTop, COLORS.bgBottom]}
                 style={StyleSheet.absoluteFill}
             />
-
-            {/* Using a regular View with safe area insets instead of deprecated SafeAreaView */}
             <View style={[
                 styles.safe,
                 {
-                    paddingTop: Math.max(insets.top, 16), // Use insets, with minimum of 16px
+                    paddingTop: Math.max(insets.top, 16),
                     paddingBottom: Math.max(insets.bottom, 16)
                 }
             ]} testID="landingSafe">
                 <View style={styles.content}>
                     <View style={styles.logoSection}>
-                        {icon}
+                        <View style={styles.logoShadowWrap}>
+                            <Image
+                                source={logo}
+                                style={styles.logo}
+                                resizeMode="contain"
+                                accessibilityLabel="Serenity logo"
+                            />
+                        </View>
+
+
                         <Text style={styles.title} testID="landingTitle">
                             Serenity
                         </Text>
