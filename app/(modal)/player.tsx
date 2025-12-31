@@ -118,6 +118,9 @@ export default function PlayerSheet() {
     } = useSleepTimer(sound);
     // Use the audio player
 
+    const isSeekingRef = useRef(false);
+    const lastSeekTsRef = useRef(0);
+
     const sheetRef = useRef<BottomSheet>(null);
     const snapPoints = useMemo(() => [SCREEN_HEIGHT * 0.92], []);
 
@@ -168,16 +171,35 @@ export default function PlayerSheet() {
         await Haptics.selectionAsync();
         handleSleepPress();
     }, [handleSleepPress]);
-
+    
     const handleScrubFromLocation = useCallback(
-        async (locationX: number) => {
+        async (locationX: number, isFinal = false) => {
             if (!sound || sliderWidth <= 0 || trackDuration <= 0) return;
 
             const ratio = Math.max(0, Math.min(locationX / sliderWidth, 1));
-            const newPosition = ratio * trackDuration * 1000;
-            await sound.setPositionAsync(newPosition);
+            const positionMs = ratio * trackDuration * 1000;
+
+            const now = Date.now();
+
+            if (!isFinal) {
+                if (now - lastSeekTsRef.current < 80) return;
+                lastSeekTsRef.current = now;
+            }
+
+            if (isSeekingRef.current) return;
+            isSeekingRef.current = true;
+
+            try {
+                await sound.setPositionAsync(positionMs);
+            } catch (error: any) {
+                if (!error?.message?.includes("Seeking interrupted")) {
+                    console.error(error);
+                }
+            } finally {
+                isSeekingRef.current = false;
+            }
         },
-        [sliderWidth, sound, trackDuration]
+        [sound, sliderWidth, trackDuration]
     );
 
 
