@@ -180,10 +180,9 @@ export function AuthForm({
     return (
         <View style={localStyles.root}>
             <LinearGradient
-                colors={["#0B0F2E", "#05060A"]}
+                colors={[COLORS.bgTop, COLORS.bgBottom]}
                 style={StyleSheet.absoluteFill}
             />
-
             {showBackButton && (
                 <View
                     style={[
