@@ -1,6 +1,15 @@
 import { playerStyles as styles } from "@/styles/modal/player.styles";
 import { formatTime } from "@/utils/formatTime";
-import { Animated, PanResponderInstance, Text, View } from "react-native";
+import React from "react";
+import {
+    Animated,
+    PanResponderInstance,
+    Text,
+    View,
+} from "react-native";
+
+const THUMB_SIZE = 12;
+const THUMB_RADIUS = THUMB_SIZE / 2;
 
 interface Props {
     progress: number;
@@ -19,19 +28,42 @@ export function ProgressBar({
 }: Props) {
     return (
         <View style={styles.progressSection}>
-            <View
-                style={styles.progressTrack}
-                onLayout={(e) => onLayout(e.nativeEvent.layout.width)}
-                {...panHandlers}
-            >
+            <View style={styles.progressVisualContainer}>
+                {/* TRACK */}
+                <View
+                    style={styles.progressTrack}
+                    onLayout={(e) => onLayout(e.nativeEvent.layout.width)}
+                >
+                    <Animated.View
+                        style={[
+                            styles.progressFill,
+                            { width: progressPercentage },
+                        ]}
+                    />
+                </View>
+
+                {/* SCRUBBER */}
                 <Animated.View
-                    style={[styles.progressFill, { width: progressPercentage }]}
-                />
-                <Animated.View
+                    pointerEvents="none"
                     style={[
                         styles.progressThumb,
-                        { transform: [{ translateX: progressPercentage }] },
+                        {
+                            transform: [
+                                {
+                                    translateX: Math.max(
+                                        progressPercentage - THUMB_RADIUS,
+                                        0
+                                    ),
+                                },
+                            ],
+                        },
                     ]}
+                />
+
+                {/* INVISIBLE TOUCH AREA */}
+                <View
+                    style={styles.progressTouchArea}
+                    {...panHandlers}
                 />
             </View>
 
@@ -44,5 +76,6 @@ export function ProgressBar({
                 </Text>
             </View>
         </View>
+
     );
 }

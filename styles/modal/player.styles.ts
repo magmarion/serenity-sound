@@ -1,5 +1,5 @@
-import { StyleSheet } from "react-native";
 import Colors from "@/constants/colors";
+import { StyleSheet } from "react-native";
 
 export const playerStyles = StyleSheet.create({
     container: {
@@ -78,24 +78,47 @@ export const playerStyles = StyleSheet.create({
         height: 6,
         borderRadius: 999,
         backgroundColor: Colors.light.border,
-        overflow: "hidden",
         justifyContent: "center",
     },
     progressFill: {
         position: "absolute",
         left: 0,
-        top: 0,
-        bottom: 0,
+        height: 6,
+        borderRadius: 999,
         backgroundColor: Colors.light.accent,
     },
+    progressVisualContainer: {
+        position: "relative",
+        height: 10,
+        justifyContent: "center",
+    },
+
+    progressTouchArea: {
+        position: "absolute",
+        left: -12,
+        right: -12,
+        top: -12,
+        bottom: -12,
+    },
+
     progressThumb: {
         position: "absolute",
-        width: 16,
-        height: 16,
-        borderRadius: 16,
+        width: 12,
+        height: 12,
+        borderRadius: 6,
         backgroundColor: Colors.light.accent,
-        top: -5,
-        left: -8,
+
+        top: "50%",
+        marginTop: -6,
+
+        zIndex: 20,
+
+        shadowColor: Colors.light.accent,
+        shadowOpacity: 0.6,
+        shadowRadius: 6,
+        shadowOffset: { width: 0, height: 0 },
+
+        elevation: 6,
     },
     progressLabels: {
         flexDirection: "row",
