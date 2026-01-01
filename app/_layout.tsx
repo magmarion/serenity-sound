@@ -1,12 +1,14 @@
+import { ToastProvider } from "@/components/ToastContext";
+import { useAuthRedirect } from "@/hooks/useAuthRedirect";
+import { useFavoritesSync } from "@/hooks/useFavoritesSync";
+import { useAuthStore } from "@/store/auth-store";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Stack, useSegments, useRootNavigationState, router } from "expo-router";
+import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect } from "react";
+import { ActivityIndicator, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { View, ActivityIndicator } from "react-native";
-import { useAuthStore } from "@/store/auth-store";
-import { ToastProvider } from "@/components/ToastContext";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -15,10 +17,9 @@ const queryClient = new QueryClient();
 export default function RootLayout() {
     const initializeAuth = useAuthStore((state) => state.initializeAuth);
     const isLoading = useAuthStore((state) => state.isLoading);
-    const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
-    const segments = useSegments();
-    const navigationState = useRootNavigationState();
+    useAuthRedirect();
+    useFavoritesSync();
 
     useEffect(() => {
         const unsubscribe = initializeAuth();
@@ -33,41 +34,6 @@ export default function RootLayout() {
         }
     }, [isLoading]);
 
-    // Auth redirection logic
-    useEffect(() => {
-        if (isLoading || !navigationState?.key) return;
-
-        const currentSegment = segments[0];
-        console.log("Auth check:", { isAuthenticated, currentSegment, segments });
-
-        const publicRoutes = ["index", "sign-in"]; // Landing page and sign-in
-        const modalRoutes = ["(modal)"]; // Modal routes are special
-
-        // If user is NOT authenticated and trying to access protected routes
-        if (!isAuthenticated) {
-            if (currentSegment && !publicRoutes.includes(currentSegment) && !modalRoutes.includes(currentSegment)) {
-                console.log("Redirecting to landing (not authenticated)");
-                router.replace("/");
-            }
-        }
-        // If user IS authenticated and trying to access auth routes
-        else if (isAuthenticated) {
-            const segment = currentSegment as string;
-            if (segment === "index" || segment === "sign-in") {
-                console.log("Redirecting to home (authenticated)");
-                router.replace("/(tabs)/home");
-            }
-        }
-    }, [isAuthenticated, isLoading, segments, navigationState]);
-
-    if (isLoading) {
-        return (
-            <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-                <ActivityIndicator size="large" />
-            </View>
-        );
-    }
-
     return (
         <ToastProvider>
             <QueryClientProvider client={queryClient}>
@@ -79,9 +45,9 @@ export default function RootLayout() {
                                 contentStyle: { backgroundColor: "transparent" },
                             }}
                         >
-                            <Stack.Screen name="index" /> {/* Landing page */}
-                            <Stack.Screen name="sign-in" /> {/* Sign in page */}
-                            <Stack.Screen name="(tabs)" /> {/* Main app tabs */}
+                            <Stack.Screen name="index" />
+                            <Stack.Screen name="sign-in" />
+                            <Stack.Screen name="(tabs)" />
                             <Stack.Screen
                                 name="(modal)"
                                 options={{
@@ -90,6 +56,22 @@ export default function RootLayout() {
                                 }}
                             />
                         </Stack>
+                        {isLoading && (
+                            <View
+                                style={{
+                                    position: "absolute",
+                                    top: 0,
+                                    left: 0,
+                                    right: 0,
+                                    bottom: 0,
+                                    justifyContent: "center",
+                                    alignItems: "center",
+                                    backgroundColor: "black",
+                                }}
+                            >
+                                <ActivityIndicator size="large" />
+                            </View>
+                        )}
                     </GestureHandlerRootView>
                 </SafeAreaProvider>
             </QueryClientProvider>
