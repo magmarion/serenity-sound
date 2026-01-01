@@ -58,7 +58,7 @@ Applikationsutveckling
 - [x] Dokumentation omfattar abstract, tech stack och arbetsprocess
 
 - [x] Appen är hostad i Android EAS build men iOS-distribution krävde Apple Developer-konto.
-- [?!] Fri från tekniska fel, konsekvent design, och obruten navigation.
+- [x] Fri från tekniska fel, konsekvent design, och obruten navigation.
 
 **Krav för väl godkänt:**
 
@@ -86,7 +86,7 @@ Kvalitet och process
 
 Testning och dokumentation
 - [ ] Automatiserat flöde för bygge och deploy.
-- [ ] Tillgänglighet testad i Figma samt verifierad i implementation
-- [ ] WCAG-arbete dokumenterat i rapporten
-- [ ] Djupgående analys och reflektion över tekniska val
-- [ ] Motivering av arkitektur, state-hantering och tillgänglighet  ?
+- [x] Tillgänglighet testad i Figma samt verifierad i implementation
+- [x] WCAG-arbete dokumenterat i rapporten
+- [x] Djupgående analys och reflektion över tekniska val
+- [x] Motivering av arkitektur, state-hantering och tillgänglighet
