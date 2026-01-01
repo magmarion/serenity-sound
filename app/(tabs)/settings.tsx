@@ -39,7 +39,7 @@ function SettingsScreen() {
             iconName: "person",
             iconBg: "rgba(255,140,84,0.18)",
             iconSet: "Ionicons",
-            onPress: () => { router.push('/profile'); },
+            onPress: () => { router.push('/(settings)/profile'); },
           },
           {
             id: "subscription",
@@ -47,7 +47,7 @@ function SettingsScreen() {
             iconName: "crown",
             iconBg: "rgba(255,180,80,0.18)",
             iconSet: "FontAwesome",
-            onPress: () => { router.push('/subscription'); },
+            onPress: () => { router.push('/(settings)/subscription'); },
           },
           {
             id: "notifications",
@@ -55,7 +55,7 @@ function SettingsScreen() {
             iconName: "notifications",
             iconBg: "rgba(255,140,84,0.18)",
             iconSet: "Ionicons",
-            onPress: () => { router.push('/notifications'); },
+            onPress: () => { router.push('/(settings)/notifications'); },
           },
         ],
       },
