@@ -38,7 +38,6 @@ SerenitySound1 är en app som hjälper användare att slappna av, få fokus elle
 **Krav för godkänt:**
 
 Planering och Research
-
 - [x] Målgruppsanalys genomförd.
 - [x] Backlog skapad och använd i projekthanteringsverktyg.
 
@@ -51,14 +50,13 @@ Design & Prototyping
 Applikationsutveckling
 - [x] Utvecklad i React Native med TypeScript och Expo
 - [x] Databas och autentisering via Firebase
-- [x] State-hantering implementerad med Zustand.
+- [x] State-hantering implementerad med Zustand
 - [x] WCAG 2.1 nivå A och AA implementerad i applikationskoden
-- [x] Responsiv för mobil och padda.
+- [x] Fungerar korrekt på mobil och surfplatta utan layoutfel
 - [x] Git och GitHub används konsekvent.
 - [x] Dokumentation omfattar abstract, tech stack och arbetsprocess
-
-- [x] Appen är hostad i Android EAS build men iOS-distribution krävde Apple Developer-konto.
-- [x] Fri från tekniska fel, konsekvent design, och obruten navigation.
+- [x] Appen är hostad i Android EAS build men iOS-distribution krävde Apple Developer-konto
+- [x] Fri från tekniska fel, konsekvent design, och obruten navigation
 
 **Krav för väl godkänt:**
 
@@ -74,18 +72,16 @@ Teknisk Implementation
    - Read via hämtning av användardata
    - Update via redigering av profil
    - Delete hanterat och dokumenterat
-
 - [x] Återanvändning av komponenter
-- [ ] Fullt responsiv inom mobil och surfplatta spannet
 
 Kvalitet och process
 - [x] Feature branches och pull requests används
 - [x] Tydliga och konsekventa commit-meddelanden
-- [x] Tillgänglighetsarbete uppdelat i separata commits ?
-- [x] Användarupplevelse optimerad med tydlig feedback och laddningsindikatorer ?
+- [x] Tillgänglighetsarbete uppdelat i separata commits
+- [x] Användarupplevelse optimerad med tydlig feedback och laddningsindikatorer
 
 Testning och dokumentation
-- [ ] Automatiserat flöde för bygge och deploy.
+- [x] Automatiserat flöde för bygge och deploy.
 - [x] Tillgänglighet testad i Figma samt verifierad i implementation
 - [x] WCAG-arbete dokumenterat i rapporten
 - [x] Djupgående analys och reflektion över tekniska val
