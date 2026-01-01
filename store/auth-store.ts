@@ -12,7 +12,6 @@ import {
 } from "firebase/auth";
 import { deleteDoc, doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import { create } from "zustand";
-import { useFavoritesStore } from "@/store/favorites-store"; // ✅ ADD
 
 export interface UserProfile {
     uid: string;
@@ -62,11 +61,6 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
                 });
 
                 await get().loadProfile(user.uid);
-
-                // ✅ LOAD FAVORITES FOR AUTHENTICATED USER
-                await useFavoritesStore
-                    .getState()
-                    .loadFavoritesFromDb();
             } else {
                 set({
                     user: null,
@@ -74,9 +68,6 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
                     isAuthenticated: false,
                     isLoading: false,
                 });
-
-                // ✅ CLEAR FAVORITES ON LOGOUT
-                useFavoritesStore.getState().clearFavorites();
             }
         });
 
@@ -100,9 +91,9 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         }
 
         // ✅ LOAD FAVORITES AFTER SIGN IN
-        await useFavoritesStore
-            .getState()
-            .loadFavoritesFromDb();
+        // await useFavoritesStore
+        //     .getState()
+        //     .loadFavoritesFromDb();
     },
 
     signUpWithEmail: async (email, password) => {
@@ -129,14 +120,14 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         });
 
         // ✅ NEW USER → EMPTY FAVORITES
-        useFavoritesStore.getState().clearFavorites();
+        // useFavoritesStore.getState().clearFavorites();
     },
 
     signOut: async () => {
         await signOut(auth);
 
         // ✅ CLEAR FAVORITES ON SIGN OUT
-        useFavoritesStore.getState().clearFavorites();
+        // useFavoritesStore.getState().clearFavorites();
 
         set({
             user: null,
@@ -200,7 +191,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         await deleteUser(user);
 
         // ✅ CLEAR FAVORITES AFTER ACCOUNT DELETION
-        useFavoritesStore.getState().clearFavorites();
+        // useFavoritesStore.getState().clearFavorites();
 
         set({
             user: null,

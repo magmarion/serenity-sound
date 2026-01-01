@@ -1,8 +1,9 @@
 import { ToastProvider } from "@/components/ToastContext";
+import { useAuthRedirect } from "@/hooks/useAuthRedirect";
+import { useFavoritesSync } from "@/hooks/useFavoritesSync";
 import { useAuthStore } from "@/store/auth-store";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
-import { useAuthRedirect } from "@/hooks/useAuthRedirect";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect } from "react";
 import { ActivityIndicator, View } from "react-native";
@@ -16,7 +17,9 @@ const queryClient = new QueryClient();
 export default function RootLayout() {
     const initializeAuth = useAuthStore((state) => state.initializeAuth);
     const isLoading = useAuthStore((state) => state.isLoading);
+
     useAuthRedirect();
+    useFavoritesSync();
 
     useEffect(() => {
         const unsubscribe = initializeAuth();
