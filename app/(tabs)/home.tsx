@@ -218,7 +218,7 @@ function HomeContent() {
                     <View style={styles.topBar} testID="home-top-bar">
                         <View style={styles.headerRow}>
                             <Pressable
-                                onPress={() => router.push('/(modal)/profile')}
+                                onPress={() => router.push('/(settings)/profile')}
                                 style={styles.profileRow}
                                 accessibilityRole="button"
                                 accessibilityLabel="Open profile"
@@ -226,7 +226,7 @@ function HomeContent() {
                             >
                                 <Avatar
                                     size={52}
-                                    onPress={() => router.push('/(modal)/profile')}
+                                    onPress={() => router.push('/(settings)/profile')}
                                     borderWidth={1}
                                     borderColor="rgba(255,255,255,0.15)"
                                     fallbackType="gradient"
