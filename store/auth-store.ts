@@ -89,11 +89,6 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         if (snap.exists()) {
             set({ profile: snap.data() as UserProfile });
         }
-
-        // ✅ LOAD FAVORITES AFTER SIGN IN
-        // await useFavoritesStore
-        //     .getState()
-        //     .loadFavoritesFromDb();
     },
 
     signUpWithEmail: async (email, password) => {
@@ -118,17 +113,10 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
             profile,
             isAuthenticated: true,
         });
-
-        // ✅ NEW USER → EMPTY FAVORITES
-        // useFavoritesStore.getState().clearFavorites();
     },
 
     signOut: async () => {
         await signOut(auth);
-
-        // ✅ CLEAR FAVORITES ON SIGN OUT
-        // useFavoritesStore.getState().clearFavorites();
-
         set({
             user: null,
             profile: null,
@@ -189,10 +177,6 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
         await deleteDoc(doc(db, "users", user.uid));
         await deleteUser(user);
-
-        // ✅ CLEAR FAVORITES AFTER ACCOUNT DELETION
-        // useFavoritesStore.getState().clearFavorites();
-
         set({
             user: null,
             profile: null,
