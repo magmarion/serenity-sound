@@ -1,7 +1,7 @@
-import { Tabs } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
-import React from "react";
 import Colors from "@/constants/colors";
+import { Fontisto, Ionicons } from "@expo/vector-icons";
+import { Tabs } from "expo-router";
+import React from "react";
 
 export default function TabLayout() {
   return (
@@ -49,7 +49,7 @@ export default function TabLayout() {
         options={{
           title: "Favorites",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="heart" color={color} size={size} />
+            <Fontisto name="favorite" color={color} size={size} />
           ),
         }}
       />
