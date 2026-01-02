@@ -40,20 +40,20 @@ export const CATEGORY_CONFIG: Record<string, CategoryConfig> = {
     },
     fireplace: {
         title: "Fireplace Sounds",
-        gradient: ["#F97316", "#7C2D12"],
+        gradient: ["#3A1C09", "#1B1C37"],
         accent: "#FF7C3A",
         icon: "flame",
     },
     thunder: {
         title: "Thunder & Storm",
-        gradient: ["#FB923C", "#9A3412"],
-        accent: "#FFA94D",
+        gradient: ["#111827", "#0B1220"],
+        accent: "#0EA5E9",
         icon: "thunderstorm",
     },
     forest: {
         title: "Forest Sounds",
         gradient: ["#0EA5A4", "#064E3B"],
-        accent: "#2DD4BF",
+        accent: "#22C55E",
         icon: "leaf",
     },
     cafe: {
@@ -64,7 +64,7 @@ export const CATEGORY_CONFIG: Record<string, CategoryConfig> = {
     },
     bricks: {
         title: "Ambient Sounds",
-        gradient: ["#F97316", "#9A3412"],
+        gradient: ["#1E1B4A", "#1A1034"],
         accent: "#FB923C",
         icon: "musical-notes",
     },

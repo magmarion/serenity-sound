@@ -6,6 +6,7 @@ import { fetchSoundEffects, Session } from "@/services/api";
 import { useFavoritesStore } from "@/store/favorites-store";
 import { categoryDetailStyles as styles } from '@/styles/category/id.styles';
 import { CATEGORY_CONFIG, getCategoryDescription } from '@/utils/categoryConfig';
+import { getReadableTextColor } from '@/utils/colorContrast';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
@@ -21,6 +22,9 @@ export default function CategoryDetailScreen() {
     const { id } = useLocalSearchParams<{ id: string }>();
     const categoryId = id || 'sleep';
     const categoryConfig = CATEGORY_CONFIG[categoryId] || CATEGORY_CONFIG.sleep;
+    const baseBgColor = categoryConfig.gradient[0];
+    const readableTextColor = getReadableTextColor(baseBgColor);
+
 
     const [sessions, setSessions] = useState<Session[]>([]);
     const [loading, setLoading] = useState(true);
@@ -102,9 +106,11 @@ export default function CategoryDetailScreen() {
                     />
 
                     <View style={styles.headerCenter}>
-                        <Text style={styles.categoryTitle}>{categoryConfig.title}</Text>
+                        <Text style={[styles.categoryTitle, { color: readableTextColor }]}>
+                            {categoryConfig.title}
+                        </Text>
                         {/* ADDED: Sounds counter under title */}
-                        <Text style={styles.soundsCounter}>
+                        <Text style={[styles.soundsCounter, { color: readableTextColor }]}>
                             {loading ? 'Loading sounds...' :
                                 error ? 'Error loading sounds' :
                                     sessions.length === 0 ? 'No sounds available' :
@@ -119,7 +125,11 @@ export default function CategoryDetailScreen() {
                         accessibilityLabel="Category information"
                         accessibilityHint="Opens information about this category"
                     >
-                        <Ionicons name="information-circle-outline" size={24} color={Colors.light.text} />
+                        <Ionicons
+                            name="information-circle-outline"
+                            size={24}
+                            color={readableTextColor}
+                        />
                     </Pressable>
                 </View>
             </SafeAreaView>
@@ -132,7 +142,9 @@ export default function CategoryDetailScreen() {
             >
                 {loading ? (
                     <View style={styles.loadingContainer}>
-                        <Text style={styles.loadingText}>Loading sounds...</Text>
+                        <Text style={[styles.loadingText, { color: readableTextColor }]}>
+                            Loading sounds...
+                        </Text>
                     </View>
                 ) : error ? (
                     <View style={styles.errorMessage}>
@@ -159,7 +171,7 @@ export default function CategoryDetailScreen() {
                                     key={session.id}
                                     session={session}
                                     accentColor={categoryConfig.accent}
-                                    backgroundColor={categoryConfig.gradient[0]}
+                                    backgroundColor="rgba(0,0,0,0.35)"
                                     isFavorite={isFavorite(session.id)}
                                     onPlay={openPlayerForSession}
                                     onToggleFavorite={handleToggleFavorite}
@@ -184,7 +196,9 @@ export default function CategoryDetailScreen() {
                             <View style={[styles.modalIconWrap, { backgroundColor: categoryConfig.accent + '20' }]}>
                                 <Ionicons name={categoryConfig.icon} color={categoryConfig.accent} size={24} />
                             </View>
-                            <Text style={styles.modalTitle}>{categoryConfig.title}</Text>
+                            <Text style={[styles.modalTitle, { color: readableTextColor }]}>
+                                {categoryConfig.title}
+                            </Text>
                             <Pressable
                                 onPress={() => setShowInfoModal(false)}
                                 style={styles.modalCloseButton}
@@ -192,11 +206,11 @@ export default function CategoryDetailScreen() {
                                 accessibilityLabel="Close"
                                 accessibilityHint="Closes the information dialog"
                             >
-                                <Ionicons name="close" size={24} color={Colors.light.text} />
+                                <Ionicons name="close" size={24} color={readableTextColor} />
                             </Pressable>
                         </View>
 
-                        <Text style={styles.modalDescription}>
+                        <Text style={[styles.modalDescription, { color: readableTextColor }]}>
                             {getCategoryDescription(categoryId)}
                         </Text>
                     </View>
