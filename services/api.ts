@@ -1,5 +1,4 @@
-const API_KEY = process.env.EXPO_PUBLIC_FREESOUND_API_KEY || '';
-const BASE_URL = process.env.EXPO_PUBLIC_FREESOUND_BASE_URL!;
+import { fetchFreesoundData } from "./fetchFreesoundData";
 
 export interface Session {
     id: string;
@@ -72,20 +71,9 @@ async function fetchHomeScreenSounds(): Promise<Session[]> {
         try {
             console.log(`Home Query: "${query}"`);
 
-            const apiUrl = `${BASE_URL}?query=${encodeURIComponent(query)}&fields=id,name,previews,duration,tags,username,images&page_size=${pageSize}&sort=downloads_desc`;
+            const data = await fetchFreesoundData(query, pageSize);
 
-            const response = await fetch(apiUrl, {
-                headers: { 'Authorization': `Token ${API_KEY}` }
-            });
-
-            if (!response.ok) {
-                console.log(`❌ Query failed: ${response.status}`);
-                continue;
-            }
-
-            const data = await response.json();
-
-            if (!data.results || data.results.length === 0) {
+            if (!data || !data.results || data.results.length === 0) {
                 console.log(`Query: No results`);
                 continue;
             }
@@ -135,20 +123,9 @@ async function fetchCategorySounds(moodFilter: string): Promise<Session[]> {
     for (const query of queryConfig.queries) {
         console.log(`Category query: "${query}"`);
 
-        const apiUrl = `${BASE_URL}?query=${encodeURIComponent(query)}&fields=id,name,previews,duration,tags,username,images&page_size=${pageSize}&sort=downloads_desc`;
+        const data = await fetchFreesoundData(query, pageSize);
 
-        const response = await fetch(apiUrl, {
-            headers: { 'Authorization': `Token ${API_KEY}` }
-        });
-
-        if (!response.ok) {
-            console.log(`❌ Query failed: ${response.status}`);
-            continue;
-        }
-
-        const data = await response.json();
-
-        if (!data.results || data.results.length === 0) {
+        if (!data || !data.results || data.results.length === 0) {
             console.log('No results with this query');
             continue;
         }
