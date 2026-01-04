@@ -12,6 +12,8 @@ export interface Session {
     artworkUrl?: string;
 }
 
+const MIN_LONG_SOUND_DURATION = 120;
+
 /* 
 MAIN API FUNCTION WITH PROPER FILTERING
  */
@@ -32,12 +34,11 @@ export async function fetchSoundEffects(moodFilter?: string): Promise<Session[]>
         return []; // Return empty array on error - NO FALLBACKS
     }
 }
-
 /* 
    HOME SCREEN: MIXED SOUNDS (100+ sounds)
  */
 async function fetchHomeScreenSounds(): Promise<Session[]> {
-    console.log('🏠 Fetching MIXED sounds for home screen...');
+    console.log('Fetching MIXED sounds for home screen...');
 
     const allSessions: Session[] = [];
 
@@ -61,7 +62,7 @@ async function fetchHomeScreenSounds(): Promise<Session[]> {
     ];
 
     const pageSize = 30; // Get 30 sounds per query
-    const targetCount = 100; // Target 100+ sounds
+    const targetCount = 100;
 
     for (const query of homeScreenQueries) {
         if (allSessions.length >= targetCount) {
@@ -69,7 +70,7 @@ async function fetchHomeScreenSounds(): Promise<Session[]> {
         }
 
         try {
-            console.log(`📡 Home Query: "${query}"`);
+            console.log(`Home Query: "${query}"`);
 
             const apiUrl = `${BASE_URL}?query=${encodeURIComponent(query)}&fields=id,name,previews,duration,tags,username,images&page_size=${pageSize}&sort=downloads_desc`;
 
@@ -85,7 +86,7 @@ async function fetchHomeScreenSounds(): Promise<Session[]> {
             const data = await response.json();
 
             if (!data.results || data.results.length === 0) {
-                console.log(`📭 Query: No results`);
+                console.log(`Query: No results`);
                 continue;
             }
 
@@ -94,7 +95,7 @@ async function fetchHomeScreenSounds(): Promise<Session[]> {
                 .map((sound: any) => createSessionFromSound(sound))
                 .filter((session: Session | null): session is Session =>
                     session !== null &&
-                    session.duration >= 30 && // Minimum 30 seconds
+                    session.duration >= MIN_LONG_SOUND_DURATION &&
                     !!session.soundUrl &&
                     !!session.title &&
                     session.duration <= 3600 // Maximum 1 hour
@@ -124,7 +125,7 @@ async function fetchHomeScreenSounds(): Promise<Session[]> {
    CATEGORY PAGES: FILTERED SOUNDS
  */
 async function fetchCategorySounds(moodFilter: string): Promise<Session[]> {
-    console.log(`🎯 Fetching FILTERED sounds for mood: ${moodFilter}`);
+    console.log(`Fetching FILTERED sounds for mood: ${moodFilter}`);
 
     const queryConfig = getCategoryQuery(moodFilter);
     const allSessions: Session[] = [];
@@ -132,7 +133,7 @@ async function fetchCategorySounds(moodFilter: string): Promise<Session[]> {
 
     // Try multiple queries for this category
     for (const query of queryConfig.queries) {
-        console.log(`🔍 Category query: "${query}"`);
+        console.log(`Category query: "${query}"`);
 
         const apiUrl = `${BASE_URL}?query=${encodeURIComponent(query)}&fields=id,name,previews,duration,tags,username,images&page_size=${pageSize}&sort=downloads_desc`;
 
@@ -148,7 +149,7 @@ async function fetchCategorySounds(moodFilter: string): Promise<Session[]> {
         const data = await response.json();
 
         if (!data.results || data.results.length === 0) {
-            console.log('📭 No results with this query');
+            console.log('No results with this query');
             continue;
         }
 
@@ -158,7 +159,10 @@ async function fetchCategorySounds(moodFilter: string): Promise<Session[]> {
             .filter((session: Session | null): session is Session =>
                 session !== null &&
                 session.moodId === moodFilter && // Strict category matching
-                session.duration >= getMinDurationForCategory(moodFilter) &&
+                session.duration >= Math.max(
+                    getMinDurationForCategory(moodFilter),
+                    MIN_LONG_SOUND_DURATION
+                ) &&
                 session.duration <= 3600 &&
                 !!session.soundUrl &&
                 !!session.title
@@ -493,7 +497,7 @@ function cleanSoundTitle(rawName: string, username?: string): string {
     // Capitalize properly
     title = title
         .split(' ')
-        .slice(0, 4)
+        .slice(0, 3)
         .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
         .join(' ');
 
