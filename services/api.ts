@@ -12,6 +12,11 @@ export interface Session {
 }
 
 const MIN_LONG_SOUND_DURATION = 120;
+const MAX_SOUND_DURATION = 3600;
+const HOME_PAGE_SIZE = 30;  // Get 30 sounds per query
+const CATEGORY_PAGE_SIZE = 50; // Get more sounds to filter from
+const HOME_TARGET_COUNT = 100;
+
 
 /* 
 MAIN API FUNCTION WITH PROPER FILTERING
@@ -60,8 +65,8 @@ async function fetchHomeScreenSounds(): Promise<Session[]> {
         'beach OR shore OR seaside'
     ];
 
-    const pageSize = 30; // Get 30 sounds per query
-    const targetCount = 100;
+    const pageSize = HOME_PAGE_SIZE;
+    const targetCount = HOME_TARGET_COUNT;
 
     for (const query of homeScreenQueries) {
         if (allSessions.length >= targetCount) {
@@ -86,7 +91,7 @@ async function fetchHomeScreenSounds(): Promise<Session[]> {
                     session.duration >= MIN_LONG_SOUND_DURATION &&
                     !!session.soundUrl &&
                     !!session.title &&
-                    session.duration <= 3600 // Maximum 1 hour
+                    session.duration <= MAX_SOUND_DURATION
                 );
 
             console.log(`✅ Query: ${sessions.length} valid sounds`);
@@ -117,7 +122,7 @@ async function fetchCategorySounds(moodFilter: string): Promise<Session[]> {
 
     const queryConfig = getCategoryQuery(moodFilter);
     const allSessions: Session[] = [];
-    const pageSize = 50; // Get more sounds to filter from
+    const pageSize = CATEGORY_PAGE_SIZE;
 
     // Try multiple queries for this category
     for (const query of queryConfig.queries) {
@@ -140,7 +145,7 @@ async function fetchCategorySounds(moodFilter: string): Promise<Session[]> {
                     getMinDurationForCategory(moodFilter),
                     MIN_LONG_SOUND_DURATION
                 ) &&
-                session.duration <= 3600 &&
+                session.duration <= MAX_SOUND_DURATION &&
                 !!session.soundUrl &&
                 !!session.title
             );
@@ -438,9 +443,8 @@ function getMinDurationForCategory(category: string): number {
     return minDurations[category] || 30;
 }
 
-/* ============================================================================
-   UTILITY FUNCTIONS
-============================================================================ */
+// UTILITY FUNCTION
+
 function cleanSoundTitle(rawName: string, username?: string): string {
     if (!rawName) return username ? `${username}'s Sound` : 'Nature Sound';
 
