@@ -30,8 +30,6 @@ export default function CategoryDetailScreen() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [showInfoModal, setShowInfoModal] = useState(false);
-
-    // Use Zustand store
     const { isFavorite } = useFavoritesStore();
 
     const loadCategorySounds = useCallback(async () => {
@@ -93,11 +91,9 @@ export default function CategoryDetailScreen() {
                 colors={categoryConfig.gradient}
                 style={StyleSheet.absoluteFill}
             />
-
             {/* Header */}
             <SafeAreaView style={styles.safeArea} edges={["top"]}>
                 <View style={styles.header}>
-                    {/* REPLACE the custom back button with BackButton component */}
                     <BackButton
                         onPress={router.back}
                         accessibilityLabel="Go back to categories"
@@ -109,7 +105,7 @@ export default function CategoryDetailScreen() {
                         <Text style={[styles.categoryTitle, { color: readableTextColor }]}>
                             {categoryConfig.title}
                         </Text>
-                        {/* ADDED: Sounds counter under title */}
+                        {/* Sounds counter under title */}
                         <Text style={[styles.soundsCounter, { color: readableTextColor }]}>
                             {loading ? 'Loading sounds...' :
                                 error ? 'Error loading sounds' :

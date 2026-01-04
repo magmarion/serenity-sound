@@ -29,13 +29,13 @@ export const CATEGORY_CONFIG: Record<string, CategoryConfig> = {
     recharge: {
         title: "Energy & Motivation",
         gradient: ["#0C1F1A", "#05100F"],
-        accent: "#4DE2C3",
+        accent: "#22C55E",
         icon: "battery-charging",
     },
     rain: {
         title: "Rain Sounds",
-        gradient: ["#1D4ED8", "#0B1B3E"],
-        accent: "#6DA7FF",
+        gradient: ["#1E1B4A", "#1A1034"],
+        accent: "#8F7CFF",
         icon: "rainy",
     },
     fireplace: {
@@ -52,14 +52,14 @@ export const CATEGORY_CONFIG: Record<string, CategoryConfig> = {
     },
     forest: {
         title: "Forest Sounds",
-        gradient: ["#0EA5A4", "#064E3B"],
+        gradient: ["#0C1F1A", "#05100F"],
         accent: "#22C55E",
         icon: "leaf",
     },
     cafe: {
         title: "Cafe Sounds",
-        gradient: ["#15803D", "#064E3B"],
-        accent: "#22C55E",
+        gradient: ["#3A1C09", "#1B1C37"],
+        accent: "#FF7C3A",
         icon: "cafe",
     },
     bricks: {
