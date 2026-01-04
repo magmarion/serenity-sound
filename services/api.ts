@@ -1,5 +1,4 @@
-const API_KEY = process.env.EXPO_PUBLIC_FREESOUND_API_KEY || '';
-const BASE_URL = process.env.EXPO_PUBLIC_FREESOUND_BASE_URL!;
+import { fetchFreesoundData } from "./fetchFreesoundData";
 
 export interface Session {
     id: string;
@@ -13,6 +12,11 @@ export interface Session {
 }
 
 const MIN_LONG_SOUND_DURATION = 120;
+const MAX_SOUND_DURATION = 3600;
+const HOME_PAGE_SIZE = 30;  // Get 30 sounds per query
+const CATEGORY_PAGE_SIZE = 50; // Get more sounds to filter from
+const HOME_TARGET_COUNT = 100;
+
 
 /* 
 MAIN API FUNCTION WITH PROPER FILTERING
@@ -61,8 +65,8 @@ async function fetchHomeScreenSounds(): Promise<Session[]> {
         'beach OR shore OR seaside'
     ];
 
-    const pageSize = 30; // Get 30 sounds per query
-    const targetCount = 100;
+    const pageSize = HOME_PAGE_SIZE;
+    const targetCount = HOME_TARGET_COUNT;
 
     for (const query of homeScreenQueries) {
         if (allSessions.length >= targetCount) {
@@ -72,20 +76,9 @@ async function fetchHomeScreenSounds(): Promise<Session[]> {
         try {
             console.log(`Home Query: "${query}"`);
 
-            const apiUrl = `${BASE_URL}?query=${encodeURIComponent(query)}&fields=id,name,previews,duration,tags,username,images&page_size=${pageSize}&sort=downloads_desc`;
+            const data = await fetchFreesoundData(query, pageSize);
 
-            const response = await fetch(apiUrl, {
-                headers: { 'Authorization': `Token ${API_KEY}` }
-            });
-
-            if (!response.ok) {
-                console.log(`❌ Query failed: ${response.status}`);
-                continue;
-            }
-
-            const data = await response.json();
-
-            if (!data.results || data.results.length === 0) {
+            if (!data || !data.results || data.results.length === 0) {
                 console.log(`Query: No results`);
                 continue;
             }
@@ -98,7 +91,7 @@ async function fetchHomeScreenSounds(): Promise<Session[]> {
                     session.duration >= MIN_LONG_SOUND_DURATION &&
                     !!session.soundUrl &&
                     !!session.title &&
-                    session.duration <= 3600 // Maximum 1 hour
+                    session.duration <= MAX_SOUND_DURATION
                 );
 
             console.log(`✅ Query: ${sessions.length} valid sounds`);
@@ -129,26 +122,15 @@ async function fetchCategorySounds(moodFilter: string): Promise<Session[]> {
 
     const queryConfig = getCategoryQuery(moodFilter);
     const allSessions: Session[] = [];
-    const pageSize = 50; // Get more sounds to filter from
+    const pageSize = CATEGORY_PAGE_SIZE;
 
     // Try multiple queries for this category
     for (const query of queryConfig.queries) {
         console.log(`Category query: "${query}"`);
 
-        const apiUrl = `${BASE_URL}?query=${encodeURIComponent(query)}&fields=id,name,previews,duration,tags,username,images&page_size=${pageSize}&sort=downloads_desc`;
+        const data = await fetchFreesoundData(query, pageSize);
 
-        const response = await fetch(apiUrl, {
-            headers: { 'Authorization': `Token ${API_KEY}` }
-        });
-
-        if (!response.ok) {
-            console.log(`❌ Query failed: ${response.status}`);
-            continue;
-        }
-
-        const data = await response.json();
-
-        if (!data.results || data.results.length === 0) {
+        if (!data || !data.results || data.results.length === 0) {
             console.log('No results with this query');
             continue;
         }
@@ -163,7 +145,7 @@ async function fetchCategorySounds(moodFilter: string): Promise<Session[]> {
                     getMinDurationForCategory(moodFilter),
                     MIN_LONG_SOUND_DURATION
                 ) &&
-                session.duration <= 3600 &&
+                session.duration <= MAX_SOUND_DURATION &&
                 !!session.soundUrl &&
                 !!session.title
             );
@@ -461,9 +443,8 @@ function getMinDurationForCategory(category: string): number {
     return minDurations[category] || 30;
 }
 
-/* ============================================================================
-   UTILITY FUNCTIONS
-============================================================================ */
+// UTILITY FUNCTION
+
 function cleanSoundTitle(rawName: string, username?: string): string {
     if (!rawName) return username ? `${username}'s Sound` : 'Nature Sound';
 
