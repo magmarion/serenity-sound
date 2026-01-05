@@ -103,7 +103,7 @@ export const favoritesStyles = StyleSheet.create({
     },
     deleteText: {
         color: '#FFFFFF',
-        fontSize: 12,
+        fontSize: 14,
         fontWeight: '600',
     },
     card: {

@@ -31,7 +31,7 @@ const MOODS: MoodCard[] = [
         id: "focus",
         title: "Focus",
         description: "Sharpen your mind",
-        gradient: ["#3A1C09", "#1B1C37"],
+        gradient: ["#3A1C09", "#1A0B06"],
         accent: "#F78A2C",
         icon: "flash",
     },

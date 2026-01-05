@@ -82,6 +82,7 @@ export const SwipeableFavoriteRow = memo(function SwipeableFavoriteRow({
 
     const deleteBackgroundStyle = useAnimatedStyle(() => ({
         width: deleteWidth.value,
+        height: rowHeight.value,
         opacity: deleteWidth.value > 0 ? 1 : 0,
     }));
 
@@ -89,7 +90,6 @@ export const SwipeableFavoriteRow = memo(function SwipeableFavoriteRow({
         <View style={styles.swipeableContainer}>
             <Animated.View style={[styles.deleteBackground, deleteBackgroundStyle]}>
                 <View style={styles.deleteContent}>
-                    <Ionicons name="trash-outline" size={24} color="#FFFFFF" />
                     <Text style={styles.deleteText}>Delete</Text>
                 </View>
             </Animated.View>
@@ -148,7 +148,6 @@ export const SwipeableFavoriteRow = memo(function SwipeableFavoriteRow({
             >
                 <View style={styles.modalOverlay}>
                     <View style={styles.confirmationBox}>
-                        <Ionicons name="trash" size={40} color="#FF3B30" />
                         <Text style={styles.confirmationTitle}>
                             Remove from Favorites
                         </Text>
