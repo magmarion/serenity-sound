@@ -34,8 +34,8 @@ function SettingsScreen() {
         title: "Account",
         rows: [
           {
-            id: "profile",
-            label: "Profile",
+            id: "account",
+            label: "Account",
             iconName: "person",
             iconBg: "rgba(255,140,84,0.18)",
             iconSet: "Ionicons",
