@@ -9,6 +9,7 @@ import React, { useEffect } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { StatusBar } from "expo-status-bar";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -36,6 +37,7 @@ export default function RootLayout() {
 
     return (
         <ToastProvider>
+            <StatusBar style="light" />
             <QueryClientProvider client={queryClient}>
                 <SafeAreaProvider>
                     <GestureHandlerRootView style={{ flex: 1 }}>
